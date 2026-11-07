@@ -1,0 +1,22 @@
+{
+  "drill": "logical-restore",
+  "ranAt": "2026-10-20T07:34:12.205Z",
+  "environment": "local Docker postgres:18.6 (Windows 11 laptop) — NOT representative of managed hosting",
+  "dataset": {
+    "orgs": 40,
+    "users": 2400,
+    "auditRows": 400000,
+    "databaseSizeMb": 138
+  },
+  "dumpSeconds": 1.64,
+  "dumpSizeMb": 16,
+  "restoreSeconds": 2.3,
+  "verification": {
+    "tablesCompared": 9,
+    "mismatches": [],
+    "securityLayer": "0/39/52/active_support_grant@crm_definer,auth_memberships_for_user@crm_definer,current_org_id@crm_migrator,current_user_id@crm_migrator,outbox_claim@crm_definer,outbox_mark_published@crm_definer,platform_org_overview@crm_definer",
+    "runtimeRoleSeesWithoutContext": 0
+  },
+  "passed": true,
+  "totalSeconds": 89.62
+}

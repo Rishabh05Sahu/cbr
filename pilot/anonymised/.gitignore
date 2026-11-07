@@ -1,0 +1,14 @@
+# Pilot exports never enter Git, even anonymised (see README.md).
+*.csv
+*.CSV
+*.xlsx
+*.XLSX
+*.xls
+*.XLS
+*.tsv
+*.TSV
+*.zip
+*.ZIP
+# Keep the folder's documentation trackable.
+!README.md
+!.gitignore

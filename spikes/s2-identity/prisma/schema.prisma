@@ -1,0 +1,252 @@
+// Spike S2 (identity and organisation). Throwaway database crm_s2; NOT the production schema.
+//
+// Better Auth models keep the library's model/field names (the Prisma adapter addresses
+// them as prisma.user, prisma.member, ...) but map to our table and column names:
+//   member.organizationId -> organization_membership.org_id   (so tenant RLS applies)
+//   invitation.organizationId -> invitation.org_id
+// Teams, team leads, support grants and audit are ours (ADR-0003).
+// RLS, grants, CHECKs and definer functions: migrations/0002_identity_security.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TeamRole {
+  MEMBER
+  LEAD
+
+  @@map("team_role")
+}
+
+// ---------- Better Auth core ----------
+
+model User {
+  id               String   @id @db.Uuid
+  name             String
+  email            String   @unique @db.Citext
+  emailVerified    Boolean  @default(false) @map("email_verified")
+  image            String?
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  twoFactorEnabled Boolean? @default(false) @map("two_factor_enabled")
+  // NULL for everyone except platform staff ('PLATFORM_ADMIN'). Never settable via the API.
+  platformRole     String?  @map("platform_role")
+
+  sessions    Session[]
+  accounts    Account[]
+  members     Member[]
+  invitations Invitation[]
+  twoFactors  TwoFactor[]
+
+  @@map("user")
+}
+
+model Session {
+  id                   String   @id @db.Uuid
+  expiresAt            DateTime @map("expires_at") @db.Timestamptz(6)
+  token                String   @unique
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  ipAddress            String?  @map("ip_address")
+  userAgent            String?  @map("user_agent")
+  userId               String   @map("user_id") @db.Uuid
+  activeOrganizationId String?  @map("active_org_id") @db.Uuid
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @db.Uuid
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id") @db.Uuid
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(6)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(6)
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @db.Uuid
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model TwoFactor {
+  id                      String    @id @db.Uuid
+  secret                  String
+  backupCodes             String    @map("backup_codes")
+  userId                  String    @map("user_id") @db.Uuid
+  verified                Boolean?  @default(true)
+  failedVerificationCount Int?      @default(0) @map("failed_verification_count")
+  lockedUntil             DateTime? @map("locked_until") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([userId])
+  @@index([secret])
+  @@map("two_factor")
+}
+
+// ---------- Better Auth organization plugin ----------
+
+model Organization {
+  id        String   @id @db.Uuid
+  name      String
+  slug      String   @unique
+  logo      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  metadata  String?
+
+  members       Member[]
+  invitations   Invitation[]
+  teams         Team[]
+  leads         Lead[]
+  supportGrants SupportAccessGrant[]
+  auditLogs     AuditLog[]
+
+  @@map("organization")
+}
+
+/// Our OrganizationMembership. `role` holds exactly one system role code (CHECK in SQL).
+model Member {
+  id             String   @id @db.Uuid
+  organizationId String   @map("org_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  role           String
+  status         String   @default("ACTIVE")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  user            User             @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  teamMemberships TeamMembership[]
+
+  @@unique([organizationId, userId])
+  @@unique([organizationId, id])
+  @@index([userId])
+  @@map("organization_membership")
+}
+
+model Invitation {
+  id             String   @id @db.Uuid
+  organizationId String   @map("org_id") @db.Uuid
+  email          String   @db.Citext
+  role           String?
+  status         String
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  inviterId      String   @map("inviter_id") @db.Uuid
+  // Optional team to join on acceptance (our team table, not plugin teams).
+  teamId         String?  @map("team_id") @db.Uuid
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  inviter      User         @relation(fields: [inviterId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  team         Team?        @relation(fields: [organizationId, teamId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([organizationId])
+  @@index([email])
+  @@map("invitation")
+}
+
+// ---------- ours ----------
+
+model Team {
+  id    String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId String @map("org_id") @db.Uuid
+  name  String
+
+  organization Organization     @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  members      TeamMembership[]
+  invitations  Invitation[]
+
+  @@unique([orgId, id])
+  @@map("team")
+}
+
+model TeamMembership {
+  id           String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId        String    @map("org_id") @db.Uuid
+  teamId       String    @map("team_id") @db.Uuid
+  membershipId String    @map("membership_id") @db.Uuid
+  teamRole     TeamRole  @default(MEMBER) @map("team_role")
+  startedAt    DateTime  @default(now()) @map("started_at") @db.Timestamptz(6)
+  endedAt      DateTime? @map("ended_at") @db.Timestamptz(6)
+
+  team       Team   @relation(fields: [orgId, teamId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  membership Member @relation(fields: [orgId, membershipId], references: [organizationId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@map("team_membership")
+}
+
+/// Representative tenant data for S2-06 / S2-08.
+model Lead {
+  id       String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId    String @map("org_id") @db.Uuid
+  fullName String @map("full_name")
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@map("lead")
+}
+
+/// Owner-approved, time-boxed platform support access (domain-model §2.1).
+model SupportAccessGrant {
+  id               String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId            String    @map("org_id") @db.Uuid
+  platformUserId   String    @map("platform_user_id") @db.Uuid
+  reason           String
+  accessLevel      String    @map("access_level")
+  approvedByUserId String?   @map("approved_by_user_id") @db.Uuid
+  startsAt         DateTime  @map("starts_at") @db.Timestamptz(6)
+  expiresAt        DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt        DateTime? @map("revoked_at") @db.Timestamptz(6)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@map("support_access_grant")
+}
+
+model AuditLog {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId       String?  @map("org_id") @db.Uuid
+  actorUserId String?  @map("actor_user_id") @db.Uuid
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String?  @map("entity_id") @db.Uuid
+  metadata    Json?
+  occurredAt  DateTime @default(now()) @map("occurred_at") @db.Timestamptz(6)
+
+  organization Organization? @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([orgId, occurredAt(sort: Desc)])
+  @@map("audit_log")
+}

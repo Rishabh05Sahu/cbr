@@ -1,0 +1,455 @@
+
+ RUN  v5.0.3 C:/Users/aDMIN/Desktop/CRM
+
+▲ Next.js 16.4.2
+- Local:         http://127.0.0.1:3100
+- Network:       http://127.0.0.1:3100
+✓ Ready in 0ms
+✓ Running next.config took 82ms
+ ✓ |unit| src/platform/email/templates.test.ts > email templates > escapes user-controlled values in HTML 11ms
+ ✓ |unit| src/platform/email/templates.test.ts > email templates > reset email states single use and 30-minute expiry 1ms
+ ✓ |unit| src/platform/email/templates.test.ts > email templates > escapeHtml covers all special characters 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > OWNER user.invite -> ORG 7ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > ADMIN user.invite -> ORG 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_MANAGER user.invite -> denied 3ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_EXECUTIVE user.invite -> denied 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > HR_OPS user.invite -> denied 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > OWNER user.suspend -> ORG 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > ADMIN user.suspend -> ORG 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_MANAGER user.suspend -> denied 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_EXECUTIVE user.suspend -> denied 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > HR_OPS user.suspend -> denied 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > OWNER user.change_role -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > ADMIN user.change_role -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_MANAGER user.change_role -> denied 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_EXECUTIVE user.change_role -> denied 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > HR_OPS user.change_role -> denied 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > OWNER team.manage -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > ADMIN team.manage -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_MANAGER team.manage -> denied 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_EXECUTIVE team.manage -> denied 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > HR_OPS team.manage -> denied 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > OWNER team.read -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > ADMIN team.read -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_MANAGER team.read -> TEAM 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_EXECUTIVE team.read -> OWN 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > HR_OPS team.read -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > OWNER user.read -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > ADMIN user.read -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_MANAGER user.read -> TEAM 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_EXECUTIVE user.read -> OWN 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > HR_OPS user.read -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > OWNER org.settings.manage -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > ADMIN org.settings.manage -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_MANAGER org.settings.manage -> denied 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_EXECUTIVE org.settings.manage -> denied 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > HR_OPS org.settings.manage -> denied 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > OWNER org.security_policy.manage -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > ADMIN org.security_policy.manage -> denied 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_MANAGER org.security_policy.manage -> denied 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_EXECUTIVE org.security_policy.manage -> denied 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > HR_OPS org.security_policy.manage -> denied 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > OWNER support_access.approve -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > ADMIN support_access.approve -> denied 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_MANAGER support_access.approve -> denied 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_EXECUTIVE support_access.approve -> denied 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > HR_OPS support_access.approve -> denied 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > OWNER audit.read -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > ADMIN audit.read -> ORG 0ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_MANAGER audit.read -> denied 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > SALES_EXECUTIVE audit.read -> denied 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > HR_OPS audit.read -> denied 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > every role can update its own profile 1ms
+ ✓ |unit| src/platform/authz/permissions.test.ts > permission matrix > support access is read-only even for a WRITE grant 2ms
+ ✓ |unit| src/platform/observability/logger.test.ts > logger redaction > redacts secrets, tokens, URLs and contact details 11ms
+ ✓ |unit| src/platform/observability/logger.test.ts > logger redaction > scrubs query strings from URLs in free text 2ms
+ ✓ |unit| src/env.test.ts > serverEnvSchema > accepts a complete environment 18ms
+ ✓ |unit| src/env.test.ts > serverEnvSchema > rejects DATABASE_URL using postgres 2ms
+ ✓ |unit| src/env.test.ts > serverEnvSchema > rejects DATABASE_URL using doadmin 1ms
+ ✓ |unit| src/env.test.ts > serverEnvSchema > rejects DATABASE_URL using crm_migrator 1ms
+ ✓ |unit| src/env.test.ts > serverEnvSchema > rejects swapped role URLs (auth library must not get crm_app, app must not get crm_auth) 1ms
+ ✓ |unit| src/env.test.ts > serverEnvSchema > rejects a short auth secret 1ms
+ ✓ |unit| src/lib/uuidv7.test.ts > uuidv7 > produces RFC 9562 version-7 UUIDs 14ms
+ ✓ |unit| src/lib/uuidv7.test.ts > uuidv7 > encodes the timestamp so ids sort by creation time 1ms
+ ✓ |unit| src/lib/uuidv7.test.ts > uuidv7 > is unique across many calls 152ms
+ ✓ |unit| src/modules/profile/profile.test.ts > normalisePhone > 98765 43210 -> +919876543210 5ms
+ ✓ |unit| src/modules/profile/profile.test.ts > normalisePhone > 09876543210 -> +919876543210 1ms
+ ✓ |unit| src/modules/profile/profile.test.ts > normalisePhone > +919876543210 -> +919876543210 0ms
+ ✓ |unit| src/modules/profile/profile.test.ts > normalisePhone > +44 20 7946 0958 -> +442079460958 0ms
+ ✓ |unit| src/modules/profile/profile.test.ts > normalisePhone >  -> null 0ms
+ ✓ |unit| src/modules/profile/profile.test.ts > normalisePhone > rejects 12345 3ms
+ ✓ |unit| src/modules/profile/profile.test.ts > normalisePhone > rejects 5876543210 1ms
+ ✓ |unit| src/modules/profile/profile.test.ts > normalisePhone > rejects abc 1ms
+ ✓ |unit| src/modules/profile/profile.test.ts > normalisePhone > rejects +0123456789 1ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > pages render only the active org > org A owner: /app contains no org B data 10457ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > pages render only the active org > org A owner: /app/settings/members contains no org B data 639ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > pages render only the active org > org A owner: /app/settings/teams contains no org B data 426ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > pages render only the active org > org A owner: /app/settings/organization contains no org B data 427ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > pages render only the active org > org A owner: /app/settings/audit contains no org B data 414ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > pages render only the active org > org A owner: /app/settings/support-access contains no org B data 406ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > pages render only the active org > member listing follows role scope on the real page 388ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > pages render only the active org > pages a role may not use are 404, and hidden from navigation 2177ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > Server Actions with org B's ids from an org A session change nothing > /app/settings/members src/modules/members/actions.ts -> NOT_FOUND 380ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > Server Actions with org B's ids from an org A session change nothing > /app/settings/members src/modules/members/actions.ts -> NOT_FOUND 338ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > Server Actions with org B's ids from an org A session change nothing > /app/settings/members src/modules/members/actions.ts -> NOT_FOUND 301ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > Server Actions with org B's ids from an org A session change nothing > /app/settings/members src/modules/members/actions.ts -> NOT_FOUND 320ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > Server Actions with org B's ids from an org A session change nothing > /app/settings/members src/modules/members/actions.ts -> NOT_FOUND 341ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > Server Actions with org B's ids from an org A session change nothing > /app/settings/members src/modules/members/actions.ts -> NOT_FOUND 303ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > Server Actions with org B's ids from an org A session change nothing > /app/settings/teams src/modules/teams/actions.ts -> NOT_FOUND 353ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > Server Actions with org B's ids from an org A session change nothing > /app/settings/teams src/modules/teams/actions.ts -> NOT_FOUND 339ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > Server Actions with org B's ids from an org A session change nothing > /app/settings/teams src/modules/teams/actions.ts -> NOT_FOUND 317ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > Server Actions with org B's ids from an org A session change nothing > /app/settings/support-access src/modules/support-access/actions.ts -> NOT_FOUND 327ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > Server Actions with org B's ids from an org A session change nothing > /app/settings/support-access src/modules/support-access/actions.ts -> NOT_FOUND 370ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > Server Actions with org B's ids from an org A session change nothing > org B is untouched 56ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > Server Actions with org B's ids from an org A session change nothing > switching to an org you are not a member of is refused 393ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > Server Actions with org B's ids from an org A session change nothing > a forged active org in the session gives no access (pages redirect, actions refuse) 373ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > role permissions enforced on real Server Actions > executive, manager and HR cannot invite, change roles, suspend or manage teams 1305ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > role permissions enforced on real Server Actions > Admin cannot grant or act on Admin/Owner; Owner can 1098ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > role permissions enforced on real Server Actions > platform actions are refused for non-platform users 374ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > role permissions enforced on real Server Actions > a successful action works end to end and is audited 493ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > session and request integrity > actions without a session are refused 33ms
+`x-forwarded-host` header with value `127.0.0.1:3100` does not match `origin` header with value `evil.example` from a forwarded Server Actions request. Aborting the action.
+⨯ Error: Invalid Server Actions request.
+    at async n (C:\Users\aDMIN\Desktop\CRM\.next\standalone\.next\server\chunks\ssr\03g2_next_dist_1-i945a7crxvf._.js:1:11624)
+    at async p (C:\Users\aDMIN\Desktop\CRM\.next\standalone\.next\server\chunks\ssr\03g2_next_dist_1-i945a7crxvf._.js:2:4598)
+    at async v (C:\Users\aDMIN\Desktop\CRM\.next\standalone\.next\server\chunks\ssr\03g2_next_dist_1-i945a7crxvf._.js:2:6019)
+    at async Module.X [as handler] (C:\Users\aDMIN\Desktop\CRM\.next\standalone\.next\server\chunks\ssr\03g2_next_dist_1-i945a7crxvf._.js:4:1552) {
+  digest: '218782351'
+}
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > session and request integrity > cross-origin Server Action calls are rejected by the framework 357ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > session and request integrity > suspension through the real route ends the target session immediately 985ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > session and request integrity > a user with no membership sees the org chooser with nothing in it 566ms
+ ✓ |e2e| tests/e2e/route-isolation.test.ts > platform support over real routes > without an approved grant, opening an org gives no data; with one, read-only access 1564ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > health check and security headers 156ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > signed-out requests to app pages redirect to login 42ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > sign-in sets an HttpOnly, SameSite session cookie and opens the app 335ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > HTTP /organization/invite-member is disabled (404); these go through authorised Server Actions 273ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > HTTP /organization/update-member-role is disabled (404); these go through authorised Server Actions 269ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > HTTP /organization/remove-member is disabled (404); these go through authorised Server Actions 253ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > HTTP /organization/cancel-invitation is disabled (404); these go through authorised Server Actions 268ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > HTTP /organization/list-members is disabled (404); these go through authorised Server Actions 238ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > HTTP /organization/list-invitations is disabled (404); these go through authorised Server Actions 260ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > HTTP /organization/get-full-organization is disabled (404); these go through authorised Server Actions 290ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > HTTP /organization/update is disabled (404); these go through authorised Server Actions 262ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > HTTP /organization/delete is disabled (404); these go through authorised Server Actions 262ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > HTTP /organization/create is disabled (404); these go through authorised Server Actions 283ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > HTTP /update-user is disabled (404); these go through authorised Server Actions 266ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > HTTP /delete-user is disabled (404); these go through authorised Server Actions 273ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > HTTP /change-email is disabled (404); these go through authorised Server Actions 250ms
+{"level":50,"time":"2026-10-20T07:57:34.393Z","service":"web","src":"better-auth","msg":"Invalid origin: https://evil.example"}
+[2m2026-10-20T07:57:34.396Z[0m [31mERROR[0m [1m[Better Auth]:[0m Invalid origin
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > cross-origin, cookie-bearing auth requests are rejected (CSRF) 299ms
+{"level":40,"time":"2026-10-20T07:57:34.684Z","service":"web","src":"better-auth","msg":"Invalid password"}
+{"level":40,"time":"2026-10-20T07:57:34.924Z","service":"web","src":"better-auth","msg":"Invalid password"}
+{"level":40,"time":"2026-10-20T07:57:35.167Z","service":"web","src":"better-auth","msg":"Invalid password"}
+{"level":40,"time":"2026-10-20T07:57:35.349Z","service":"web","src":"better-auth","msg":"Invalid password"}
+{"level":40,"time":"2026-10-20T07:57:35.547Z","service":"web","src":"better-auth","msg":"Invalid password"}
+{"level":40,"time":"2026-10-20T07:57:35.778Z","service":"web","src":"better-auth","msg":"Invalid password"}
+{"level":40,"time":"2026-10-20T07:57:36.021Z","service":"web","src":"better-auth","msg":"Invalid password"}
+{"level":40,"time":"2026-10-20T07:57:36.233Z","service":"web","src":"better-auth","msg":"Invalid password"}
+{"level":40,"time":"2026-10-20T07:57:36.460Z","service":"web","src":"better-auth","msg":"Invalid password"}
+{"level":40,"time":"2026-10-20T07:57:36.683Z","service":"web","src":"better-auth","msg":"Invalid password"}
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > baseline HTTP behaviour > sign-in is rate-limited per client IP (10/min) 2252ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > invitation flow over real routes and email (D3) > invite -> email -> sign-up -> verify -> sign in -> accept -> member 2225ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > invitation flow over real routes and email (D3) > someone else signed in cannot see or accept the invitation 660ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > invitation flow over real routes and email (D3) > sign-up without an invitation creates no account 240ms
+ ✓ |e2e| tests/e2e/auth-routes.test.ts > password reset over real routes and email > reset link works once, revokes sessions, and is never logged in our audit metadata 1211ms
+ ✓ |integration| tests/integration/members.test.ts > listing scope > Owner/Admin/HR see all; manager sees led team + self; executive sees self only 110ms
+ ✓ |integration| tests/integration/members.test.ts > listing scope > pending invitations are visible only to users who may invite (D3) 33ms
+ ✓ |integration| tests/integration/members.test.ts > invitations (D3) > only Owner/Admin can invite; only the Owner can invite Admins/Owners 255ms
+ ✓ |integration| tests/integration/members.test.ts > invitations (D3) > expiry is 7 days, ids are fully random (UUIDv4), and invitation.created is audited 115ms
+ ✓ |integration| tests/integration/members.test.ts > invitations (D3) > acceptance requires the matching, verified, signed-in user; joins the invited team 1250ms
+ ✓ |integration| tests/integration/members.test.ts > invitations (D3) > expired invitations cannot be accepted 572ms
+ ✓ |integration| tests/integration/members.test.ts > invitations (D3) > cancellation works and is audited; a cancelled invitation cannot be accepted 575ms
+ ✓ |integration| tests/integration/members.test.ts > invitations (D3) > sign-up without a pending invitation creates nothing (closed sign-up) 426ms
+ ✓ |integration| tests/integration/members.test.ts > invitations (D3) > invitation creation is rate-limited per user (30/hour) 3956ms
+ ✓ |integration| tests/integration/members.test.ts > roles and status (owner-only rules) > Admin cannot change, suspend or deactivate Owners/Admins; Owner can 439ms
+ ✓ |integration| tests/integration/members.test.ts > roles and status (owner-only rules) > role change is audited and emits an outbox event 73ms
+ ✓ |integration| tests/integration/members.test.ts > roles and status (owner-only rules) > suspension revokes sessions immediately, blocks the org, and can be reversed 590ms
+ ✓ |integration| tests/integration/members.test.ts > roles and status (owner-only rules) > nobody can suspend themselves; the last active Owner cannot be removed 1848ms
+ ✓ |integration| tests/integration/members.test.ts > roles and status (owner-only rules) > deactivation ends team spells and keeps the membership row (history) 90ms
+ ✓ |integration| tests/integration/members.test.ts > roles and status (owner-only rules) > HR can update HR profile fields; executives cannot 566ms
+ ✓ |integration| tests/integration/platform-support.test.ts > platform console > is for platform staff only 259ms
+ ✓ |integration| tests/integration/platform-support.test.ts > platform console > provisions an org with a new Owner (set-password email queued) and audits it 245ms
+ ✓ |integration| tests/integration/platform-support.test.ts > platform console > suspending an org blocks all its members 367ms
+ ✓ |integration| tests/integration/platform-support.test.ts > support access > no membership + no grant = no access, even with the org opened 73ms
+ ✓ |integration| tests/integration/platform-support.test.ts > support access > a requested grant needs Owner approval (Admin cannot approve) 618ms
+ ✓ |integration| tests/integration/platform-support.test.ts > support access > approved access is read-only, audited in both logs, and limited to that org 1632ms
+ ✓ |integration| tests/integration/platform-support.test.ts > support access > the Owner can revoke at any time; grants cannot exceed 72 h 385ms
+ ✓ |integration| tests/integration/platform-support.test.ts > support access > a non-platform user cannot open an org through the support path 228ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > reads never return another org > lists contain only org A data 110ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > writes with org B's ids from org A fail and change nothing > changeRole -> NOT_FOUND 12ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > writes with org B's ids from org A fail and change nothing > suspendMember -> NOT_FOUND 10ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > writes with org B's ids from org A fail and change nothing > deactivateMember -> NOT_FOUND 13ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > writes with org B's ids from org A fail and change nothing > reactivateMember -> NOT_FOUND 12ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > writes with org B's ids from org A fail and change nothing > updateHrProfile -> NOT_FOUND 15ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > writes with org B's ids from org A fail and change nothing > cancelInvitation -> NOT_FOUND 14ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > writes with org B's ids from org A fail and change nothing > renameTeam -> NOT_FOUND 22ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > writes with org B's ids from org A fail and change nothing > archiveTeam -> NOT_FOUND 17ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > writes with org B's ids from org A fail and change nothing > addTeamMember (B team) -> NOT_FOUND 18ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > writes with org B's ids from org A fail and change nothing > addTeamMember (B member) -> NOT_FOUND 28ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > writes with org B's ids from org A fail and change nothing > approveGrant -> NOT_FOUND 17ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > writes with org B's ids from org A fail and change nothing > revokeGrant -> NOT_FOUND 16ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > writes with org B's ids from org A fail and change nothing > org B state is untouched 23ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > writes with org B's ids from org A fail and change nothing > inviting into org A with a team from org B fails 15ms
+ ✓ |integration| tests/integration/cross-org-isolation.test.ts > D2: the auth library still enforces org membership on its own APIs > an org A owner cannot use library APIs against org B 128ms
+ ✓ |integration| tests/integration/teams-settings-audit.test.ts > teams > Owner/Admin manage teams; others cannot 79ms
+ ✓ |integration| tests/integration/teams-settings-audit.test.ts > teams > only managers/admins/owners can lead; executives can be members 113ms
+ ✓ |integration| tests/integration/teams-settings-audit.test.ts > teams > team scope: manager sees led team and its members; executive sees own team; exec2 sees none 106ms
+ ✓ |integration| tests/integration/teams-settings-audit.test.ts > teams > changing team role keeps history (spells) 45ms
+ ✓ |integration| tests/integration/teams-settings-audit.test.ts > teams > archiving ends all open spells 68ms
+ ✓ |integration| tests/integration/teams-settings-audit.test.ts > organisation settings > everyone reads; Owner/Admin update; invalid time zones are rejected 104ms
+ ✓ |integration| tests/integration/teams-settings-audit.test.ts > profile > a user edits only their own profile; phone normalised to E.164 40ms
+ ✓ |integration| tests/integration/teams-settings-audit.test.ts > audit > Owner/Admin read the org audit log, newest first, with keyset pagination 44ms
+ ✓ |integration| tests/integration/teams-settings-audit.test.ts > audit > managers, executives and HR cannot read it 1ms
+ ✓ |integration| tests/integration/teams-settings-audit.test.ts > audit > a garbage cursor is ignored, not an error 16ms
+ ✓ |integration| tests/integration/teams-settings-audit.test.ts > audit > audit rows are append-only for the app role 33ms
+ ✓ |integration| tests/integration/worker-outbox.test.ts > transactional outbox > a suspension writes the event in the same transaction; the relay publishes it once 652ms
+ ✓ |integration| tests/integration/worker-outbox.test.ts > transactional outbox > re-enqueueing the same event is deduplicated by jobId 12ms
+ ✓ |integration| tests/integration/worker-outbox.test.ts > transactional outbox > the handler runs under the event org and queues the notification email; a mismatched org is skipped 1589ms
+ ✓ |integration| tests/integration/worker-outbox.test.ts > transactional outbox > the email adapter delivers through SMTP to Mailpit 133ms
+ ✓ |integration| tests/integration/db-roles.test.ts > RLS coverage on the production schema > every table (except the migrations ledger) is RLS enabled + forced 75ms
+ ✓ |integration| tests/integration/db-roles.test.ts > RLS coverage on the production schema > every org_id table has a crm_app tenant policy 24ms
+ ✓ |integration| tests/integration/db-roles.test.ts > RLS coverage on the production schema > crm_app with no context sees 0 rows in every table it can read 41ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_app hardening > is not superuser, cannot bypass RLS, create roles/DBs, or inherit other roles 16ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_app hardening > cannot SET ROLE crm_migrator 20ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_app hardening > cannot SET ROLE crm_definer 13ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_app hardening > cannot SET ROLE crm_auth 15ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_app hardening > cannot SET ROLE postgres 15ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_app hardening > cannot create objects or disable RLS 26ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_auth hardening > is not superuser, cannot bypass RLS, create roles/DBs, or inherit other roles 30ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_auth hardening > cannot SET ROLE crm_migrator 19ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_auth hardening > cannot SET ROLE crm_definer 17ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_auth hardening > cannot SET ROLE crm_app 13ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_auth hardening > cannot SET ROLE postgres 14ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_auth hardening > cannot create objects or disable RLS 14ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_platform hardening > is not superuser, cannot bypass RLS, create roles/DBs, or inherit other roles 17ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_platform hardening > cannot SET ROLE crm_migrator 15ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_platform hardening > cannot SET ROLE crm_definer 14ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_platform hardening > cannot SET ROLE crm_app 16ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_platform hardening > cannot SET ROLE crm_auth 16ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_platform hardening > cannot SET ROLE postgres 16ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_platform hardening > cannot create objects or disable RLS 19ms
+ ✓ |integration| tests/integration/db-roles.test.ts > D2: crm_auth least privilege > holds privileges on exactly the authentication/organisation tables 21ms
+ ✓ |integration| tests/integration/db-roles.test.ts > D2: crm_auth least privilege > is denied on team 17ms
+ ✓ |integration| tests/integration/db-roles.test.ts > D2: crm_auth least privilege > is denied on team_membership 18ms
+ ✓ |integration| tests/integration/db-roles.test.ts > D2: crm_auth least privilege > is denied on audit_log 16ms
+ ✓ |integration| tests/integration/db-roles.test.ts > D2: crm_auth least privilege > is denied on outbox_event 16ms
+ ✓ |integration| tests/integration/db-roles.test.ts > D2: crm_auth least privilege > is denied on support_access_grant 18ms
+ ✓ |integration| tests/integration/db-roles.test.ts > D2: crm_auth least privilege > cannot execute pre-tenant or relay functions 15ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_app cannot reach credentials or sessions > denied on session 17ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_app cannot reach credentials or sessions > denied on account 14ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_app cannot reach credentials or sessions > denied on verification 14ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_app cannot reach credentials or sessions > denied on two_factor 17ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_app cannot reach credentials or sessions > cannot write memberships/invitations directly (only via the auth library) 17ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_platform sees no tenant PII > denied on user 18ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_platform sees no tenant PII > denied on organization_membership 17ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_platform sees no tenant PII > denied on invitation 16ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_platform sees no tenant PII > denied on team 17ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_platform sees no tenant PII > denied on team_membership 18ms
+ ✓ |integration| tests/integration/db-roles.test.ts > crm_platform sees no tenant PII > denied on outbox_event 17ms
+stdout | spikes/s1-tenant-isolation/tests/s1-08-concurrency.test.ts > S1-08 pool leakage under concurrency > 50 workers x 1000 iterations over a pool of 5: 0 leaks
+[S1-08] transactions=50000 committed=45000 rolledBack=5000 unwrappedProbes=2500 distinctBackends=5 leaks=0 in 129.8s
+
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-08-concurrency.test.ts > S1-08 pool leakage under concurrency > 50 workers x 1000 iterations over a pool of 5: 0 leaks 129809ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-17-performance.test.ts > S1-17 performance sanity > seed check: 250k leads in the perf org 62ms
+stdout | spikes/s1-tenant-isolation/tests/s1-17-performance.test.ts > S1-17 performance sanity > end-to-end list (withTenant + scope + ORM), Sales Executive (OWN): p95 <= 500 ms
+[S1-17] Sales Executive (OWN): p50=11.71ms p95=19.25ms max=23.41ms
+
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-17-performance.test.ts > S1-17 performance sanity > end-to-end list (withTenant + scope + ORM), Sales Executive (OWN): p95 <= 500 ms 2874ms
+stdout | spikes/s1-tenant-isolation/tests/s1-17-performance.test.ts > S1-17 performance sanity > end-to-end list (withTenant + scope + ORM), Sales Manager (TEAM): p95 <= 500 ms
+[S1-17] Sales Manager (TEAM): p50=22.79ms p95=32.29ms max=41.24ms
+
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-17-performance.test.ts > S1-17 performance sanity > end-to-end list (withTenant + scope + ORM), Sales Manager (TEAM): p95 <= 500 ms 5224ms
+stdout | spikes/s1-tenant-isolation/tests/s1-17-performance.test.ts > S1-17 performance sanity > end-to-end list (withTenant + scope + ORM), Admin (ORG): p95 <= 500 ms
+[S1-17] Admin (ORG): p50=11.18ms p95=15.09ms max=24.82ms
+
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-17-performance.test.ts > S1-17 performance sanity > end-to-end list (withTenant + scope + ORM), Admin (ORG): p95 <= 500 ms 2629ms
+stdout | spikes/s1-tenant-isolation/tests/s1-17-performance.test.ts > S1-17 performance sanity > RLS overhead vs the same query without RLS (superuser + explicit org predicate) <= 15%
+[S1-17] baseline plan:
+Limit (actual rows=50.00 loops=1)
+  Buffers: shared hit=158
+  ->  Incremental Sort (actual rows=50.00 loops=1)
+        Sort Key: created_at DESC, id DESC
+        Presorted Key: created_at
+        Full-sort Groups: 2  Sort Method: quicksort  Average Memory: 29kB  Peak Memory: 29kB
+        Buffers: shared hit=158
+        ->  Index Scan using lead_org_id_created_at_id_idx on lead (actual rows=51.00 loops=1)
+              Index Cond: (org_id = '01a15538-5494-7cdc-bde7-61bc573a73f2'::uuid)
+              Filter: (owner_user_id = ANY ('{01a15538-5495-785f-82d3-d56d682c31a8,01a15538-5495-7a11-84eb-341b6b09dffe,01a15538-5495-7a4d-beff-572eb8c2abdd,01a15538-5495-7a82-a129-d7ca6be9a3e6,01a15538-5495-7aba-adbb-9a8240e0f757}'::uuid[]))
+              Rows Removed by Filter: 103
+              Index Searches: 1
+              Buffers: shared hit=158
+Planning Time: 0.097 ms
+Execution Time: 0.164 ms
+[S1-17] RLS plan:
+Limit (actual rows=50.00 loops=1)
+  Buffers: shared hit=158
+  InitPlan 1
+    ->  Result (actual rows=1.00 loops=1)
+  ->  Incremental Sort (actual rows=50.00 loops=1)
+        Sort Key: lead.created_at DESC, lead.id DESC
+        Presorted Key: lead.created_at
+        Full-sort Groups: 2  Sort Method: quicksort  Average Memory: 29kB  Peak Memory: 29kB
+        Buffers: shared hit=158
+        ->  Index Scan using lead_org_id_created_at_id_idx on lead (actual rows=51.00 loops=1)
+              Index Cond: (org_id = (InitPlan 1).col1)
+              Filter: (owner_user_id = ANY ('{01a15538-5495-785f-82d3-d56d682c31a8,01a15538-5495-7a11-84eb-341b6b09dffe,01a15538-5495-7a4d-beff-572eb8c2abdd,01a15538-5495-7a82-a129-d7ca6be9a3e6,01a15538-5495-7aba-adbb-9a8240e0f757}'::uuid[]))
+              Rows Removed by Filter: 103
+              Index Searches: 1
+              Buffers: shared hit=158
+Planning Time: 0.085 ms
+Execution Time: 0.171 ms
+[S1-17] RLS p50=2.19ms p95=3.89ms | baseline p50=2.10ms p95=3.51ms | overhead p50=4.2% p95=10.8%
+
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-17-performance.test.ts > S1-17 performance sanity > RLS overhead vs the same query without RLS (superuser + explicit org predicate) <= 15% 2581ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 lint rule > rejects `import { PrismaClient } from '@prisma/client';` in a business module 6521ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 lint rule > rejects `import { PrismaClient } from '../../generated/prisma/client';` in a business module 28ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 lint rule > rejects `import { PrismaPg } from '@prisma/adapter-pg';` in a business module 20ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 lint rule > rejects `import pg from 'pg';` in a business module 16ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 lint rule > rejects `import { PrismaClient } from '@prisma/client';` in app routes 21ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 lint rule > rejects `import { PrismaClient } from '../../generated/prisma/client';` in app routes 14ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 lint rule > rejects `import { PrismaPg } from '@prisma/adapter-pg';` in app routes 13ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 lint rule > rejects `import pg from 'pg';` in app routes 66ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 lint rule > allows `import { PrismaClient } from '@prisma/client';` inside src/platform/db 83ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 lint rule > allows `import { PrismaClient } from '../../generated/prisma/client';` inside src/platform/db 14ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 lint rule > allows `import { PrismaPg } from '@prisma/adapter-pg';` inside src/platform/db 12ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 lint rule > allows `import pg from 'pg';` inside src/platform/db 11ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 lint rule > rejects importing the auth library outside src/platform/auth 86ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 lint rule > rejects raw database clients inside src/platform/auth too 10ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 lint rule > allows the gateway API (withTenant) everywhere 10ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-09-lint-and-raw-client.test.ts > S1-09 raw client at runtime > a query on the raw crm_app client (no wrapper) returns 0 tenant rows 96ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on organization_membership returns 0 rows 29ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on team returns 0 rows 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on team_membership returns 0 rows 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on lead returns 0 rows 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on lead_assignment_history returns 0 rows 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on delegation returns 0 rows 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on task returns 0 rows 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on interaction returns 0 rows 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on import_job returns 0 rows 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on import_row returns 0 rows 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on integration_connection returns 0 rows 2ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on share_link returns 0 rows 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on invitation returns 0 rows 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on audit_log returns 0 rows 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on organization returns 0 rows 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > SELECT on user returns 0 rows 2ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > ORM reads on every tenant model return nothing 47ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > INSERT raises (WITH CHECK), UPDATE/DELETE affect 0 rows 35ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-03 fail closed (crm_app, no app.org_id) > an empty-string context (what PostgreSQL leaves after a local set) also matches nothing 10ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-04 tenant reads > sanity: org A context sees its own rows in every tenant table 33ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-04 tenant reads > org A context finds 0 rows of org B via ORM (by org_id and by known ids) 72ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-04 tenant reads > org A context finds 0 rows of org B via raw SQL 30ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-05 tenant writes > inserting a row with org_id = B fails (ORM and raw) 24ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-05 tenant writes > updating/deleting B's rows affects 0 rows 20ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-05 tenant writes > moving a row from A to B fails 20ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-06 composite FK > a task in org A referencing org B's lead fails at the FK even as crm_migrator 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-06 composite FK > a lead in org A cannot be owned by a user who is only a member of org B 15ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-06 composite FK > the same cross-org reference fails for crm_app inside org A context 10ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-07 transaction-local context > context is cleared on the same pooled connection after commit 25ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-07 transaction-local context > context is cleared on the same pooled connection after rollback (thrown error) 42ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-03-07-isolation.test.ts > S1-07 transaction-local context > invalid context ids are rejected before a connection is used 1ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-13-14-definer-and-platform.test.ts > S1-13 pre-tenant functions: definition > each is SECURITY DEFINER, owned by NOLOGIN crm_definer, with fixed search_path 35ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-13-14-definer-and-platform.test.ts > S1-13 pre-tenant functions: definition > crm_definer can read only the minimum columns (no secrets) 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-13-14-definer-and-platform.test.ts > S1-13 pre-tenant functions: definition > EXECUTE is granted to crm_app only (not PUBLIC, not crm_platform) 31ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-13-14-definer-and-platform.test.ts > S1-13 pre-tenant functions: behaviour > functions return exactly the documented columns 25ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-13-14-definer-and-platform.test.ts > S1-13 pre-tenant functions: behaviour > auth_memberships_for_user: own memberships only; another user id returns nothing 17ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-13-14-definer-and-platform.test.ts > S1-13 pre-tenant functions: behaviour > token lookups match the exact token only and cannot enumerate 46ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-13-14-definer-and-platform.test.ts > S1-13 pre-tenant functions: behaviour > crm_app cannot impersonate crm_definer or read its tables directly 16ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-13-14-definer-and-platform.test.ts > S1-14 platform tables > user: own row via withUser; org members via withTenant; other orgs invisible 32ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-13-14-definer-and-platform.test.ts > S1-14 platform tables > user: a user can update only their own row 16ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-13-14-definer-and-platform.test.ts > S1-14 platform tables > organization: crm_app sees only the current org; crm_platform sees all 28ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-13-14-definer-and-platform.test.ts > S1-14 platform tables > audit_log: NULL-org rows invisible to crm_app; crm_platform sees only NULL-org rows 41ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-13-14-definer-and-platform.test.ts > S1-14 platform tables > audit_log is append-only for crm_app and crm_platform 10ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-13-14-definer-and-platform.test.ts > S1-14 platform tables > crm_platform has no access to tenant PII tables 25ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-15-16-scope-and-history.test.ts > S1-15 scope layer > Sales Executive: own leads only; reassigned-away lead not visible; expired delegation ignored 127ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-15-16-scope-and-history.test.ts > S1-15 scope layer > Sales Executive with active delegation: own + delegated leads 18ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-15-16-scope-and-history.test.ts > S1-15 scope layer > Sales Executive in another team: own only 20ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-15-16-scope-and-history.test.ts > S1-15 scope layer > Sales Manager: led team (North) only, not a team they merely belong to (South) 37ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-15-16-scope-and-history.test.ts > S1-15 scope layer > Admin and Owner: whole org, nothing from another org 25ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-15-16-scope-and-history.test.ts > S1-15 scope layer > HR/Ops: no lead access 9ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-15-16-scope-and-history.test.ts > S1-15 scope layer > ending a team-lead spell removes team scope immediately 34ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-15-16-scope-and-history.test.ts > S1-15 scope layer > a user from org B cannot use org A's context to see anything (no membership in A) 10ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-15-16-scope-and-history.test.ts > S1-16 ownership history > an overlapping assignment spell is rejected by the exclusion constraint 37ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-15-16-scope-and-history.test.ts > S1-16 ownership history > closing the open spell, then starting a new one, is accepted 30ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-15-16-scope-and-history.test.ts > S1-16 ownership history > crm_app cannot rewrite history columns other than ended_at 15ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-10-12-access-paths.test.ts > S1-10 Server Action path > sees only the session org; a forged orgId in input has no effect 85ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-10-12-access-paths.test.ts > S1-10 Server Action path > scope still applies: an executive sees only own leads 32ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-10-12-access-paths.test.ts > S1-10 Server Action path > no session -> UNAUTHENTICATED, no query 1ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-10-12-access-paths.test.ts > S1-11 Route Handler path > uses the session org, ignoring ?orgId= 62ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-10-12-access-paths.test.ts > S1-11 Route Handler path > unauthenticated -> 401 1ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-10-12-access-paths.test.ts > S1-11 Route Handler path > webhook handler resolves org only via resolve_webhook_connection > valid token + own lead -> 201, interaction written to that org 31ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-10-12-access-paths.test.ts > S1-11 Route Handler path > webhook handler resolves org only via resolve_webhook_connection > valid token for A + B's lead id in payload -> 404, nothing written 19ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-10-12-access-paths.test.ts > S1-11 Route Handler path > webhook handler resolves org only via resolve_webhook_connection > unknown token -> 404 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-10-12-access-paths.test.ts > S1-12 worker path > job runs under withTenant(payload.orgId) and creates the task in that org 15ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-10-12-access-paths.test.ts > S1-12 worker path > payload org mismatching the entity org finds 0 rows and fails safely 12ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-10-12-access-paths.test.ts > S1-12 worker path > malformed payload is rejected before touching the database 2ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-01-02-catalog.test.ts > S1-01 role hardening > crm_app is not superuser, cannot bypass RLS, cannot create roles or databases 180ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-01-02-catalog.test.ts > S1-01 role hardening > crm_app owns no relations, functions or schemas 8ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-01-02-catalog.test.ts > S1-01 role hardening > crm_app has no CREATE on schemas public/app or on the database 4ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-01-02-catalog.test.ts > S1-01 role hardening > crm_app is not a member of any other role (no inherited privileges) 5ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-01-02-catalog.test.ts > S1-02 RLS enabled and forced > every public table with an org_id column has relrowsecurity AND relforcerowsecurity 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-01-02-catalog.test.ts > S1-02 RLS enabled and forced > platform tables organization and user are also RLS-forced 4ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-01-02-catalog.test.ts > S1-02 RLS enabled and forced > the representative suite covers every org_id table (no untested tenant table) 3ms
+ ✓ |s1| spikes/s1-tenant-isolation/tests/s1-01-02-catalog.test.ts > S1-02 RLS enabled and forced > every tenant table has a crm_app policy (RLS on with no policy would hide misconfiguration) 7ms
+ ✓ |s2| spikes/s2-identity/tests/s2-01-auth-basics.test.ts > S2-01 email + password > sign-up requires email verification before sign-in; verified user signs in 986ms
+stderr | spikes/s2-identity/tests/s2-01-auth-basics.test.ts > S2-01 email + password > wrong password is rejected; passwords are stored hashed
+[2m2026-10-20T08:01:16.475Z[0m [33mWARN[0m [1m[Better Auth]:[0m Invalid password
+
+ ✓ |s2| spikes/s2-identity/tests/s2-01-auth-basics.test.ts > S2-01 email + password > wrong password is rejected; passwords are stored hashed 535ms
+ ✓ |s2| spikes/s2-identity/tests/s2-01-auth-basics.test.ts > S2-01 email + password > sign-out-all revokes every session of the user 772ms
+stderr | spikes/s2-identity/tests/s2-01-auth-basics.test.ts > S2-01 password reset > token is valid for 30 minutes, works once, and revokes existing sessions
+[2m2026-10-20T08:01:18.334Z[0m [33mWARN[0m [1m[Better Auth]:[0m Invalid password
+
+ ✓ |s2| spikes/s2-identity/tests/s2-01-auth-basics.test.ts > S2-01 password reset > token is valid for 30 minutes, works once, and revokes existing sessions 1299ms
+ ✓ |s2| spikes/s2-identity/tests/s2-01-auth-basics.test.ts > S2-01 password reset > an expired reset token is rejected 273ms
+stderr | spikes/s2-identity/tests/s2-01-auth-basics.test.ts > S2-01 password reset > reset for an unknown email does not error or send anything (no enumeration)
+[2m2026-10-20T08:01:18.849Z[0m [33mWARN[0m [1m[Better Auth]:[0m Reset Password: User not found
+
+ ✓ |s2| spikes/s2-identity/tests/s2-01-auth-basics.test.ts > S2-01 password reset > reset for an unknown email does not error or send anything (no enumeration) 13ms
+ ✓ |s2| spikes/s2-identity/tests/s2-01-auth-basics.test.ts > S2-01 session revocation on suspend > suspending a member revokes their sessions and blocks re-entry to the org 1494ms
+ ✓ |s2| spikes/s2-identity/tests/s2-01-auth-basics.test.ts > S2-01 TOTP two-factor > enrolment, then sign-in requires a valid TOTP code 1144ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-02 role mapping > org creator is the plugin owner; roles map to our role codes 217ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-02 role mapping > addMember with array is rejected 33ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-02 role mapping > addMember with comma list is rejected 27ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-02 role mapping > addMember with unknown role is rejected 23ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-02 role mapping > updateMemberRole to multiple roles is rejected (even by the owner) 11ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-02 role mapping > invitations with multiple roles are rejected 2ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-02 role mapping > the database rejects multi-role values even if the library is bypassed 23ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-03 owner invariants > the last Owner cannot leave 33ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-03 owner invariants > the last Owner cannot demote themselves 34ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-03 owner invariants > an Admin cannot demote or remove the Owner 37ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-03 owner invariants > an Admin cannot grant Owner or Admin (role change or invitation) 76ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-03 owner invariants > an Admin cannot demote, remove or suspend another Admin 95ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-03 owner invariants > an Admin can remove a non-admin member 88ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-03 owner invariants > an Admin can assign non-admin roles 92ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-03 owner invariants > non-admin roles cannot change roles at all 83ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-03 owner invariants > only the Owner can delete the organization 593ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-03 owner invariants > the Owner can grant Admin; with two Owners one may step down 197ms
+ ✓ |s2| spikes/s2-identity/tests/s2-02-03-roles-and-owner.test.ts > S2-03 owner invariants > a signed-in user cannot create organizations (self-service is off for the pilot) 15ms
+ ✓ |s2| spikes/s2-identity/tests/s2-05-06-teams-and-active-org.test.ts > S2-05 teams > the plugin exposes no team endpoints and created no team tables 167ms
+ ✓ |s2| spikes/s2-identity/tests/s2-05-06-teams-and-active-org.test.ts > S2-05 teams > team-lead scope comes from our team_membership.team_role 969ms
+ ✓ |s2| spikes/s2-identity/tests/s2-05-06-teams-and-active-org.test.ts > S2-06 active organisation > switching the active org switches tenant context; nothing from the previous org appears 1334ms
+ ✓ |s2| spikes/s2-identity/tests/s2-05-06-teams-and-active-org.test.ts > S2-06 active organisation > cannot activate an org without membership; a forged active org is refused 792ms
+ ✓ |s2| spikes/s2-identity/tests/s2-05-06-teams-and-active-org.test.ts > S2-06 active organisation > removal from the active org takes effect on the next request 1096ms
+ ✓ |s2| spikes/s2-identity/tests/s2-07-08-rls-and-platform.test.ts > S2-07 tables under RLS > every table is RLS enabled + forced (auth, plugin and ours) 149ms
+ ✓ |s2| spikes/s2-identity/tests/s2-07-08-rls-and-platform.test.ts > S2-07 tables under RLS > plugin org-owned tables carry org_id and a crm_app tenant policy 6ms
+ ✓ |s2| spikes/s2-identity/tests/s2-07-08-rls-and-platform.test.ts > S2-07 tables under RLS > crm_app cannot touch credential/session tables at all 3ms
+ ✓ |s2| spikes/s2-identity/tests/s2-07-08-rls-and-platform.test.ts > S2-07 tables under RLS > crm_auth (the library) has no access to business tables 3ms
+ ✓ |s2| spikes/s2-identity/tests/s2-07-08-rls-and-platform.test.ts > S2-07 tables under RLS > memberships and invitations: crm_app sees only the current org; none without context 1117ms
+ ✓ |s2| spikes/s2-identity/tests/s2-07-08-rls-and-platform.test.ts > S2-08 platform admin and support grants > platform admin has no membership and is denied tenant data 69ms
+ ✓ |s2| spikes/s2-identity/tests/s2-07-08-rls-and-platform.test.ts > S2-08 platform admin and support grants > a requested but unapproved grant gives no access; only the Owner can approve 128ms
+ ✓ |s2| spikes/s2-identity/tests/s2-07-08-rls-and-platform.test.ts > S2-08 platform admin and support grants > an approved READ grant gives time-boxed, read-only, audited access to that org only 163ms
+ ✓ |s2| spikes/s2-identity/tests/s2-07-08-rls-and-platform.test.ts > S2-08 platform admin and support grants > expired or revoked grants stop working; grants longer than 72 h are refused 168ms
+ ✓ |s2| spikes/s2-identity/tests/s2-04-invitations.test.ts > S2-04 invitations > expire after 7 days 67ms
+ ✓ |s2| spikes/s2-identity/tests/s2-04-invitations.test.ts > S2-04 invitations > cannot be accepted by a different (even verified) user 487ms
+ ✓ |s2| spikes/s2-identity/tests/s2-04-invitations.test.ts > S2-04 invitations > requires a verified email for the matching user; then creates membership + team membership 650ms
+ ✓ |s2| spikes/s2-identity/tests/s2-04-invitations.test.ts > S2-04 invitations > an expired invitation cannot be accepted 529ms
+ ✓ |s2| spikes/s2-identity/tests/s2-04-invitations.test.ts > S2-04 invitations > a team id from another org is rejected by the composite FK 324ms
+
+ Test Files  27 passed (27)
+      Tests  363 passed (363)
+   Start at  13:26:34
+   Duration  310.62s (tests 89%, import 7%, setup 2%, transform 1%)
+

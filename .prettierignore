@@ -1,0 +1,7 @@
+pnpm-lock.yaml
+**/generated/
+**/migrations/**/*.sql
+.next/
+docs/
+dist/
+scripts/recovery/results/

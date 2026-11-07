@@ -1,0 +1,79 @@
+{
+  "label": "SYNTHETIC TEST DATA: not a brokerage export. All values are fabricated.",
+  "generator": "scripts/pilot/generate-import-corpus.ts (definitions: tests/support/import-corpus.ts)",
+  "notP6": "These files are synthetic test data. They do not replace a representative anonymised export from the pilot brokerage (P6).",
+  "files": [
+    {
+      "name": "corpus_custom_fields.csv",
+      "bytes": 731,
+      "sha256": "f1f9576e1a8116bd635c865c93cb5019f95cb38c7392536de675f39f475565a6",
+      "purpose": "required and strictly typed custom fields; every custom-field failure code",
+      "expected": {
+        "total": 12,
+        "valid": 3,
+        "invalid": 7,
+        "empty": 1,
+        "duplicateInFile": 1,
+        "existing": 0
+      }
+    },
+    {
+      "name": "corpus_multisheet.xlsx",
+      "bytes": 14868,
+      "sha256": "a509020e8abcbd29382406c0dd1baa7200e91b6a9935306dff0ae91c629689dd",
+      "sheet": "Leads Q4",
+      "purpose": "sheet selection; a second header vocabulary; numeric phone cells on Q3",
+      "expected": {
+        "total": 150,
+        "valid": 150,
+        "invalid": 0,
+        "empty": 0,
+        "duplicateInFile": 0,
+        "existing": 0
+      }
+    },
+    {
+      "name": "corpus_variants.csv",
+      "bytes": 76891,
+      "sha256": "2bfb2cbcd78e58b521eb60e837d983e043356d5d01bd1552eeb0cc421f1867a1",
+      "purpose": "a third header vocabulary; +91/0/91-/spaced phones; L, Cr, Lakh, crore, Indian grouping and plain INR budgets",
+      "expected": {
+        "total": 500,
+        "valid": 500,
+        "invalid": 0,
+        "empty": 0,
+        "duplicateInFile": 0,
+        "existing": 0
+      }
+    },
+    {
+      "name": "corpus_large_100k.csv",
+      "bytes": 19950650,
+      "sha256": "eadf44df45695f19411d96a008b62fd4cc90dc20758299f7c12356b1800db3e1",
+      "purpose": "100,000 rows just under 20 MB; fixed mix of invalid, empty, in-file duplicate and existing-lead rows",
+      "expected": {
+        "total": 100000,
+        "valid": 99700,
+        "invalid": 100,
+        "empty": 100,
+        "duplicateInFile": 100,
+        "existing": 100
+      }
+    },
+    {
+      "name": "corpus_xlsx_20k.xlsx",
+      "bytes": 1082353,
+      "sha256": "c7aafeb50c4fc2a0616c52c41a8d36217fc4c2e2199e5b53d4fb745194555c99",
+      "sheet": "Leads",
+      "purpose": "20,000 rows as XLSX with numeric phone and budget cells; same mix",
+      "expected": {
+        "total": 20000,
+        "valid": 19940,
+        "invalid": 20,
+        "empty": 20,
+        "duplicateInFile": 20,
+        "existing": 20
+      }
+    }
+  ]
+}

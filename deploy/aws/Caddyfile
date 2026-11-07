@@ -1,0 +1,10 @@
+# HTTPS for the pilot host. Caddy obtains and renews the Let's Encrypt certificate itself;
+# the domain's A record must point at the instance's Elastic IP before the first start.
+{$SITE_DOMAIN} {
+	encode zstd gzip
+	# Import uploads go straight to Supabase Storage (signed URLs), so no large bodies here.
+	request_body {
+		max_size 10MB
+	}
+	reverse_proxy web:3000
+}

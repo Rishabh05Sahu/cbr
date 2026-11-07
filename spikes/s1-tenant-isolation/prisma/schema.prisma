@@ -1,0 +1,297 @@
+// Spike S1 (tenant isolation). Representative tables only, in a throwaway
+// database (crm_s1). This is NOT the production schema. Lead/task/interaction
+// shapes are trimmed to what the isolation tests need.
+//
+// Everything Prisma cannot express (RLS, exclusion constraints, definer
+// functions, grants) is in migrations/0002_tenant_security/migration.sql.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  SALES_MANAGER
+  SALES_EXECUTIVE
+  HR_OPS
+
+  @@map("membership_role")
+}
+
+enum MembershipStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+
+  @@map("membership_status")
+}
+
+enum TeamRole {
+  MEMBER
+  LEAD
+
+  @@map("team_role")
+}
+
+// ---------- platform-scoped ----------
+
+model Organization {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  memberships OrganizationMembership[]
+  teams       Team[]
+  leads       Lead[]
+  delegations Delegation[]
+  importJobs  ImportJob[]
+  connections IntegrationConnection[]
+  shareLinks  ShareLink[]
+  invitations Invitation[]
+  auditLogs   AuditLog[]
+
+  @@map("organization")
+}
+
+model User {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  email     String   @unique @db.Citext
+  name      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  memberships OrganizationMembership[]
+
+  @@map("user")
+}
+
+// ---------- tenant-scoped ----------
+
+model OrganizationMembership {
+  id       String           @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId    String           @map("org_id") @db.Uuid
+  userId   String           @map("user_id") @db.Uuid
+  roleCode MembershipRole   @map("role_code")
+  status   MembershipStatus @default(ACTIVE)
+
+  organization    Organization            @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  user            User                    @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  teamMemberships TeamMembership[]
+  ownedLeads      Lead[]
+  assignments     LeadAssignmentHistory[]
+  tasks           Task[]
+  interactions    Interaction[]
+  delegationsFrom Delegation[]            @relation("DelegationFrom")
+  delegationsTo   Delegation[]            @relation("DelegationTo")
+
+  @@unique([orgId, id])
+  @@unique([orgId, userId])
+  @@index([orgId, status])
+  @@map("organization_membership")
+}
+
+model Team {
+  id    String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId String @map("org_id") @db.Uuid
+  name  String
+
+  organization Organization     @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  members      TeamMembership[]
+  leads        Lead[]
+
+  @@unique([orgId, id])
+  @@map("team")
+}
+
+model TeamMembership {
+  id           String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId        String    @map("org_id") @db.Uuid
+  teamId       String    @map("team_id") @db.Uuid
+  membershipId String    @map("membership_id") @db.Uuid
+  teamRole     TeamRole  @default(MEMBER) @map("team_role")
+  startedAt    DateTime  @default(now()) @map("started_at") @db.Timestamptz(6)
+  endedAt      DateTime? @map("ended_at") @db.Timestamptz(6)
+
+  team       Team                   @relation(fields: [orgId, teamId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  membership OrganizationMembership @relation(fields: [orgId, membershipId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, membershipId])
+  @@map("team_membership")
+}
+
+model Lead {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId       String   @map("org_id") @db.Uuid
+  fullName    String   @map("full_name")
+  phoneE164   String   @map("primary_phone_e164")
+  ownerUserId String?  @map("owner_user_id") @db.Uuid
+  teamId      String?  @map("team_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization Organization            @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  owner        OrganizationMembership? @relation(fields: [orgId, ownerUserId], references: [orgId, userId], onDelete: Restrict, onUpdate: Restrict)
+  team         Team?                   @relation(fields: [orgId, teamId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  assignments  LeadAssignmentHistory[]
+  tasks        Task[]
+  interactions Interaction[]
+
+  @@unique([orgId, id])
+  @@index([orgId, createdAt(sort: Desc), id])
+  @@index([orgId, ownerUserId])
+  @@map("lead")
+}
+
+model LeadAssignmentHistory {
+  id        String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId     String    @map("org_id") @db.Uuid
+  leadId    String    @map("lead_id") @db.Uuid
+  userId    String?   @map("user_id") @db.Uuid
+  startedAt DateTime  @map("started_at") @db.Timestamptz(6)
+  endedAt   DateTime? @map("ended_at") @db.Timestamptz(6)
+  source    String
+
+  lead Lead                    @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  user OrganizationMembership? @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@map("lead_assignment_history")
+}
+
+model Delegation {
+  id         String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId      String    @map("org_id") @db.Uuid
+  fromUserId String    @map("from_user_id") @db.Uuid
+  toUserId   String    @map("to_user_id") @db.Uuid
+  startsAt   DateTime  @map("starts_at") @db.Timestamptz(6)
+  endsAt     DateTime  @map("ends_at") @db.Timestamptz(6)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(6)
+
+  organization Organization           @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  fromUser     OrganizationMembership @relation("DelegationFrom", fields: [orgId, fromUserId], references: [orgId, userId], onDelete: Restrict, onUpdate: Restrict)
+  toUser       OrganizationMembership @relation("DelegationTo", fields: [orgId, toUserId], references: [orgId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, toUserId])
+  @@map("delegation")
+}
+
+model Task {
+  id             String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId          String   @map("org_id") @db.Uuid
+  leadId         String   @map("lead_id") @db.Uuid
+  assigneeUserId String   @map("assignee_user_id") @db.Uuid
+  title          String
+  dueAt          DateTime @map("due_at") @db.Timestamptz(6)
+
+  lead     Lead                   @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  assignee OrganizationMembership @relation(fields: [orgId, assigneeUserId], references: [orgId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@map("task")
+}
+
+model Interaction {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId      String   @map("org_id") @db.Uuid
+  leadId     String   @map("lead_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  outcome    String
+  occurredAt DateTime @default(now()) @map("occurred_at") @db.Timestamptz(6)
+
+  lead Lead                   @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  user OrganizationMembership @relation(fields: [orgId, userId], references: [orgId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@map("interaction")
+}
+
+model ImportJob {
+  id       String      @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId    String      @map("org_id") @db.Uuid
+  fileName String      @map("file_name")
+  status   String
+  rows     ImportRow[]
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@map("import_job")
+}
+
+// Child table: rows reference the job; they still carry org_id + RLS (coverage rule).
+model ImportRow {
+  id          String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId       String @map("org_id") @db.Uuid
+  importJobId String @map("import_job_id") @db.Uuid
+  rowNumber   Int    @map("row_number")
+  data        Json
+
+  job ImportJob @relation(fields: [orgId, importJobId], references: [orgId, id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@unique([importJobId, rowNumber])
+  @@map("import_row")
+}
+
+model IntegrationConnection {
+  id               String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId            String @map("org_id") @db.Uuid
+  provider         String
+  webhookTokenHash String @unique @map("webhook_token_hash")
+  secretCiphertext String @map("secret_ciphertext")
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@map("integration_connection")
+}
+
+model ShareLink {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId     String   @map("org_id") @db.Uuid
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@map("share_link")
+}
+
+model Invitation {
+  id        String         @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId     String         @map("org_id") @db.Uuid
+  email     String         @db.Citext
+  roleCode  MembershipRole @map("role_code")
+  tokenHash String         @unique @map("token_hash")
+  status    String
+  expiresAt DateTime       @map("expires_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@map("invitation")
+}
+
+// org_id NULL = platform-level event (visible only to crm_platform).
+model AuditLog {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId       String?  @map("org_id") @db.Uuid
+  actorUserId String?  @map("actor_user_id") @db.Uuid
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String?  @map("entity_id") @db.Uuid
+  occurredAt  DateTime @default(now()) @map("occurred_at") @db.Timestamptz(6)
+
+  organization Organization? @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([orgId, occurredAt(sort: Desc)])
+  @@map("audit_log")
+}

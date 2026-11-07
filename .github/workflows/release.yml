@@ -1,0 +1,49 @@
+# Release: build the web and worker images and push them to Amazon ECR (ap-south-1), tagged
+# with the commit SHA. Manual only; deploying is a separate step on the host (deploy/aws/deploy.sh).
+# AWS access is short-lived via GitHub OIDC (no stored keys). Repository variables:
+#   AWS_RELEASE_ROLE_ARN  the IAM role from docs/runbooks/aws-ec2-pilot-deploy.md step 4
+#   ECR_REGISTRY          <account-id>.dkr.ecr.ap-south-1.amazonaws.com
+name: release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  images:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: AWS credentials (OIDC, 1 hour)
+        env:
+          ROLE_ARN: ${{ vars.AWS_RELEASE_ROLE_ARN }}
+        run: |
+          token=$(curl -fsS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r .value)
+          creds=$(aws sts assume-role-with-web-identity --region ap-south-1 \
+            --role-arn "$ROLE_ARN" --role-session-name "release-${GITHUB_RUN_ID}" \
+            --web-identity-token "$token" --duration-seconds 3600 --query Credentials --output json)
+          for k in AccessKeyId:AWS_ACCESS_KEY_ID SecretAccessKey:AWS_SECRET_ACCESS_KEY SessionToken:AWS_SESSION_TOKEN; do
+            v=$(jq -r ".${k%%:*}" <<<"$creds"); echo "::add-mask::$v"; echo "${k##*:}=$v" >> "$GITHUB_ENV"
+          done
+          echo "AWS_REGION=ap-south-1" >> "$GITHUB_ENV"
+      - name: ECR login
+        run: aws ecr get-login-password | docker login --username AWS --password-stdin "${{ vars.ECR_REGISTRY }}"
+      - name: Build and push (linux/amd64, tag = commit SHA)
+        env:
+          REGISTRY: ${{ vars.ECR_REGISTRY }}
+        run: |
+          for target in web worker; do
+            docker build --target "$target" -t "$REGISTRY/cbr-crm-$target:$GITHUB_SHA" .
+            docker push "$REGISTRY/cbr-crm-$target:$GITHUB_SHA"
+          done
+          echo "Deploy on the host with: ./deploy.sh $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"

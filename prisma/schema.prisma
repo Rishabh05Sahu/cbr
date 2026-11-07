@@ -1,0 +1,1320 @@
+// CBR Property CRM: Phase 1 foundation schema (identity, organisations, membership,
+// teams, support access, audit, outbox), plus Phase 2 M1 lead records (lead sources, leads,
+// enquiries, notes, stage history, activity timeline), M3 assignment history, round-robin
+// state and in-app notifications, M4 import jobs. Other later-phase tables are NOT here.
+//
+// Better Auth models keep the library's model/field names (the Prisma adapter addresses
+// them as prisma.user, prisma.member, ...) and map to our table/column names. Everything
+// Prisma cannot express (RLS, grants, CHECKs, exclusion/partial indexes, definer
+// functions) is raw SQL in migrations/ — see prisma/README.md.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TeamRole {
+  MEMBER
+  LEAD
+
+  @@map("team_role")
+}
+
+/// Platform-defined sales stages (lead-lifecycle §2). Orgs may relabel, never add codes.
+enum LeadStage {
+  NEW
+  ASSIGNED
+  CONTACTED
+  QUALIFIED
+  SITE_VISIT_SCHEDULED
+  SITE_VISIT_COMPLETED
+  NEGOTIATION
+  WON
+  LOST
+  NURTURE
+
+  @@map("lead_stage")
+}
+
+// ===================== Better Auth core (crm_auth) =====================
+
+model User {
+  id               String   @id @db.Uuid
+  name             String
+  email            String   @unique @db.Citext
+  emailVerified    Boolean  @default(false) @map("email_verified")
+  image            String?
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  twoFactorEnabled Boolean? @default(false) @map("two_factor_enabled")
+  /// NULL for everyone except platform staff ('PLATFORM_ADMIN'). Never settable via the API.
+  platformRole     String?  @map("platform_role")
+  /// Profile: E.164 mobile number (optional).
+  phoneE164        String?  @map("phone_e164")
+
+  sessions    Session[]
+  accounts    Account[]
+  members     Member[]
+  invitations Invitation[]
+  twoFactors  TwoFactor[]
+
+  @@map("user")
+}
+
+model Session {
+  id                   String   @id @db.Uuid
+  expiresAt            DateTime @map("expires_at") @db.Timestamptz(6)
+  token                String   @unique
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  ipAddress            String?  @map("ip_address")
+  userAgent            String?  @map("user_agent")
+  userId               String   @map("user_id") @db.Uuid
+  activeOrganizationId String?  @map("active_org_id") @db.Uuid
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @db.Uuid
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id") @db.Uuid
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(6)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(6)
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @db.Uuid
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model TwoFactor {
+  id                      String    @id @db.Uuid
+  secret                  String
+  backupCodes             String    @map("backup_codes")
+  userId                  String    @map("user_id") @db.Uuid
+  verified                Boolean?  @default(true)
+  failedVerificationCount Int?      @default(0) @map("failed_verification_count")
+  lockedUntil             DateTime? @map("locked_until") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([userId])
+  @@index([secret])
+  @@map("two_factor")
+}
+
+// ================= Better Auth organization plugin (crm_auth) =================
+
+model Organization {
+  id                  String   @id @db.Uuid
+  name                String
+  slug                String   @unique
+  logo                String?
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  metadata            String?
+  /// ACTIVE | SUSPENDED (platform-controlled; suspended orgs are inaccessible)
+  status              String   @default("ACTIVE")
+  timeZone            String   @default("Asia/Kolkata") @map("time_zone")
+  locale              String   @default("en-IN")
+  /// FR-060 (migration 0016): numbers shown masked; reveal is audited and capped per person per day.
+  phoneMasking        Boolean  @default(false) @map("phone_masking")
+  phoneRevealDailyCap Int      @default(50) @map("phone_reveal_daily_cap")
+
+  members             Member[]
+  invitations         Invitation[]
+  teams               Team[]
+  supportGrants       SupportAccessGrant[]
+  auditLogs           AuditLog[]
+  outboxEvents        OutboxEvent[]
+  leadSources         LeadSource[]
+  leads               Lead[]
+  importJobs          ImportJob[]
+  importTemplates     ImportMappingTemplate[]
+  leadTags            LeadTag[]
+  customFields        CustomFieldDefinition[]
+  exportJobs          ExportJob[]
+  tasks               Task[]
+  taskSeries          TaskSeries[]
+  properties          Property[]
+  siteVisits          SiteVisit[]
+  callScripts         CallScript[]
+  contactStatusEvents LeadContactStatusEvent[]
+  phoneReveals        LeadPhoneReveal[]
+  interactions        Interaction[]
+
+  @@map("organization")
+}
+
+/// OrganizationMembership. `role` holds exactly one system role code (CHECK in SQL).
+model Member {
+  id             String    @id @db.Uuid
+  organizationId String    @map("org_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  role           String
+  /// ACTIVE | SUSPENDED | DEACTIVATED
+  status         String    @default("ACTIVE")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  employeeCode   String?   @map("employee_code")
+  designation    String?
+  suspendedAt    DateTime? @map("suspended_at") @db.Timestamptz(6)
+
+  organization            Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  user                    User                     @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  teamMemberships         TeamMembership[]
+  leadsOwned              Lead[]                   @relation("LeadOwner")
+  leadsCreated            Lead[]                   @relation("LeadCreator")
+  leadEnquiries           LeadEnquiry[]
+  leadNotes               LeadNote[]
+  leadStageChanges        LeadStageHistory[]
+  leadActivities          LeadActivity[]
+  assignmentSpells        LeadAssignmentHistory[]  @relation("AssignmentUser")
+  assignmentsMade         LeadAssignmentHistory[]  @relation("AssignmentAssigner")
+  roundRobinLast          TeamAssignmentState[]
+  notifications           Notification[]
+  importJobs              ImportJob[]
+  importTemplates         ImportMappingTemplate[]
+  customFields            CustomFieldDefinition[]
+  leadTagsCreated         LeadTag[]
+  leadTagsAdded           LeadTagLink[]
+  duplicatesFound         LeadDuplicateMatch[]     @relation("DuplicateDetector")
+  duplicatesClosed        LeadDuplicateMatch[]     @relation("DuplicateResolver")
+  exportJobs              ExportJob[]
+  tasksAssigned           Task[]                   @relation("TaskAssignee")
+  tasksCreated            Task[]                   @relation("TaskCreator")
+  meetingsAttending       TaskAttendee[]           @relation("TaskAttendeeMember")
+  attendeesAdded          TaskAttendee[]           @relation("TaskAttendeeAdder")
+  attendeesRemoved        TaskAttendee[]           @relation("TaskAttendeeRemover")
+  seriesOwned             TaskSeries[]             @relation("TaskSeriesOwner")
+  seriesCreated           TaskSeries[]             @relation("TaskSeriesCreator")
+  seriesStopped           TaskSeries[]             @relation("TaskSeriesStopper")
+  propertiesResponsible   Property[]               @relation("PropertyResponsible")
+  propertiesCreated       Property[]               @relation("PropertyCreator")
+  propertyContactsAdded   PropertyContact[]        @relation("PropertyContactCreator")
+  propertyContactsRemoved PropertyContact[]        @relation("PropertyContactRemover")
+  siteVisitsAssigned      SiteVisit[]              @relation("SiteVisitAssignee")
+  siteVisitsScheduled     SiteVisit[]              @relation("SiteVisitScheduler")
+  siteVisitEvents         SiteVisitEvent[]
+  scriptsCreated          CallScript[]
+  scriptVersions          CallScriptVersion[]      @relation("ScriptVersionCreator")
+  scriptsPublished        CallScriptVersion[]      @relation("ScriptVersionPublisher")
+  contactStatusChanges    LeadContactStatusEvent[]
+  phoneReveals            LeadPhoneReveal[]
+  interactions            Interaction[]
+
+  @@unique([organizationId, userId])
+  @@unique([organizationId, id])
+  @@index([userId])
+  @@index([organizationId, status])
+  @@map("organization_membership")
+}
+
+model Invitation {
+  id             String   @id @db.Uuid
+  organizationId String   @map("org_id") @db.Uuid
+  email          String   @db.Citext
+  role           String?
+  status         String
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  inviterId      String   @map("inviter_id") @db.Uuid
+  /// Optional team to join on acceptance (our team table, not plugin teams).
+  teamId         String?  @map("team_id") @db.Uuid
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  inviter      User         @relation(fields: [inviterId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  team         Team?        @relation(fields: [organizationId, teamId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([organizationId, status])
+  @@index([email])
+  @@map("invitation")
+}
+
+// ===================== ours (crm_app) =====================
+
+model Team {
+  id          String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId       String    @map("org_id") @db.Uuid
+  name        String
+  description String?
+  archivedAt  DateTime? @map("archived_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization Organization            @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  members      TeamMembership[]
+  invitations  Invitation[]
+  leads        Lead[]
+  assignments  LeadAssignmentHistory[]
+  roundRobin   TeamAssignmentState?
+
+  @@unique([orgId, id])
+  @@map("team")
+}
+
+model TeamMembership {
+  id           String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId        String    @map("org_id") @db.Uuid
+  teamId       String    @map("team_id") @db.Uuid
+  membershipId String    @map("membership_id") @db.Uuid
+  teamRole     TeamRole  @default(MEMBER) @map("team_role")
+  startedAt    DateTime  @default(now()) @map("started_at") @db.Timestamptz(6)
+  endedAt      DateTime? @map("ended_at") @db.Timestamptz(6)
+
+  team       Team   @relation(fields: [orgId, teamId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  membership Member @relation(fields: [orgId, membershipId], references: [organizationId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, membershipId])
+  @@map("team_membership")
+}
+
+/// Owner-approved, time-boxed platform support access (domain-model §2.1).
+model SupportAccessGrant {
+  id               String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId            String    @map("org_id") @db.Uuid
+  platformUserId   String    @map("platform_user_id") @db.Uuid
+  reason           String
+  accessLevel      String    @map("access_level")
+  approvedByUserId String?   @map("approved_by_user_id") @db.Uuid
+  startsAt         DateTime  @map("starts_at") @db.Timestamptz(6)
+  expiresAt        DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt        DateTime? @map("revoked_at") @db.Timestamptz(6)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@map("support_access_grant")
+}
+
+/// Append-only. org_id NULL = platform-level event (visible only to crm_platform).
+model AuditLog {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId       String?  @map("org_id") @db.Uuid
+  actorUserId String?  @map("actor_user_id") @db.Uuid
+  actorKind   String   @default("USER") @map("actor_kind")
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String?  @map("entity_id") @db.Uuid
+  /// Redacted, display-safe details (never secrets or tokens).
+  metadata    Json?
+  requestId   String?  @map("request_id")
+  occurredAt  DateTime @default(now()) @map("occurred_at") @db.Timestamptz(6)
+
+  organization Organization? @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([orgId, occurredAt(sort: Desc), id])
+  @@map("audit_log")
+}
+
+/// Transactional outbox: written in the same transaction as the change; relayed by the worker.
+model OutboxEvent {
+  id           String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId        String    @map("org_id") @db.Uuid
+  type         String
+  payload      Json
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  claimedUntil DateTime? @map("claimed_until") @db.Timestamptz(6)
+  attempts     Int       @default(0)
+  publishedAt  DateTime? @map("published_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@map("outbox_event")
+}
+
+// ===================== Phase 2 M1: lead records (crm_app) =====================
+// Field names follow lead-lifecycle §4 and domain-model §2.2. Enum-like text columns are
+// constrained by CHECKs in migrations/0003_leads; tenant references are composite
+// (org_id, …) foreign keys so no row can point into another organisation.
+
+/// Org-configurable first-touch sources. "Unknown" is created on first use.
+model LeadSource {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId     String   @map("org_id") @db.Uuid
+  name      String
+  /// PORTAL | SOCIAL_ADS | WEBSITE | REFERRAL | WALK_IN | CHANNEL_PARTNER | COLD | OTHER
+  channel   String   @default("OTHER")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization    Organization            @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  leads           Lead[]
+  enquiries       LeadEnquiry[]
+  importJobs      ImportJob[]
+  importTemplates ImportMappingTemplate[]
+
+  @@unique([orgId, id])
+  @@map("lead_source")
+}
+
+model Lead {
+  id                     String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId                  String    @map("org_id") @db.Uuid
+  fullName               String    @map("full_name")
+  primaryPhoneE164       String    @map("primary_phone_e164")
+  primaryPhoneRaw        String    @map("primary_phone_raw")
+  alternatePhoneE164     String?   @map("alternate_phone_e164")
+  /// Last 10 digits of the primary phone, for phone-fragment search (M2).
+  phoneLast10            String    @map("phone_last10")
+  email                  String?   @db.Citext
+  preferredLanguage      String?   @map("preferred_language")
+  preferredContactMethod String?   @map("preferred_contact_method")
+  transactionType        String?   @map("transaction_type")
+  propertyType           String?   @map("property_type")
+  bhkMin                 Int?      @map("bhk_min") @db.SmallInt
+  bhkMax                 Int?      @map("bhk_max") @db.SmallInt
+  budgetMin              Decimal?  @map("budget_min") @db.Decimal(15, 2)
+  budgetMax              Decimal?  @map("budget_max") @db.Decimal(15, 2)
+  preferredCity          String?   @map("preferred_city")
+  preferredLocalities    String[]  @default([]) @map("preferred_localities")
+  purpose                String?
+  timeline               String?
+  intent                 String?
+  sourceId               String    @map("source_id") @db.Uuid
+  campaign               String?
+  ownerUserId            String?   @map("owner_user_id") @db.Uuid
+  teamId                 String?   @map("team_id") @db.Uuid
+  stage                  LeadStage @default(NEW)
+  /// OK | DO_NOT_CONTACT | INVALID (system-managed)
+  contactStatus          String    @default("OK") @map("contact_status")
+  firstContactedAt       DateTime? @map("first_contacted_at") @db.Timestamptz(6)
+  qualifiedAt            DateTime? @map("qualified_at") @db.Timestamptz(6)
+  firstVisitScheduledAt  DateTime? @map("first_visit_scheduled_at") @db.Timestamptz(6)
+  firstVisitCompletedAt  DateTime? @map("first_visit_completed_at") @db.Timestamptz(6)
+  wonAt                  DateTime? @map("won_at") @db.Timestamptz(6)
+  lostAt                 DateTime? @map("lost_at") @db.Timestamptz(6)
+  /// Optimistic lock (database-design §5).
+  version                Int       @default(1)
+  previousLeadId         String?   @map("previous_lead_id") @db.Uuid
+  mergedIntoLeadId       String?   @map("merged_into_lead_id") @db.Uuid
+  isTest                 Boolean   @default(false) @map("is_test")
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  /// NULL for system actors (imports, integrations).
+  createdBy              String?   @map("created_by") @db.Uuid
+  archivedAt             DateTime? @map("archived_at") @db.Timestamptz(6)
+  deletedAt              DateTime? @map("deleted_at") @db.Timestamptz(6)
+  /// Org-defined values keyed by custom_field_definition.key (M5; validated by
+  /// custom-fields.ts; object <= 16 KB CHECK in SQL).
+  customFields           Json      @default("{}") @map("custom_fields")
+  /// FR-108: earliest due_at of the lead's open follow-ups (migration 0012). Derived: written
+  /// only by the task_sync_next_follow_up trigger, in the same transaction as the task change.
+  nextFollowUpAt         DateTime? @map("next_follow_up_at") @db.Timestamptz(6)
+
+  organization               Organization             @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  source                     LeadSource               @relation(fields: [orgId, sourceId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  owner                      Member?                  @relation("LeadOwner", fields: [orgId, ownerUserId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  creator                    Member?                  @relation("LeadCreator", fields: [orgId, createdBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  team                       Team?                    @relation(fields: [orgId, teamId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  previousLead               Lead?                    @relation("LeadPrevious", fields: [orgId, previousLeadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  laterLeads                 Lead[]                   @relation("LeadPrevious")
+  mergedInto                 Lead?                    @relation("LeadMerged", fields: [orgId, mergedIntoLeadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  mergedFrom                 Lead[]                   @relation("LeadMerged")
+  enquiries                  LeadEnquiry[]
+  notes                      LeadNote[]
+  stageHistory               LeadStageHistory[]
+  activities                 LeadActivity[]
+  assignments                LeadAssignmentHistory[]
+  tags                       LeadTagLink[]
+  importResults              ImportRowResult[]
+  duplicateOf                LeadDuplicateMatch[]     @relation("DuplicateLead")
+  duplicateIn                LeadDuplicateMatch[]     @relation("DuplicateCandidate")
+  tasks                      Task[]
+  siteVisits                 SiteVisit[]
+  contactStatusEvents        LeadContactStatusEvent[] @relation("ContactStatusLead")
+  phoneReveals               LeadPhoneReveal[]
+  relatedContactStatusEvents LeadContactStatusEvent[] @relation("ContactStatusRelatedLead")
+  interactions               Interaction[]
+
+  @@unique([orgId, id])
+  @@index([orgId, ownerUserId, stage])
+  @@index([orgId, teamId, stage])
+  @@index([orgId, createdAt(sort: Desc), id])
+  @@index([orgId, alternatePhoneE164])
+  @@index([orgId, phoneLast10])
+  @@index([orgId, fullName, id])
+  @@map("lead")
+}
+
+/// Each inbound enquiry; the first is the lead's attribution source (lead-lifecycle §5).
+model LeadEnquiry {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId      String   @map("org_id") @db.Uuid
+  leadId     String   @map("lead_id") @db.Uuid
+  sourceId   String   @map("source_id") @db.Uuid
+  campaign   String?
+  channelRef String?  @map("channel_ref")
+  externalId String?  @map("external_id")
+  receivedAt DateTime @default(now()) @map("received_at") @db.Timestamptz(6)
+  createdBy  String?  @map("created_by") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  lead    Lead                 @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  source  LeadSource           @relation(fields: [orgId, sourceId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  creator Member?              @relation(fields: [orgId, createdBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  reviews LeadDuplicateMatch[]
+
+  @@unique([orgId, id])
+  @@index([orgId, leadId])
+  @@map("lead_enquiry")
+}
+
+/// Editable by its author for 15 minutes, then immutable (FR-059). Never deleted by the app.
+model LeadNote {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId       String   @map("org_id") @db.Uuid
+  leadId      String   @map("lead_id") @db.Uuid
+  authorId    String   @map("author_id") @db.Uuid
+  body        String
+  editedUntil DateTime @map("edited_until") @db.Timestamptz(6)
+  isPinned    Boolean  @default(false) @map("is_pinned")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  lead   Lead   @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  author Member @relation(fields: [orgId, authorId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, leadId, createdAt])
+  @@map("lead_note")
+}
+
+/// Immutable record of every stage change (lead-lifecycle §2.1).
+model LeadStageHistory {
+  id                String     @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId             String     @map("org_id") @db.Uuid
+  leadId            String     @map("lead_id") @db.Uuid
+  fromStage         LeadStage? @map("from_stage")
+  toStage           LeadStage  @map("to_stage")
+  /// NULL for system actors.
+  changedBy         String?    @map("changed_by") @db.Uuid
+  /// USER | SYSTEM_RULE | IMPORT | INTEGRATION
+  source            String     @default("USER")
+  reasonCode        String?    @map("reason_code")
+  reasonText        String?    @map("reason_text")
+  relatedEntityType String?    @map("related_entity_type")
+  relatedEntityId   String?    @map("related_entity_id") @db.Uuid
+  occurredAt        DateTime   @default(dbgenerated("CURRENT_TIMESTAMP")) @map("occurred_at") @db.Timestamptz(6)
+
+  lead    Lead    @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  changer Member? @relation(fields: [orgId, changedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, leadId, occurredAt])
+  @@map("lead_stage_history")
+}
+
+/// Append-only timeline projection; source of truth stays in the owning entities.
+/// FR-065 (migration 0015, ADR-0012): append-only history of lead.contact_status. The only way
+/// to change it: inserting an event checks the transition and its trigger updates the lead and
+/// writes the timeline entry and audit row. A change to DO_NOT_CONTACT is the consent-withdrawal
+/// record. No UPDATE or DELETE grants.
+model LeadContactStatusEvent {
+  id            String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId         String   @map("org_id") @db.Uuid
+  leadId        String   @map("lead_id") @db.Uuid
+  /// OK | DO_NOT_CONTACT | INVALID
+  fromStatus    String   @map("from_status")
+  toStatus      String   @map("to_status")
+  /// MANUAL | CARRY_OVER (new lead after a closed DNC lead) | MERGE (DNC duplicate merged in)
+  origin        String   @default("MANUAL")
+  /// To DNC: VERBAL | WRITTEN | OTHER. Lifting DNC: VERBAL | WRITTEN | FORM_OPT_IN | INBOUND_ENQUIRY
+  method        String?
+  reason        String?
+  evidenceRef   String?  @map("evidence_ref")
+  relatedLeadId String?  @map("related_lead_id") @db.Uuid
+  changedBy     String?  @map("changed_by") @db.Uuid
+  changedAt     DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("changed_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  lead         Lead         @relation("ContactStatusLead", fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  relatedLead  Lead?        @relation("ContactStatusRelatedLead", fields: [orgId, relatedLeadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  changer      Member?      @relation(fields: [orgId, changedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, leadId, changedAt(sort: Desc)])
+  @@map("lead_contact_status_event")
+}
+
+/// FR-060 (migration 0016, ADR-0013): one row per reveal; inserting it is the reveal (guarded:
+/// masking on, lead role, daily cap) and its trigger writes the lead.phone_revealed audit row.
+/// Never holds the number. No UPDATE or DELETE grants.
+model LeadPhoneReveal {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId      String   @map("org_id") @db.Uuid
+  leadId     String   @map("lead_id") @db.Uuid
+  revealedBy String   @map("revealed_by") @db.Uuid
+  revealedAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("revealed_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  lead         Lead         @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  revealer     Member       @relation(fields: [orgId, revealedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, revealedBy, revealedAt])
+  @@index([orgId, leadId, revealedAt(sort: Desc)])
+  @@map("lead_phone_reveal")
+}
+
+/// FR-083/084/085 (migration 0017, ADR-0014): one contact a person reports on a lead. Append-only;
+/// the interaction_guard trigger refuses outbound contact on a DO_NOT_CONTACT lead and unconfirmed
+/// outbound contact on an INVALID one, and interaction_timeline writes the INTERACTION entry.
+model Interaction {
+  id                     String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId                  String   @map("org_id") @db.Uuid
+  leadId                 String   @map("lead_id") @db.Uuid
+  userId                 String   @map("user_id") @db.Uuid
+  /// PHONE_NATIVE | WHATSAPP_APP_CALL | WHATSAPP_APP_MESSAGE | SMS | EMAIL | IN_PERSON
+  channel                String
+  /// OUTBOUND | INBOUND
+  direction              String
+  /// MANUAL only until provider events exist (Phase 6)
+  source                 String   @default("MANUAL")
+  /// LOGGED only until provider events exist (Phase 6)
+  status                 String   @default("LOGGED")
+  /// lead-lifecycle §3 outcome code
+  outcome                String
+  /// NOT_CONNECTED | INVALID | CONNECTED | OTHER
+  outcomeGroup           String   @map("outcome_group")
+  /// When it happened, as reported (at most seven days before logging)
+  occurredAt             DateTime @map("occurred_at") @db.Timestamptz(6)
+  loggedAt               DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("logged_at") @db.Timestamptz(6)
+  /// A person's estimate; never mixed with provider-reported duration
+  manualDurationMinutes  Int?     @map("manual_duration_minutes")
+  /// Personal data: never copied into the timeline summary or the audit log
+  notes                  String?
+  /// The lead's contact status when this was logged (checked against the lead by the trigger)
+  contactStatusAtLog     String   @map("contact_status_at_log")
+  invalidNumberConfirmed Boolean  @default(false) @map("invalid_number_confirmed")
+  clientIdempotencyKey   String   @map("client_idempotency_key") @db.Uuid
+  /// SHA-256 of the canonical submission (migration 0018); NULL only on rows from before it
+  requestFingerprint     String?  @map("request_fingerprint")
+  /// FR-098 (migration 0019): the published script version last shown in the lead-page drawer
+  /// before logging; NULL when none was shown. Never "the latest version".
+  scriptVersionId        String?  @map("script_version_id") @db.Uuid
+
+  organization  Organization       @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  lead          Lead               @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  user          Member             @relation(fields: [orgId, userId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  scriptVersion CallScriptVersion? @relation(fields: [orgId, scriptVersionId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@unique([orgId, userId, clientIdempotencyKey])
+  @@index([orgId, leadId, occurredAt(sort: Desc)])
+  @@index([orgId, userId, occurredAt])
+  @@map("interaction")
+}
+
+model LeadActivity {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId      String   @map("org_id") @db.Uuid
+  leadId     String   @map("lead_id") @db.Uuid
+  /// CREATED | ENQUIRY | ASSIGNED | STAGE | NOTE | FIELD_CHANGED | ARCHIVED | RESTORED | MERGED |
+  /// TASK | CONTACT_STATUS | INTERACTION (later phases add types)
+  type       String
+  actorId    String?  @map("actor_id") @db.Uuid
+  /// Small, display-ready details. Never secrets.
+  summary    Json     @default("{}")
+  refType    String?  @map("ref_type")
+  refId      String?  @map("ref_id") @db.Uuid
+  occurredAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("occurred_at") @db.Timestamptz(6)
+
+  lead  Lead    @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  actor Member? @relation(fields: [orgId, actorId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, leadId, occurredAt(sort: Desc)])
+  @@map("lead_activity")
+}
+
+// ===================== Phase 2 M3: assignment and notifications (crm_app) =====================
+
+/// Ownership spells (domain-model §2.2, Workflow G). Contiguous and non-overlapping per lead
+/// (exclusion constraint in 0004). Immutable except setting ended_at once, to the DB time.
+model LeadAssignmentHistory {
+  id         String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId      String    @map("org_id") @db.Uuid
+  leadId     String    @map("lead_id") @db.Uuid
+  /// NULL = in the team's (or the org's) unassigned queue.
+  userId     String?   @map("user_id") @db.Uuid
+  teamId     String?   @map("team_id") @db.Uuid
+  startedAt  DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("started_at") @db.Timestamptz(6)
+  endedAt    DateTime? @map("ended_at") @db.Timestamptz(6)
+  /// NULL for system actors.
+  assignedBy String?   @map("assigned_by") @db.Uuid
+  /// MANUAL | BULK | IMPORT | ROUND_ROBIN | RULE | LEAVE_COVER | DEACTIVATION | MERGE
+  source     String
+  reason     String?
+
+  lead     Lead    @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  user     Member? @relation("AssignmentUser", fields: [orgId, userId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  team     Team?   @relation(fields: [orgId, teamId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  assigner Member? @relation("AssignmentAssigner", fields: [orgId, assignedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, leadId, startedAt])
+  @@index([orgId, userId, startedAt])
+  @@map("lead_assignment_history")
+}
+
+/// Row-locked round-robin pointer per team (database-design §5: SELECT … FOR UPDATE).
+model TeamAssignmentState {
+  teamId                   String   @id @map("team_id") @db.Uuid
+  orgId                    String   @map("org_id") @db.Uuid
+  lastAssignedMembershipId String?  @map("last_assigned_membership_id") @db.Uuid
+  updatedAt                DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("updated_at") @db.Timestamptz(6)
+
+  team       Team    @relation(fields: [orgId, teamId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  lastMember Member? @relation(fields: [orgId, lastAssignedMembershipId], references: [organizationId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, teamId])
+  @@map("team_assignment_state")
+}
+
+/// In-app notification (domain-model §2.6). Written only by the worker (system actor) from
+/// outbox events; readable and markable only by its recipient (RLS in 0004).
+model Notification {
+  id              String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId           String    @map("org_id") @db.Uuid
+  recipientUserId String    @map("recipient_user_id") @db.Uuid
+  type            String
+  title           String
+  body            String
+  link            String?
+  /// Small, display-safe details (ids, counts). Never contact details.
+  data            Json      @default("{}")
+  readAt          DateTime? @map("read_at") @db.Timestamptz(6)
+  digestKey       String?   @map("digest_key")
+  /// Outbox event that produced it: one notification per (event, recipient), so redelivery is a no-op.
+  eventId         String?   @map("event_id") @db.Uuid
+  createdAt       DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+
+  recipient Member @relation(fields: [orgId, recipientUserId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@unique([eventId, recipientUserId])
+  @@index([orgId, recipientUserId, readAt, id(sort: Desc)])
+  @@map("notification")
+}
+
+// ===================== Phase 2 M4: lead import jobs (crm_app) =====================
+// CHECKs, the status guard trigger, RLS, grants and the cleanup lookup are raw SQL in
+// migrations/0005_imports. Cell values are never stored: only column names, codes and counts.
+
+/// One upload-to-results import (FR-040–FR-052). Status changes follow the transitions in
+/// app.import_job_guard(); finished jobs are frozen.
+model ImportJob {
+  id                  String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId               String    @map("org_id") @db.Uuid
+  /// The uploader; also the actor the worker imports as (re-checked before every batch).
+  createdBy           String    @map("created_by") @db.Uuid
+  /// AWAITING_UPLOAD | UPLOADED | ANALYSING | NEEDS_MAPPING | VALIDATING | READY | IMPORTING |
+  /// PAUSED | COMPLETED | COMPLETED_WITH_ERRORS | FAILED | CANCELLED | EXPIRED
+  status              String    @default("AWAITING_UPLOAD")
+  /// csv | xlsx
+  fileType            String    @map("file_type")
+  contentType         String    @map("content_type")
+  /// Display only; never part of a storage key.
+  originalFilename    String    @map("original_filename")
+  byteSize            BigInt    @map("byte_size")
+  /// orgs/<org_id>/imports/<id>/<32 hex>.<csv|xlsx> (CHECK in SQL).
+  storageKey          String    @unique @map("storage_key")
+  sha256              Bytes?
+  sheetNames          String[]  @default([]) @map("sheet_names")
+  sheetName           String?   @map("sheet_name")
+  /// Header names only, for the mapping screen.
+  headers             String[]  @default([])
+  /// { field: columnIndex }
+  mapping             Json?
+  defaultSourceId     String?   @map("default_source_id") @db.Uuid
+  /// ATTACH | SKIP
+  duplicatePolicy     String    @default("ATTACH") @map("duplicate_policy")
+  /// { mode: none | target | round_robin, ... }
+  assignment          Json      @default("{\"mode\":\"none\"}")
+  dryRun              Boolean   @default(false) @map("dry_run")
+  attestedAt          DateTime? @map("attested_at") @db.Timestamptz(6)
+  attestationVersion  String?   @map("attestation_version")
+  hashWarningAckAt    DateTime? @map("hash_warning_ack_at") @db.Timestamptz(6)
+  duplicateOfJobId    String?   @map("duplicate_of_job_id") @db.Uuid
+  validationAttempt   Int       @default(0) @map("validation_attempt")
+  /// Resume cursor: data rows already committed.
+  nextRow             Int       @default(0) @map("next_row")
+  rowsTotal           Int       @default(0) @map("rows_total")
+  rowsEmpty           Int       @default(0) @map("rows_empty")
+  rowsValid           Int       @default(0) @map("rows_valid")
+  rowsInvalid         Int       @default(0) @map("rows_invalid")
+  rowsDuplicateInFile Int       @default(0) @map("rows_duplicate_in_file")
+  rowsCreated         Int       @default(0) @map("rows_created")
+  rowsAttached        Int       @default(0) @map("rows_attached")
+  rowsSkipped         Int       @default(0) @map("rows_skipped")
+  rowsFailed          Int       @default(0) @map("rows_failed")
+  errorCode           String?   @map("error_code")
+  version             Int       @default(1)
+  createdAt           DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("updated_at") @db.Timestamptz(6)
+  /// The signed upload token lasts 2 h (Supabase; not configurable).
+  uploadExpiresAt     DateTime  @default(dbgenerated("(CURRENT_TIMESTAMP + '02:00:00'::interval)")) @map("upload_expires_at") @db.Timestamptz(6)
+  uploadedAt          DateTime? @map("uploaded_at") @db.Timestamptz(6)
+  validatedAt         DateTime? @map("validated_at") @db.Timestamptz(6)
+  startedAt           DateTime? @map("started_at") @db.Timestamptz(6)
+  finishedAt          DateTime? @map("finished_at") @db.Timestamptz(6)
+  cancelRequestedAt   DateTime? @map("cancel_requested_at") @db.Timestamptz(6)
+  /// When the cleanup sweep deletes the stored file (abandoned: +3 h; finished: +24 h).
+  purgeFileAfter      DateTime  @default(dbgenerated("(CURRENT_TIMESTAMP + '03:00:00'::interval)")) @map("purge_file_after") @db.Timestamptz(6)
+  fileDeletedAt       DateTime? @map("file_deleted_at") @db.Timestamptz(6)
+
+  organization  Organization      @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  creator       Member            @relation(fields: [orgId, createdBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  defaultSource LeadSource?       @relation(fields: [orgId, defaultSourceId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  duplicateOf   ImportJob?        @relation("ImportJobDuplicate", fields: [orgId, duplicateOfJobId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  duplicates    ImportJob[]       @relation("ImportJobDuplicate")
+  results       ImportRowResult[]
+
+  @@unique([orgId, id])
+  @@index([orgId, createdAt(sort: Desc), id])
+  @@map("import_job")
+}
+
+/// Per-row problem or duplicate match (FR-042, FR-044, FR-045, FR-047). Row number, field and
+/// code only: never cell values.
+model ImportRowResult {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId       String   @map("org_id") @db.Uuid
+  importJobId String   @map("import_job_id") @db.Uuid
+  /// VALIDATE | IMPORT
+  phase       String
+  /// import_job.validation_attempt the row belongs to.
+  attempt     Int
+  rowNumber   Int      @map("row_number")
+  /// INVALID | DUPLICATE_IN_FILE | DUPLICATE_ATTACHED | DUPLICATE_SKIPPED | FAILED
+  outcome     String
+  field       String?
+  code        String
+  /// In-file duplicate: the first row with the same phone.
+  relatedRow  Int?     @map("related_row")
+  /// Existing-lead duplicate: the matched lead.
+  leadId      String?  @map("lead_id") @db.Uuid
+  createdAt   DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+
+  job  ImportJob @relation(fields: [orgId, importJobId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  lead Lead?     @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, importJobId, phase, attempt, rowNumber])
+  @@map("import_row_result")
+}
+
+// ===================== Phase 2 M5: hygiene (crm_app) =====================
+// CHECKs, guard triggers, partial/expression unique indexes, RLS, grants and the export cleanup
+// functions are raw SQL in migrations/0006_hygiene (docs/PHASE-2-M5-PROPOSAL.md).
+
+/// An org-defined lead field (FR-064). At most 30 active per org (app.custom_field_limit). Key and
+/// type are never updatable and keys are never reused.
+model CustomFieldDefinition {
+  id         String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId      String    @map("org_id") @db.Uuid
+  key        String
+  label      String
+  /// text | number | date | single_select | multi_select | boolean
+  type       String
+  required   Boolean   @default(false)
+  /// Option strings (select types only).
+  options    Json      @default("[]")
+  position   Int       @default(0)
+  archivedAt DateTime? @map("archived_at") @db.Timestamptz(6)
+  createdBy  String    @map("created_by") @db.Uuid
+  createdAt  DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("updated_at") @db.Timestamptz(6)
+  version    Int       @default(1)
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  creator      Member       @relation(fields: [orgId, createdBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@unique([orgId, key])
+  @@map("custom_field_definition")
+}
+
+/// A duplicate review case. Pair cases (PHONE_ALT | EMAIL | NAME_SIMILAR) name two leads;
+/// ARCHIVED_ENQUIRY cases name an archived lead and the enquiry that arrived for it (D2: never
+/// auto-restored). Resolved once, by the session user (app.duplicate_match_guard + RLS).
+model LeadDuplicateMatch {
+  id              String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId           String    @map("org_id") @db.Uuid
+  matchType       String    @map("match_type")
+  leadId          String    @map("lead_id") @db.Uuid
+  candidateLeadId String?   @map("candidate_lead_id") @db.Uuid
+  enquiryId       String?   @map("enquiry_id") @db.Uuid
+  score           Decimal   @default(1) @db.Decimal(4, 3)
+  /// OPEN | MERGED | DISMISSED | RESTORED | KEPT_ARCHIVED
+  status          String    @default("OPEN")
+  /// NULL for system detection.
+  detectedBy      String?   @map("detected_by") @db.Uuid
+  resolvedBy      String?   @map("resolved_by") @db.Uuid
+  resolvedAt      DateTime? @map("resolved_at") @db.Timestamptz(6)
+  createdAt       DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+
+  lead      Lead         @relation("DuplicateLead", fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  candidate Lead?        @relation("DuplicateCandidate", fields: [orgId, candidateLeadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  enquiry   LeadEnquiry? @relation(fields: [orgId, enquiryId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  detector  Member?      @relation("DuplicateDetector", fields: [orgId, detectedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  resolver  Member?      @relation("DuplicateResolver", fields: [orgId, resolvedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, status, createdAt(sort: Desc)])
+  @@map("lead_duplicate_match")
+}
+
+/// An Owner's lead export (FR-066, D3). Visible only to the requester; one download within 15
+/// minutes; file purged at most 1 h after creation; the search text is removed when it finishes.
+model ExportJob {
+  id             String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId          String    @map("org_id") @db.Uuid
+  requestedBy    String    @map("requested_by") @db.Uuid
+  /// QUEUED | RUNNING | READY | DOWNLOADED | EXPIRED | FAILED (app.export_job_guard)
+  status         String    @default("QUEUED")
+  format         String    @default("csv")
+  /// The lead list's filters (export-job.ts), at most 4 KB; `q` is removed on finishing.
+  filters        Json      @default("{}")
+  rowCount       Int?      @map("row_count")
+  /// orgs/<org_id>/exports/<id>/<32 hex>.csv (CHECK in SQL).
+  storageKey     String    @unique @map("storage_key")
+  sha256         Bytes?
+  errorCode      String?   @map("error_code")
+  version        Int       @default(1)
+  createdAt      DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("updated_at") @db.Timestamptz(6)
+  startedAt      DateTime? @map("started_at") @db.Timestamptz(6)
+  finishedAt     DateTime? @map("finished_at") @db.Timestamptz(6)
+  expiresAt      DateTime? @map("expires_at") @db.Timestamptz(6)
+  downloadedAt   DateTime? @map("downloaded_at") @db.Timestamptz(6)
+  purgeFileAfter DateTime  @default(dbgenerated("(CURRENT_TIMESTAMP + '01:00:00'::interval)")) @map("purge_file_after") @db.Timestamptz(6)
+  fileDeletedAt  DateTime? @map("file_deleted_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  requester    Member       @relation(fields: [orgId, requestedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, requestedBy, createdAt(sort: Desc)])
+  @@map("export_job")
+}
+
+/// FR-041 (migration 0009): a saved import mapping, per org and optionally per lead source.
+/// mapping = { "<import field>": "<column heading text>" }: headings only, never column positions
+/// of a particular file and never cell values. Owner/Admin (lead.import); no update, only delete.
+model ImportMappingTemplate {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId     String   @map("org_id") @db.Uuid
+  name      String
+  sourceId  String?  @map("source_id") @db.Uuid
+  mapping   Json
+  createdBy String   @map("created_by") @db.Uuid
+  createdAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  creator      Member       @relation(fields: [orgId, createdBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  source       LeadSource?  @relation(fields: [orgId, sourceId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@map("import_mapping_template")
+}
+
+/// FR-063 add tag (migration 0011, OD-05 default): an organisation-defined lead label. Owner/Admin
+/// create them; no rename or delete yet. Name stored normalized, unique per org ignoring case.
+model LeadTag {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId     String   @map("org_id") @db.Uuid
+  name      String
+  createdBy String   @map("created_by") @db.Uuid
+  createdAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+
+  organization Organization  @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  creator      Member        @relation(fields: [orgId, createdBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  links        LeadTagLink[]
+
+  @@unique([orgId, id])
+  @@map("lead_tag")
+}
+
+/// A tag on a lead (migration 0011). The primary key (lead, tag) makes a duplicate impossible.
+model LeadTagLink {
+  orgId   String   @map("org_id") @db.Uuid
+  leadId  String   @map("lead_id") @db.Uuid
+  tagId   String   @map("tag_id") @db.Uuid
+  addedBy String   @map("added_by") @db.Uuid
+  addedAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("added_at") @db.Timestamptz(6)
+
+  lead  Lead    @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  tag   LeadTag @relation(fields: [orgId, tagId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  adder Member  @relation(fields: [orgId, addedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([leadId, tagId])
+  @@index([orgId, tagId])
+  @@map("lead_tag_link")
+}
+
+/// Tasks (domain-model §2.6; migration 0012). Phase 3 first slice: lead follow-ups only
+/// (FR-100, FR-102, FR-108), assigned to their creator. At most one OPEN follow-up per lead and
+/// assignee (task_open_follow_up_uq). Closed tasks never change (task_guard); no deletes.
+model Task {
+  id              String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId           String    @map("org_id") @db.Uuid
+  /// FOLLOW_UP | CALL | MEETING | DOCUMENT | OTHER. A non-follow-up needs a title and may have no lead (0020)
+  type            String    @default("FOLLOW_UP")
+  title           String?
+  leadId          String?   @map("lead_id") @db.Uuid
+  assigneeUserId  String    @map("assignee_user_id") @db.Uuid
+  dueAt           DateTime  @map("due_at") @db.Timestamptz(6)
+  /// LOW | NORMAL | HIGH | URGENT
+  priority        String    @default("NORMAL")
+  /// OPEN | DONE | CANCELLED
+  status          String    @default("OPEN")
+  completedAt     DateTime? @map("completed_at") @db.Timestamptz(6)
+  cancelledAt     DateTime? @map("cancelled_at") @db.Timestamptz(6)
+  cancelReason    String?   @map("cancel_reason")
+  rescheduleCount Int       @default(0) @map("reschedule_count")
+  /// Optimistic lock (database-design §5).
+  version         Int       @default(1)
+  createdBy       String    @map("created_by") @db.Uuid
+  createdAt       DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("updated_at") @db.Timestamptz(6)
+  /// FR-104 (0022): meetings only. End is after the start, at most 24 h later.
+  endAt           DateTime? @map("end_at") @db.Timestamptz(6)
+  /// FR-104: "location or link", plain text, meetings only.
+  location        String?
+  /// FR-107 (0024): the recurring series this occurrence belongs to (no-lead, never a follow-up).
+  seriesId        String?   @map("series_id") @db.Uuid
+
+  organization Organization   @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  lead         Lead?          @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  attendees    TaskAttendee[]
+  reminders    TaskReminder[]
+  series       TaskSeries?    @relation(fields: [orgId, seriesId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  assignee     Member         @relation("TaskAssignee", fields: [orgId, assigneeUserId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  creator      Member         @relation("TaskCreator", fields: [orgId, createdBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, leadId, status])
+  @@index([orgId, assigneeUserId, status, dueAt])
+  @@map("task")
+}
+
+/// FR-107 recurring tasks (migration 0024): the template of a daily or weekly series of no-lead
+/// tasks. The next occurrence is created when the open one is completed or cancelled.
+model TaskSeries {
+  id              String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId           String    @map("org_id") @db.Uuid
+  ownerUserId     String    @map("owner_user_id") @db.Uuid
+  createdBy       String    @map("created_by") @db.Uuid
+  /// CALL | MEETING | DOCUMENT | OTHER
+  type            String
+  title           String
+  priority        String    @default("NORMAL")
+  /// DAILY | WEEKLY
+  frequency       String
+  /// WEEKLY only: 0 = Monday … 6 = Sunday
+  weekday         Int?
+  /// HH:MM, org-local
+  localTime       String    @map("local_time")
+  /// Inclusive, org-local
+  endDate         DateTime? @map("end_date") @db.Date
+  durationMinutes Int?      @map("duration_minutes")
+  location        String?
+  attendeeUserIds String[]  @default([]) @map("attendee_user_ids") @db.Uuid
+  stoppedAt       DateTime? @map("stopped_at") @db.Timestamptz(6)
+  stoppedBy       String?   @map("stopped_by") @db.Uuid
+  version         Int       @default(1)
+  createdAt       DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("updated_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  owner        Member       @relation("TaskSeriesOwner", fields: [orgId, ownerUserId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  creator      Member       @relation("TaskSeriesCreator", fields: [orgId, createdBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  stopper      Member?      @relation("TaskSeriesStopper", fields: [orgId, stoppedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  tasks        Task[]
+
+  @@unique([orgId, id])
+  @@index([orgId, ownerUserId])
+  @@map("task_series")
+}
+
+/// FR-106 reminders (migration 0023): one row per task, offset and fire time, written only by
+/// app.task_reminders_claim (the idempotency anchor); read-only for the app.
+model TaskReminder {
+  id            String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId         String   @map("org_id") @db.Uuid
+  taskId        String   @map("task_id") @db.Uuid
+  offsetMinutes Int      @map("offset_minutes")
+  fireAt        DateTime @map("fire_at") @db.Timestamptz(6)
+  dueAt         DateTime @map("due_at") @db.Timestamptz(6)
+  createdAt     DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+
+  task Task @relation(fields: [orgId, taskId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@unique([taskId, offsetMinutes, fireAt])
+  @@map("task_reminder")
+}
+
+/// FR-104 meeting attendees (migration 0022): internal members invited to a MEETING task. A
+/// removal is recorded, never deleted; one current invitation per meeting and person.
+model TaskAttendee {
+  id        String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId     String    @map("org_id") @db.Uuid
+  taskId    String    @map("task_id") @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  addedBy   String    @map("added_by") @db.Uuid
+  createdAt DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+  removedAt DateTime? @map("removed_at") @db.Timestamptz(6)
+  removedBy String?   @map("removed_by") @db.Uuid
+
+  task    Task    @relation(fields: [orgId, taskId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  member  Member  @relation("TaskAttendeeMember", fields: [orgId, userId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  adder   Member  @relation("TaskAttendeeAdder", fields: [orgId, addedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  remover Member? @relation("TaskAttendeeRemover", fields: [orgId, removedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@map("task_attendee")
+}
+
+/// Call scripts (FR-095–FR-097; migration 0014). Name and targeting are script metadata; the
+/// content lives in numbered versions. DRAFT → PUBLISHED → ARCHIVED (archived is final). Role
+/// policies in the database: Owner/Admin manage and read all; sales roles read published only.
+model CallScript {
+  id               String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId            String    @map("org_id") @db.Uuid
+  name             String
+  /// DRAFT | PUBLISHED | ARCHIVED
+  status           String    @default("DRAFT")
+  transactionTypes String[]  @default([]) @map("transaction_types")
+  propertyTypes    String[]  @default([]) @map("property_types")
+  languages        String[]  @default([])
+  sourceIds        String[]  @default([]) @map("source_ids") @db.Uuid
+  /// The live published version (null until first published).
+  currentVersionId String?   @map("current_version_id") @db.Uuid
+  archivedAt       DateTime? @map("archived_at") @db.Timestamptz(6)
+  /// Optimistic lock (database-design §5).
+  version          Int       @default(1)
+  createdBy        String    @map("created_by") @db.Uuid
+  createdAt        DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("updated_at") @db.Timestamptz(6)
+
+  organization   Organization        @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  creator        Member              @relation(fields: [orgId, createdBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  currentVersion CallScriptVersion?  @relation("ScriptCurrentVersion", fields: [orgId, currentVersionId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  versions       CallScriptVersion[] @relation("ScriptVersions")
+
+  @@unique([orgId, id])
+  @@index([orgId, status])
+  @@map("call_script")
+}
+
+/// One numbered version of a script's content (the five sections as sanitized HTML). Created as
+/// a draft; immutable once published (call_script_version_guard). At most one draft per script.
+model CallScriptVersion {
+  id          String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId       String    @map("org_id") @db.Uuid
+  scriptId    String    @map("script_id") @db.Uuid
+  versionNo   Int       @map("version_no")
+  content     Json
+  publishedAt DateTime? @map("published_at") @db.Timestamptz(6)
+  publishedBy String?   @map("published_by") @db.Uuid
+  version     Int       @default(1)
+  createdBy   String    @map("created_by") @db.Uuid
+  createdAt   DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("updated_at") @db.Timestamptz(6)
+
+  script    CallScript    @relation("ScriptVersions", fields: [orgId, scriptId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  liveFor   CallScript[]  @relation("ScriptCurrentVersion")
+  creator   Member        @relation("ScriptVersionCreator", fields: [orgId, createdBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  publisher Member?       @relation("ScriptVersionPublisher", fields: [orgId, publishedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  shownWith Interaction[]
+
+  @@unique([orgId, id])
+  @@unique([scriptId, versionNo])
+  @@map("call_script_version")
+}
+
+/// FR-140 property inventory (migration 0025, ADR-0021). Never deleted: WITHDRAWN takes a listing
+/// off the market. Owner contacts live in PropertyContact (FR-142, restricted).
+model Property {
+  id                String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId             String    @map("org_id") @db.Uuid
+  /// Org-unique, e.g. P-00001; never changes
+  code              String
+  title             String
+  /// SALE | RENT | LEASE
+  listingType       String    @map("listing_type")
+  /// Same codes as a lead's property type
+  propertyType      String    @map("property_type")
+  bhk               Int?
+  city              String
+  locality          String?
+  addressLine       String?   @map("address_line")
+  latitude          Decimal?  @db.Decimal(9, 6)
+  longitude         Decimal?  @db.Decimal(9, 6)
+  price             Decimal   @db.Decimal(15, 2)
+  /// TOTAL | PER_SQFT (sale) | MONTHLY_RENT (rent, lease)
+  priceType         String    @map("price_type")
+  maintenance       Decimal?  @db.Decimal(15, 2)
+  deposit           Decimal?  @db.Decimal(15, 2)
+  carpetAreaSqft    Decimal?  @map("carpet_area_sqft") @db.Decimal(10, 2)
+  builtUpAreaSqft   Decimal?  @map("built_up_area_sqft") @db.Decimal(10, 2)
+  floor             String?
+  facing            String?
+  furnishing        String?
+  amenities         String[]  @default([])
+  /// DRAFT | AVAILABLE | ON_HOLD | SOLD | RENTED | WITHDRAWN
+  status            String    @default("DRAFT")
+  responsibleUserId String    @map("responsible_user_id") @db.Uuid
+  availableFrom     DateTime? @map("available_from") @db.Date
+  description       String?
+  version           Int       @default(1)
+  createdBy         String    @map("created_by") @db.Uuid
+  createdAt         DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("updated_at") @db.Timestamptz(6)
+
+  organization Organization      @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  responsible  Member            @relation("PropertyResponsible", fields: [orgId, responsibleUserId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  creator      Member            @relation("PropertyCreator", fields: [orgId, createdBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  contacts     PropertyContact[]
+
+  @@unique([orgId, id])
+  @@unique([orgId, code])
+  @@index([orgId, status, city, propertyType, price])
+  @@index([orgId, locality])
+  @@map("property")
+}
+
+/// FR-142 confidential property contacts (owner, authorised agent, developer). Read only with
+/// property.read_owner_contact, through an audited reveal; removed (recorded), never edited.
+model PropertyContact {
+  id           String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId        String    @map("org_id") @db.Uuid
+  propertyId   String    @map("property_id") @db.Uuid
+  name         String
+  phoneE164    String?   @map("phone_e164")
+  email        String?
+  /// OWNER | AUTHORISED_AGENT | DEVELOPER
+  relationship String
+  createdBy    String    @map("created_by") @db.Uuid
+  createdAt    DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+  removedAt    DateTime? @map("removed_at") @db.Timestamptz(6)
+  removedBy    String?   @map("removed_by") @db.Uuid
+
+  property Property @relation(fields: [orgId, propertyId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  creator  Member   @relation("PropertyContactCreator", fields: [orgId, createdBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  remover  Member?  @relation("PropertyContactRemover", fields: [orgId, removedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, propertyId])
+  @@map("property_contact")
+}
+
+/// FR-150–152 basic site visits (migration 0026, ADR-0022). Its own entity, not a task.
+/// SCHEDULED | CONFIRMED | RESCHEDULED (open) → CANCELLED | ATTENDED | NO_SHOW (closed, final).
+model SiteVisit {
+  id              String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId           String    @map("org_id") @db.Uuid
+  leadId          String    @map("lead_id") @db.Uuid
+  assignedUserId  String    @map("assigned_user_id") @db.Uuid
+  scheduledBy     String    @map("scheduled_by") @db.Uuid
+  scheduledFor    DateTime  @map("scheduled_for") @db.Timestamptz(6)
+  /// Meeting point / location, free text (no property link until FR-157)
+  locationText    String    @map("location_text")
+  status          String    @default("SCHEDULED")
+  rescheduleCount Int       @default(0) @map("reschedule_count")
+  cancelReason    String?   @map("cancel_reason")
+  noShowReason    String?   @map("no_show_reason")
+  attendedAt      DateTime? @map("attended_at") @db.Timestamptz(6)
+  /// HIGH | MEDIUM | LOW | NONE
+  interestLevel   String?   @map("interest_level")
+  objections      String[]  @default([])
+  outcomeNotes    String?   @map("outcome_notes")
+  nextAction      String?   @map("next_action")
+  closedAt        DateTime? @map("closed_at") @db.Timestamptz(6)
+  version         Int       @default(1)
+  createdAt       DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("updated_at") @db.Timestamptz(6)
+
+  organization Organization        @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  lead         Lead                @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  assignee     Member              @relation("SiteVisitAssignee", fields: [orgId, assignedUserId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  scheduler    Member              @relation("SiteVisitScheduler", fields: [orgId, scheduledBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  events       SiteVisitEvent[]
+  reminders    SiteVisitReminder[]
+
+  @@unique([orgId, id])
+  @@index([orgId, assignedUserId, scheduledFor])
+  @@index([orgId, leadId])
+  @@map("site_visit")
+}
+
+/// Append-only history of a visit's status changes and reschedules.
+model SiteVisitEvent {
+  id                   String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId                String    @map("org_id") @db.Uuid
+  siteVisitId          String    @map("site_visit_id") @db.Uuid
+  fromStatus           String?   @map("from_status")
+  toStatus             String    @map("to_status")
+  scheduledFor         DateTime  @map("scheduled_for") @db.Timestamptz(6)
+  previousScheduledFor DateTime? @map("previous_scheduled_for") @db.Timestamptz(6)
+  reason               String?
+  actorId              String    @map("actor_id") @db.Uuid
+  occurredAt           DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("occurred_at") @db.Timestamptz(6)
+
+  siteVisit SiteVisit @relation(fields: [orgId, siteVisitId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  actor     Member    @relation(fields: [orgId, actorId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, siteVisitId])
+  @@map("site_visit_event")
+}
+
+/// FR-150 visit reminders (migration 0026), written only by app.site_visit_reminders_claim.
+model SiteVisitReminder {
+  id              String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId           String   @map("org_id") @db.Uuid
+  siteVisitId     String   @map("site_visit_id") @db.Uuid
+  recipientUserId String   @map("recipient_user_id") @db.Uuid
+  offsetMinutes   Int      @map("offset_minutes")
+  fireAt          DateTime @map("fire_at") @db.Timestamptz(6)
+  scheduledFor    DateTime @map("scheduled_for") @db.Timestamptz(6)
+  createdAt       DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+
+  siteVisit SiteVisit @relation(fields: [orgId, siteVisitId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@unique([siteVisitId, recipientUserId, offsetMinutes, fireAt], map: "site_visit_reminder_key")
+  @@map("site_visit_reminder")
+}

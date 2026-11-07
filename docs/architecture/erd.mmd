@@ -1,0 +1,89 @@
+%% CBR Property CRM — conceptual ERD (Phase 0). Core entities and keys only.
+%% Detailed per-area diagrams and field lists: domain-model.md
+%% Every entity except ORGANIZATION and USER carries org_id (tenant key); omitted from relationships for readability.
+erDiagram
+    ORGANIZATION ||--o{ ORGANIZATION_MEMBERSHIP : has
+    USER ||--o{ ORGANIZATION_MEMBERSHIP : joins
+    ROLE ||--o{ ORGANIZATION_MEMBERSHIP : grants
+    ORGANIZATION ||--o{ TEAM : has
+    TEAM ||--o{ TEAM_MEMBERSHIP : has
+    ORGANIZATION_MEMBERSHIP ||--o{ TEAM_MEMBERSHIP : in
+
+    ORGANIZATION ||--o{ LEAD : owns
+    LEAD_SOURCE ||--o{ LEAD : "first touch"
+    LEAD ||--|{ LEAD_ENQUIRY : "1..n enquiries"
+    IMPORT_JOB ||--o{ IMPORT_ROW : rows
+    IMPORT_ROW |o--o| LEAD_ENQUIRY : creates
+    USER |o--o{ LEAD : "current owner"
+    TEAM |o--o{ LEAD : "team queue"
+    LEAD ||--o{ LEAD_ASSIGNMENT_HISTORY : "ownership spells"
+    LEAD ||--o{ LEAD_STAGE_HISTORY : stages
+    LEAD ||--o{ LEAD_ACTIVITY : timeline
+    LEAD ||--o{ CONSENT_RECORD : consent
+
+    LEAD ||--o{ CALL_INTENT : "call taps (L0)"
+    LEAD ||--o{ INTERACTION : "calls/messages (L1-L4)"
+    INTERACTION ||--o{ COMMUNICATION_EVENT : "provider events"
+    WEBHOOK_EVENT ||--o{ COMMUNICATION_EVENT : source
+    CALL_SCRIPT ||--|{ CALL_SCRIPT_VERSION : versions
+    CALL_SCRIPT_VERSION |o--o{ INTERACTION : "used in"
+
+    LEAD ||--o{ TASK : "follow-ups/meetings"
+    USER ||--o{ TASK : assignee
+    USER ||--o{ LEAVE_REQUEST : requests
+    USER ||--o{ DELEGATION : "cover"
+
+    PROPERTY ||--o{ PROPERTY_MEDIA : media
+    PROPERTY ||--o| PROPERTY_CONTACT : "restricted owner contact"
+    LEAD ||--o{ PROPERTY_SHARE : "shared listings"
+    LEAD ||--o{ SITE_VISIT : visits
+    SITE_VISIT ||--o{ SITE_VISIT_PROPERTY : "covers (Phase 5, optional)"
+    PROPERTY ||--o{ SITE_VISIT_PROPERTY : "visited in"
+    LEAD ||--o{ DEAL : deals
+    PROPERTY |o--o{ DEAL : "for"
+    DEAL ||--o{ BROKERAGE : earns
+    BROKERAGE ||--o{ BROKERAGE_PAYMENT : payments
+
+    ORGANIZATION ||--o{ AUDIT_LOG : audit
+    ORGANIZATION ||--o{ INTEGRATION_CONNECTION : integrations
+    INTEGRATION_CONNECTION ||--o{ WEBHOOK_EVENT : receives
+
+    LEAD {
+        uuid id PK
+        uuid org_id FK
+        text primary_phone_e164 "unique among open leads per org"
+        text stage
+        uuid owner_user_id FK
+        uuid team_id FK
+        timestamptz next_follow_up_at
+        timestamptz first_contacted_at
+        timestamptz first_visit_completed_at
+        timestamptz won_at
+        int version
+    }
+    INTERACTION {
+        uuid id PK
+        uuid lead_id FK
+        uuid user_id FK
+        text channel
+        text source "MANUAL or PROVIDER"
+        text outcome
+        int duration_seconds "provider-reported only"
+        text provider_call_id "unique per provider"
+    }
+    LEAD_ASSIGNMENT_HISTORY {
+        uuid id PK
+        uuid lead_id FK
+        uuid user_id FK
+        uuid team_id FK
+        timestamptz started_at
+        timestamptz ended_at "non-overlapping per lead"
+        text source
+    }
+    DEAL {
+        uuid id PK
+        uuid lead_id FK
+        uuid property_id FK
+        text status
+        numeric deal_value "numeric(15,2) INR"
+    }

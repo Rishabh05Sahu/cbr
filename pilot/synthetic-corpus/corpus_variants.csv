@@ -1,0 +1,501 @@
+﻿Lead Name,Phone Number,Phone 2,E-mail,Requirement Type,Unit Type,Min BHK,Max BHK,Budget From,Budget To,Preferred City,Area,Timeframe,Temperature,Preferred Language
+Synthetic Kabir Kulkarni 50001,+91 6300000001,,,Rent,Flat,1,1,1.5 Cr,₹ 235.1 Lakh,Hyderabad,Madhapur,Within 1 month,Hot,Hindi
+Synthetic Saanvi Nair 50002,063000 00002,,synthetic.variant.50002@example.test,Purchase,Flat,2,2,₹ 75 Lakh,"86,50,443/-",Pune,Viman Nagar,Within 1 month,Hot,Hindi
+Synthetic Sunita Kulkarni 50003,91-63000-00003,,,Rent,Flat,3,4,"45,00,000/-",Rs. 0.57 crore,Chennai,OMR,Within 1 month,warm,English
+Synthetic Suresh Banerjee 50004,63000 00004,,synthetic.variant.50004@example.test,Lease commercial,Office space,1,1,Rs. 0.85 crore,9798420,Pune,Aundh,Within 1 month,Hot,English
+Synthetic Ira Banerjee 50005,6300000005,,,Rent,Office space,1,1,50000000,757.21 L,Pune,Viman Nagar,Within 1 month,Hot,Hindi
+Synthetic Riya Deshpande 50006,+91 6300000006,,synthetic.variant.50006@example.test,Rent,Office space,2,3,95 L,1.31 Cr,Bengaluru,Sarjapur,Within 1 month,Hot,English
+Synthetic Diya Chopra 50007,063000 00007,64000 00007,,Rent,Flat,2,2,0.35 Cr,₹ 39.97 Lakh,Hyderabad,Kukatpally,Within 1 month,warm,Hindi
+Synthetic Kabir Singh 50008,91-63000-00008,,synthetic.variant.50008@example.test,Lease commercial,Office space,1,1,₹ 150 Lakh,"1,70,77,878/-",Pune,Aundh,Within 1 month,warm,English
+Synthetic Diya Das 50009,63000 00009,,,Rent,Office space,3,4,"75,00,000/-",Rs. 1.07 crore,Hyderabad,Kondapur,Within 1 month,warm,English
+Synthetic Ishaan Sharma 50010,6300000010,,synthetic.variant.50010@example.test,Lease commercial,Office space,1,1,Rs. 1.5 crore,23902553,Bengaluru,Electronic City,Within 1 month,Hot,Hindi
+Synthetic Vihaan Banerjee 50011,+91 6300000011,,,Purchase,Flat,1,1,50000000,652.87 L,Mumbai,Malad,Within 1 month,Hot,Hindi
+Synthetic Rohan Kulkarni 50012,063000 00012,,synthetic.variant.50012@example.test,Purchase,Office space,1,2,25 L,0.32 Cr,Chennai,Anna Nagar,Within 1 month,Hot,Hindi
+Synthetic Sunita Nair 50013,91-63000-00013,,,Purchase,Flat,2,2,0.95 Cr,₹ 124.53 Lakh,Hyderabad,Gachibowli,Within 1 month,Hot,English
+Synthetic Manoj Rao 50014,63000 00014,+91 6400000014,synthetic.variant.50014@example.test,Purchase,Flat,1,1,₹ 120 Lakh,"1,88,41,755/-",Ahmedabad,Satellite,Within 1 month,warm,Hindi
+Synthetic Aarav Banerjee 50015,6300000015,,,Lease commercial,Office space,2,3,"35,00,000/-",Rs. 0.42 crore,Chennai,OMR,Within 1 month,Hot,Hindi
+Synthetic Ishaan Deshpande 50016,+91 6300000016,,synthetic.variant.50016@example.test,Rent,Flat,3,3,Rs. 0.75 crore,11328705,Hyderabad,Kukatpally,Within 1 month,warm,Hindi
+Synthetic Rahul Joshi 50017,063000 00017,,,Purchase,Office space,3,3,15000000,173.79 L,Ahmedabad,Satellite,Within 1 month,warm,Hindi
+Synthetic Amit Deshpande 50018,91-63000-00018,,synthetic.variant.50018@example.test,Rent,Office space,1,2,60 L,0.77 Cr,Mumbai,Chembur,Within 1 month,Hot,English
+Synthetic Saanvi Banerjee 50019,63000 00019,,,Rent,Office space,1,1,0.25 Cr,₹ 33.08 Lakh,Hyderabad,Miyapur,Within 1 month,Hot,English
+Synthetic Ira Singh 50020,6300000020,,synthetic.variant.50020@example.test,Lease commercial,Office space,2,2,₹ 200 Lakh,"3,13,66,544/-",Ahmedabad,Gota,Within 1 month,Hot,Hindi
+Synthetic Ananya Das 50021,+91 6300000021,91-64000-00021,,Purchase,Flat,1,2,"2,00,00,000/-",Rs. 2.22 crore,Chennai,Velachery,Within 1 month,Hot,English
+Synthetic Aadhya Mehta 50022,063000 00022,,synthetic.variant.50022@example.test,Rent,Office space,3,3,Rs. 1.2 crore,15656188,Ahmedabad,Satellite,Within 1 month,Hot,Hindi
+Synthetic Kabir Deshpande 50023,91-63000-00023,,,Lease commercial,Office space,1,1,15000000,225.54 L,Hyderabad,Miyapur,Within 1 month,warm,Hindi
+Synthetic Arjun Das 50024,63000 00024,,synthetic.variant.50024@example.test,Rent,Flat,1,2,60 L,0.79 Cr,Bengaluru,Electronic City,Within 1 month,Hot,English
+Synthetic Vihaan Mehta 50025,6300000025,,,Purchase,Flat,3,3,0.45 Cr,₹ 71.59 Lakh,Ahmedabad,Satellite,Within 1 month,warm,English
+Synthetic Sai Mehta 50026,+91 6300000026,,synthetic.variant.50026@example.test,Lease commercial,Flat,3,3,₹ 35 Lakh,"39,90,814/-",Mumbai,Goregaon,Within 1 month,warm,English
+Synthetic Reyansh Kapoor 50027,063000 00027,,,Rent,Flat,1,2,"2,00,00,000/-",Rs. 2.97 crore,Hyderabad,Kondapur,Within 1 month,warm,Hindi
+Synthetic Saanvi Patel 50028,91-63000-00028,6400000028,synthetic.variant.50028@example.test,Lease commercial,Flat,3,3,Rs. 3 crore,42624721,Bengaluru,Hebbal,Within 1 month,warm,Hindi
+Synthetic Sai Pillai 50029,63000 00029,,,Lease commercial,Flat,1,1,3500000,46.51 L,Hyderabad,Gachibowli,Within 1 month,Hot,English
+Synthetic Sai Singh 50030,6300000030,,synthetic.variant.50030@example.test,Rent,Flat,2,3,75 L,1.03 Cr,Hyderabad,Kukatpally,Within 1 month,Hot,Hindi
+Synthetic Arjun Singh 50031,+91 6300000031,,,Rent,Flat,3,3,0.35 Cr,₹ 51.6 Lakh,Pune,Viman Nagar,Within 1 month,Hot,Hindi
+Synthetic Aadhya Shah 50032,063000 00032,,synthetic.variant.50032@example.test,Purchase,Flat,3,3,₹ 120 Lakh,"1,33,15,599/-",Chennai,Porur,Within 1 month,Hot,English
+Synthetic Meera Chopra 50033,91-63000-00033,,,Rent,Office space,3,4,"75,00,000/-",Rs. 0.86 crore,Pune,Viman Nagar,Within 1 month,warm,Hindi
+Synthetic Diya Joshi 50034,63000 00034,,synthetic.variant.50034@example.test,Lease commercial,Office space,1,1,Rs. 3 crore,33495259,Mumbai,Goregaon,Within 1 month,Hot,Hindi
+Synthetic Ira Nair 50035,6300000035,064000 00035,,Lease commercial,Flat,2,2,30000000,405.78 L,Hyderabad,Madhapur,Within 1 month,warm,Hindi
+Synthetic Ananya Chopra 50036,+91 6300000036,,synthetic.variant.50036@example.test,Rent,Flat,2,3,150 L,2.29 Cr,Chennai,Tambaram,Within 1 month,Hot,English
+Synthetic Vikram Sharma 50037,063000 00037,,,Purchase,Office space,1,1,1.2 Cr,₹ 187.06 Lakh,Mumbai,Andheri,Within 1 month,warm,English
+Synthetic Aadhya Kulkarni 50038,91-63000-00038,,synthetic.variant.50038@example.test,Rent,Office space,2,2,₹ 200 Lakh,"2,48,86,752/-",Bengaluru,Yelahanka,Within 1 month,warm,English
+Synthetic Suresh Kulkarni 50039,63000 00039,,,Lease commercial,Office space,3,4,"75,00,000/-",Rs. 1 crore,Mumbai,Powai,Within 1 month,warm,English
+Synthetic Pooja Iyer 50040,6300000040,,synthetic.variant.50040@example.test,Rent,Flat,2,2,Rs. 1.5 crore,17791749,Hyderabad,Madhapur,Within 1 month,Hot,English
+Synthetic Meera Chopra 50041,+91 6300000041,,,Purchase,Office space,1,1,8500000,132.08 L,Mumbai,Chembur,Within 1 month,warm,Hindi
+Synthetic Pooja Singh 50042,063000 00042,64000 00042,synthetic.variant.50042@example.test,Rent,Office space,1,2,500 L,7.16 Cr,Bengaluru,Electronic City,Within 1 month,warm,English
+Synthetic Neha Iyer 50043,91-63000-00043,,,Lease commercial,Office space,1,1,1.5 Cr,₹ 185.69 Lakh,Bengaluru,Sarjapur,Within 1 month,warm,Hindi
+Synthetic Krishna Verma 50044,63000 00044,,synthetic.variant.50044@example.test,Rent,Flat,3,3,₹ 60 Lakh,"66,23,047/-",Chennai,OMR,Within 1 month,Hot,English
+Synthetic Krishna Patel 50045,6300000045,,,Rent,Flat,2,3,"85,00,000/-",Rs. 1.04 crore,Pune,Baner,Within 1 month,warm,Hindi
+Synthetic Ramesh Das 50046,+91 6300000046,,synthetic.variant.50046@example.test,Lease commercial,Office space,3,3,Rs. 1.2 crore,17298556,Mumbai,Borivali,Within 1 month,warm,Hindi
+Synthetic Ramesh Das 50047,063000 00047,,,Purchase,Flat,1,1,3500000,51.76 L,Mumbai,Thane,Within 1 month,Hot,Hindi
+Synthetic Ramesh Shah 50048,91-63000-00048,,synthetic.variant.50048@example.test,Lease commercial,Office space,3,4,85 L,1.02 Cr,Ahmedabad,Gota,Within 1 month,Hot,English
+Synthetic Rahul Sharma 50049,63000 00049,+91 6400000049,,Purchase,Flat,2,2,5 Cr,₹ 744.49 Lakh,Pune,Wakad,Within 1 month,warm,English
+Synthetic Kavya Pillai 50050,6300000050,,synthetic.variant.50050@example.test,Lease commercial,Flat,1,1,₹ 60 Lakh,"92,63,650/-",Bengaluru,Electronic City,Within 1 month,warm,English
+Synthetic Lakshmi Chopra 50051,+91 6300000051,,,Lease commercial,Office space,1,2,"1,50,00,000/-",Rs. 1.85 crore,Bengaluru,Whitefield,Within 1 month,Hot,English
+Synthetic Sai Joshi 50052,063000 00052,,synthetic.variant.50052@example.test,Rent,Flat,2,2,Rs. 5 crore,75397980,Pune,Hadapsar,Within 1 month,warm,English
+Synthetic Riya Joshi 50053,91-63000-00053,,,Rent,Flat,3,3,2500000,27.62 L,Mumbai,Borivali,Within 1 month,Hot,English
+Synthetic Krishna Gupta 50054,63000 00054,,synthetic.variant.50054@example.test,Purchase,Flat,1,2,120 L,1.62 Cr,Chennai,Anna Nagar,Within 1 month,Hot,English
+Synthetic Suresh Verma 50055,6300000055,,,Lease commercial,Office space,2,2,5 Cr,₹ 798.25 Lakh,Chennai,Velachery,Within 1 month,warm,English
+Synthetic Suresh Patel 50056,+91 6300000056,91-64000-00056,synthetic.variant.50056@example.test,Rent,Office space,3,3,₹ 150 Lakh,"2,25,28,319/-",Ahmedabad,SG Highway,Within 1 month,warm,English
+Synthetic Reyansh Mehta 50057,063000 00057,,,Purchase,Flat,3,4,"25,00,000/-",Rs. 0.36 crore,Chennai,OMR,Within 1 month,Hot,Hindi
+Synthetic Manoj Shah 50058,91-63000-00058,,synthetic.variant.50058@example.test,Rent,Office space,1,1,Rs. 1.5 crore,18179055,Hyderabad,Kukatpally,Within 1 month,Hot,English
+Synthetic Suresh Verma 50059,63000 00059,,,Rent,Office space,1,1,8500000,126.64 L,Hyderabad,Kondapur,Within 1 month,Hot,Hindi
+Synthetic Reyansh Gupta 50060,6300000060,,synthetic.variant.50060@example.test,Lease commercial,Office space,2,3,75 L,0.95 Cr,Chennai,OMR,Within 1 month,warm,Hindi
+Synthetic Arjun Sharma 50061,+91 6300000061,,,Rent,Office space,3,3,0.6 Cr,₹ 91.24 Lakh,Pune,Hadapsar,Within 1 month,warm,Hindi
+Synthetic Lakshmi Nair 50062,063000 00062,,synthetic.variant.50062@example.test,Lease commercial,Flat,2,2,₹ 35 Lakh,"47,13,970/-",Chennai,Anna Nagar,Within 1 month,Hot,Hindi
+Synthetic Krishna Rao 50063,91-63000-00063,6400000063,,Rent,Office space,2,3,"75,00,000/-",Rs. 1.15 crore,Pune,Baner,Within 1 month,Hot,English
+Synthetic Kabir Reddy 50064,63000 00064,,synthetic.variant.50064@example.test,Purchase,Office space,1,1,Rs. 0.25 crore,3350929,Chennai,Tambaram,Within 1 month,Hot,English
+Synthetic Reyansh Sharma 50065,6300000065,,,Rent,Office space,3,3,12000000,169.89 L,Bengaluru,Hebbal,Within 1 month,warm,English
+Synthetic Lakshmi Banerjee 50066,+91 6300000066,,synthetic.variant.50066@example.test,Purchase,Office space,3,4,120 L,1.83 Cr,Mumbai,Thane,Within 1 month,Hot,Hindi
+Synthetic Rohan Iyer 50067,063000 00067,,,Rent,Flat,2,2,0.35 Cr,₹ 54.84 Lakh,Chennai,OMR,Within 1 month,warm,English
+Synthetic Rahul Pillai 50068,91-63000-00068,,synthetic.variant.50068@example.test,Lease commercial,Office space,3,3,₹ 85 Lakh,"1,26,72,359/-",Chennai,Tambaram,Within 1 month,warm,English
+Synthetic Saanvi Patel 50069,63000 00069,,,Lease commercial,Office space,3,4,"25,00,000/-",Rs. 0.37 crore,Bengaluru,HSR Layout,Within 1 month,warm,Hindi
+Synthetic Krishna Banerjee 50070,6300000070,064000 00070,synthetic.variant.50070@example.test,Purchase,Flat,3,3,Rs. 3 crore,44551624,Mumbai,Andheri,Within 1 month,warm,English
+Synthetic Vikram Iyer 50071,+91 6300000071,,,Rent,Office space,3,3,6000000,94.75 L,Pune,Viman Nagar,Within 1 month,Hot,Hindi
+Synthetic Aarav Sharma 50072,063000 00072,,synthetic.variant.50072@example.test,Rent,Flat,3,4,75 L,0.89 Cr,Mumbai,Andheri,Within 1 month,warm,English
+Synthetic Rohan Chopra 50073,91-63000-00073,,,Purchase,Flat,3,3,0.6 Cr,₹ 78.63 Lakh,Mumbai,Goregaon,Within 1 month,warm,English
+Synthetic Suresh Shah 50074,63000 00074,,synthetic.variant.50074@example.test,Rent,Flat,1,1,₹ 35 Lakh,"47,81,104/-",Pune,Aundh,Within 1 month,Hot,Hindi
+Synthetic Riya Singh 50075,6300000075,,,Rent,Flat,2,3,"95,00,000/-",Rs. 1.27 crore,Pune,Hinjewadi,Within 1 month,warm,Hindi
+Synthetic Vihaan Nair 50076,+91 6300000076,,synthetic.variant.50076@example.test,Rent,Office space,2,2,Rs. 3 crore,39777615,Bengaluru,Sarjapur,Within 1 month,warm,Hindi
+Synthetic Vihaan Gupta 50077,063000 00077,64000 00077,,Rent,Office space,2,2,3500000,51.1 L,Ahmedabad,Satellite,Within 1 month,warm,Hindi
+Synthetic Sunita Rao 50078,91-63000-00078,,synthetic.variant.50078@example.test,Rent,Office space,1,2,60 L,0.94 Cr,Bengaluru,HSR Layout,Within 1 month,warm,Hindi
+Synthetic Aadhya Menon 50079,63000 00079,,,Rent,Flat,3,3,0.35 Cr,₹ 45.05 Lakh,Hyderabad,Kukatpally,Within 1 month,warm,English
+Synthetic Deepa Banerjee 50080,6300000080,,synthetic.variant.50080@example.test,Lease commercial,Flat,1,1,₹ 95 Lakh,"1,24,44,170/-",Chennai,Velachery,Within 1 month,warm,English
+Synthetic Kabir Verma 50081,+91 6300000081,,,Lease commercial,Office space,2,3,"35,00,000/-",Rs. 0.55 crore,Hyderabad,Kukatpally,Within 1 month,warm,English
+Synthetic Suresh Nair 50082,063000 00082,,synthetic.variant.50082@example.test,Purchase,Office space,1,1,Rs. 0.95 crore,14471174,Ahmedabad,Gota,Within 1 month,warm,English
+Synthetic Amit Chopra 50083,91-63000-00083,,,Rent,Office space,1,1,7500000,105.96 L,Ahmedabad,Gota,Within 1 month,warm,Hindi
+Synthetic Arjun Kapoor 50084,63000 00084,+91 6400000084,synthetic.variant.50084@example.test,Lease commercial,Office space,1,2,200 L,2.79 Cr,Ahmedabad,Satellite,Within 1 month,Hot,Hindi
+Synthetic Kavya Rao 50085,6300000085,,,Purchase,Office space,2,2,0.45 Cr,₹ 63.37 Lakh,Ahmedabad,Satellite,Within 1 month,warm,Hindi
+Synthetic Kavya Nair 50086,+91 6300000086,,synthetic.variant.50086@example.test,Purchase,Flat,3,3,₹ 25 Lakh,"30,45,302/-",Pune,Viman Nagar,Within 1 month,Hot,Hindi
+Synthetic Kabir Chopra 50087,063000 00087,,,Purchase,Office space,3,4,"35,00,000/-",Rs. 0.46 crore,Ahmedabad,Gota,Within 1 month,Hot,Hindi
+Synthetic Rohan Verma 50088,91-63000-00088,,synthetic.variant.50088@example.test,Lease commercial,Office space,2,2,Rs. 3 crore,35569500,Ahmedabad,Gota,Within 1 month,warm,Hindi
+Synthetic Aarav Chopra 50089,63000 00089,,,Rent,Flat,2,2,50000000,696.22 L,Mumbai,Borivali,Within 1 month,Hot,Hindi
+Synthetic Rahul Nair 50090,6300000090,,synthetic.variant.50090@example.test,Purchase,Flat,3,4,120 L,1.68 Cr,Pune,Aundh,Within 1 month,Hot,English
+Synthetic Ishaan Singh 50091,+91 6300000091,91-64000-00091,,Purchase,Flat,1,1,1.2 Cr,₹ 134.07 Lakh,Chennai,Porur,Within 1 month,warm,English
+Synthetic Meera Joshi 50092,063000 00092,,synthetic.variant.50092@example.test,Lease commercial,Flat,1,1,₹ 120 Lakh,"1,61,10,001/-",Chennai,Anna Nagar,Within 1 month,warm,Hindi
+Synthetic Meera Menon 50093,91-63000-00093,,,Lease commercial,Office space,3,4,"95,00,000/-",Rs. 1.51 crore,Bengaluru,Hebbal,Within 1 month,warm,Hindi
+Synthetic Ananya Nair 50094,63000 00094,,synthetic.variant.50094@example.test,Lease commercial,Office space,1,1,Rs. 0.25 crore,3087161,Pune,Hinjewadi,Within 1 month,warm,Hindi
+Synthetic Manoj Reddy 50095,6300000095,,,Lease commercial,Office space,1,1,50000000,644.09 L,Mumbai,Andheri,Within 1 month,Hot,Hindi
+Synthetic Reyansh Shah 50096,+91 6300000096,,synthetic.variant.50096@example.test,Rent,Office space,3,4,300 L,3.52 Cr,Mumbai,Andheri,Within 1 month,warm,English
+Synthetic Vihaan Sharma 50097,063000 00097,,,Purchase,Office space,1,1,0.6 Cr,₹ 82.2 Lakh,Pune,Aundh,Within 1 month,warm,Hindi
+Synthetic Lakshmi Sharma 50098,91-63000-00098,6400000098,synthetic.variant.50098@example.test,Rent,Office space,2,2,₹ 300 Lakh,"3,70,03,230/-",Bengaluru,Whitefield,Within 1 month,warm,Hindi
+Synthetic Neha Banerjee 50099,63000 00099,,,Rent,Flat,1,2,"5,00,00,000/-",Rs. 6.32 crore,Ahmedabad,Satellite,Within 1 month,Hot,English
+Synthetic Neha Banerjee 50100,6300000100,,synthetic.variant.50100@example.test,Lease commercial,Office space,2,2,Rs. 0.95 crore,13330828,Hyderabad,Miyapur,Within 1 month,warm,English
+Synthetic Neha Verma 50101,+91 6300000101,,,Rent,Flat,3,3,4500000,53.65 L,Mumbai,Andheri,Within 1 month,Hot,English
+Synthetic Lakshmi Shah 50102,063000 00102,,synthetic.variant.50102@example.test,Lease commercial,Flat,1,2,35 L,0.47 Cr,Pune,Hadapsar,Within 1 month,Hot,English
+Synthetic Kavya Kulkarni 50103,91-63000-00103,,,Lease commercial,Office space,1,1,0.75 Cr,₹ 95.93 Lakh,Bengaluru,Whitefield,Within 1 month,warm,English
+Synthetic Arjun Kulkarni 50104,63000 00104,,synthetic.variant.50104@example.test,Rent,Office space,1,1,₹ 150 Lakh,"1,96,02,552/-",Mumbai,Malad,Within 1 month,Hot,Hindi
+Synthetic Pooja Banerjee 50105,6300000105,064000 00105,,Lease commercial,Office space,1,2,"3,00,00,000/-",Rs. 3.75 crore,Ahmedabad,Gota,Within 1 month,Hot,English
+Synthetic Aditya Nair 50106,+91 6300000106,,synthetic.variant.50106@example.test,Rent,Office space,2,2,Rs. 2 crore,30436445,Chennai,Porur,Within 1 month,warm,Hindi
+Synthetic Aarav Verma 50107,063000 00107,,,Lease commercial,Office space,1,1,2500000,33.87 L,Mumbai,Borivali,Within 1 month,Hot,Hindi
+Synthetic Deepa Kulkarni 50108,91-63000-00108,,synthetic.variant.50108@example.test,Lease commercial,Office space,1,2,25 L,0.29 Cr,Ahmedabad,SG Highway,Within 1 month,Hot,English
+Synthetic Vihaan Mehta 50109,63000 00109,,,Purchase,Flat,2,2,1.2 Cr,₹ 141.49 Lakh,Pune,Hadapsar,Within 1 month,warm,English
+Synthetic Aadhya Verma 50110,6300000110,,synthetic.variant.50110@example.test,Rent,Flat,1,1,₹ 95 Lakh,"1,23,59,164/-",Hyderabad,Gachibowli,Within 1 month,warm,English
+Synthetic Manoj Sharma 50111,+91 6300000111,,,Purchase,Flat,3,4,"3,00,00,000/-",Rs. 4.4 crore,Pune,Baner,Within 1 month,Hot,Hindi
+Synthetic Krishna Chopra 50112,063000 00112,64000 00112,synthetic.variant.50112@example.test,Purchase,Office space,1,1,Rs. 0.35 crore,4991335,Pune,Aundh,Within 1 month,warm,English
+Synthetic Saanvi Iyer 50113,91-63000-00113,,,Purchase,Flat,3,3,4500000,55.28 L,Mumbai,Malad,Within 1 month,warm,English
+Synthetic Sunita Gupta 50114,63000 00114,,synthetic.variant.50114@example.test,Lease commercial,Office space,1,2,35 L,0.55 Cr,Mumbai,Andheri,Within 1 month,Hot,Hindi
+Synthetic Sunita Das 50115,6300000115,,,Purchase,Office space,2,2,2 Cr,₹ 253.39 Lakh,Chennai,Tambaram,Within 1 month,Hot,Hindi
+Synthetic Ramesh Kapoor 50116,+91 6300000116,,synthetic.variant.50116@example.test,Lease commercial,Flat,2,2,₹ 150 Lakh,"2,34,65,095/-",Hyderabad,Miyapur,Within 1 month,warm,English
+Synthetic Rahul Iyer 50117,063000 00117,,,Purchase,Office space,3,4,"5,00,00,000/-",Rs. 7.72 crore,Chennai,Tambaram,Within 1 month,Hot,English
+Synthetic Vikram Banerjee 50118,91-63000-00118,,synthetic.variant.50118@example.test,Rent,Office space,2,2,Rs. 0.45 crore,6562185,Mumbai,Chembur,Within 1 month,Hot,Hindi
+Synthetic Rohan Iyer 50119,63000 00119,+91 6400000119,,Rent,Flat,1,1,15000000,178.34 L,Hyderabad,Madhapur,Within 1 month,Hot,Hindi
+Synthetic Arjun Patel 50120,6300000120,,synthetic.variant.50120@example.test,Purchase,Office space,1,2,150 L,1.67 Cr,Hyderabad,Gachibowli,Within 1 month,Hot,English
+Synthetic Arjun Chopra 50121,+91 6300000121,,,Rent,Office space,1,1,0.6 Cr,₹ 74.14 Lakh,Mumbai,Borivali,Within 1 month,warm,English
+Synthetic Arjun Das 50122,063000 00122,,synthetic.variant.50122@example.test,Rent,Office space,3,3,₹ 45 Lakh,"56,84,609/-",Mumbai,Chembur,Within 1 month,warm,Hindi
+Synthetic Vikram Kulkarni 50123,91-63000-00123,,,Lease commercial,Flat,3,4,"1,20,00,000/-",Rs. 1.84 crore,Hyderabad,Madhapur,Within 1 month,Hot,Hindi
+Synthetic Kabir Banerjee 50124,63000 00124,,synthetic.variant.50124@example.test,Rent,Office space,1,1,Rs. 5 crore,63367208,Hyderabad,Kukatpally,Within 1 month,warm,English
+Synthetic Diya Das 50125,6300000125,,,Purchase,Flat,1,1,6000000,82.91 L,Bengaluru,Sarjapur,Within 1 month,Hot,English
+Synthetic Pooja Chopra 50126,+91 6300000126,91-64000-00126,synthetic.variant.50126@example.test,Lease commercial,Flat,3,4,150 L,1.78 Cr,Pune,Hinjewadi,Within 1 month,warm,English
+Synthetic Amit Gupta 50127,063000 00127,,,Purchase,Office space,2,2,2 Cr,₹ 314.98 Lakh,Bengaluru,HSR Layout,Within 1 month,warm,English
+Synthetic Meera Menon 50128,91-63000-00128,,synthetic.variant.50128@example.test,Lease commercial,Office space,1,1,₹ 120 Lakh,"1,88,99,169/-",Bengaluru,Sarjapur,Within 1 month,Hot,Hindi
+Synthetic Ramesh Verma 50129,63000 00129,,,Rent,Office space,2,3,"35,00,000/-",Rs. 0.4 crore,Mumbai,Powai,Within 1 month,Hot,Hindi
+Synthetic Saanvi Reddy 50130,6300000130,,synthetic.variant.50130@example.test,Lease commercial,Flat,1,1,Rs. 2 crore,31635254,Mumbai,Borivali,Within 1 month,warm,English
+Synthetic Rahul Pillai 50131,+91 6300000131,,,Purchase,Office space,2,2,15000000,215.56 L,Chennai,Tambaram,Within 1 month,warm,English
+Synthetic Vihaan Menon 50132,063000 00132,,synthetic.variant.50132@example.test,Lease commercial,Office space,1,2,120 L,1.46 Cr,Bengaluru,Electronic City,Within 1 month,Hot,English
+Synthetic Ramesh Nair 50133,91-63000-00133,6400000133,,Rent,Flat,2,2,0.45 Cr,₹ 55.59 Lakh,Chennai,Tambaram,Within 1 month,warm,English
+Synthetic Rohan Iyer 50134,63000 00134,,synthetic.variant.50134@example.test,Rent,Office space,1,1,₹ 60 Lakh,"75,13,736/-",Mumbai,Powai,Within 1 month,Hot,English
+Synthetic Pooja Reddy 50135,6300000135,,,Rent,Office space,1,2,"45,00,000/-",Rs. 0.66 crore,Pune,Hadapsar,Within 1 month,warm,English
+Synthetic Deepa Patel 50136,+91 6300000136,,synthetic.variant.50136@example.test,Lease commercial,Office space,1,1,Rs. 0.85 crore,13106257,Mumbai,Malad,Within 1 month,warm,English
+Synthetic Ishaan Mehta 50137,063000 00137,,,Rent,Office space,3,3,8500000,96.66 L,Bengaluru,Yelahanka,Within 1 month,warm,Hindi
+Synthetic Arjun Gupta 50138,91-63000-00138,,synthetic.variant.50138@example.test,Purchase,Office space,2,3,300 L,3.38 Cr,Ahmedabad,SG Highway,Within 1 month,warm,English
+Synthetic Riya Deshpande 50139,63000 00139,,,Purchase,Office space,3,3,0.35 Cr,₹ 43.09 Lakh,Mumbai,Malad,Within 1 month,Hot,Hindi
+Synthetic Manoj Kapoor 50140,6300000140,064000 00140,synthetic.variant.50140@example.test,Purchase,Flat,1,1,₹ 200 Lakh,"2,22,00,303/-",Mumbai,Borivali,Within 1 month,Hot,Hindi
+Synthetic Ananya Menon 50141,+91 6300000141,,,Rent,Office space,2,3,"60,00,000/-",Rs. 0.9 crore,Mumbai,Powai,Within 1 month,Hot,English
+Synthetic Manoj Deshpande 50142,063000 00142,,synthetic.variant.50142@example.test,Rent,Flat,2,2,Rs. 0.45 crore,5875447,Bengaluru,Sarjapur,Within 1 month,Hot,English
+Synthetic Rahul Nair 50143,91-63000-00143,,,Purchase,Flat,1,1,12000000,139.75 L,Pune,Hinjewadi,Within 1 month,warm,English
+Synthetic Kabir Nair 50144,63000 00144,,synthetic.variant.50144@example.test,Rent,Office space,1,2,25 L,0.33 Cr,Chennai,OMR,Within 1 month,Hot,English
+Synthetic Kavya Rao 50145,6300000145,,,Lease commercial,Flat,1,1,1.2 Cr,₹ 172.48 Lakh,Ahmedabad,Satellite,Within 1 month,Hot,Hindi
+Synthetic Manoj Sharma 50146,+91 6300000146,,synthetic.variant.50146@example.test,Lease commercial,Office space,1,1,₹ 60 Lakh,"74,93,906/-",Pune,Hinjewadi,Within 1 month,Hot,Hindi
+Synthetic Vikram Das 50147,063000 00147,64000 00147,,Lease commercial,Office space,1,2,"85,00,000/-",Rs. 1.19 crore,Hyderabad,Madhapur,Within 1 month,warm,English
+Synthetic Arjun Kulkarni 50148,91-63000-00148,,synthetic.variant.50148@example.test,Rent,Flat,3,3,Rs. 5 crore,59599666,Ahmedabad,Satellite,Within 1 month,warm,English
+Synthetic Meera Singh 50149,63000 00149,,,Lease commercial,Flat,1,1,30000000,396.94 L,Pune,Viman Nagar,Within 1 month,warm,English
+Synthetic Ramesh Deshpande 50150,6300000150,,synthetic.variant.50150@example.test,Lease commercial,Flat,1,2,35 L,0.52 Cr,Bengaluru,Whitefield,Within 1 month,warm,English
+Synthetic Vihaan Shah 50151,+91 6300000151,,,Rent,Office space,1,1,0.75 Cr,₹ 99.54 Lakh,Ahmedabad,SG Highway,Within 1 month,Hot,English
+Synthetic Saanvi Nair 50152,063000 00152,,synthetic.variant.50152@example.test,Lease commercial,Office space,2,2,₹ 85 Lakh,"1,09,24,912/-",Bengaluru,Yelahanka,Within 1 month,Hot,Hindi
+Synthetic Manoj Shah 50153,91-63000-00153,,,Rent,Office space,3,4,"2,00,00,000/-",Rs. 2.96 crore,Bengaluru,Hebbal,Within 1 month,warm,Hindi
+Synthetic Arjun Gupta 50154,63000 00154,+91 6400000154,synthetic.variant.50154@example.test,Rent,Flat,3,3,Rs. 3 crore,37321567,Pune,Hadapsar,Within 1 month,warm,English
+Synthetic Sai Verma 50155,6300000155,,,Rent,Flat,1,1,7500000,99.17 L,Mumbai,Borivali,Within 1 month,warm,Hindi
+Synthetic Pooja Verma 50156,+91 6300000156,,synthetic.variant.50156@example.test,Lease commercial,Flat,2,3,60 L,0.93 Cr,Hyderabad,Gachibowli,Within 1 month,warm,English
+Synthetic Amit Patel 50157,063000 00157,,,Rent,Flat,3,3,3 Cr,₹ 418.97 Lakh,Mumbai,Powai,Within 1 month,Hot,Hindi
+Synthetic Riya Iyer 50158,91-63000-00158,,synthetic.variant.50158@example.test,Lease commercial,Flat,1,1,₹ 60 Lakh,"91,11,185/-",Pune,Baner,Within 1 month,Hot,English
+Synthetic Pooja Singh 50159,63000 00159,,,Lease commercial,Flat,3,4,"5,00,00,000/-",Rs. 6.79 crore,Mumbai,Malad,Within 1 month,Hot,Hindi
+Synthetic Aadhya Patel 50160,6300000160,,synthetic.variant.50160@example.test,Purchase,Office space,1,1,Rs. 0.35 crore,4248669,Mumbai,Chembur,Within 1 month,warm,English
+Synthetic Deepa Pillai 50161,+91 6300000161,91-64000-00161,,Rent,Flat,1,1,6000000,78.17 L,Pune,Baner,Within 1 month,warm,Hindi
+Synthetic Ishaan Reddy 50162,063000 00162,,synthetic.variant.50162@example.test,Lease commercial,Office space,2,3,60 L,0.67 Cr,Pune,Baner,Within 1 month,Hot,Hindi
+Synthetic Sai Banerjee 50163,91-63000-00163,,,Lease commercial,Office space,1,1,0.85 Cr,₹ 103.26 Lakh,Mumbai,Malad,Within 1 month,Hot,Hindi
+Synthetic Aadhya Shah 50164,63000 00164,,synthetic.variant.50164@example.test,Purchase,Flat,2,2,₹ 60 Lakh,"89,66,418/-",Chennai,Porur,Within 1 month,warm,English
+Synthetic Amit Sharma 50165,6300000165,,,Purchase,Office space,1,2,"3,00,00,000/-",Rs. 4.57 crore,Hyderabad,Kukatpally,Within 1 month,Hot,English
+Synthetic Lakshmi Rao 50166,+91 6300000166,,synthetic.variant.50166@example.test,Rent,Flat,1,1,Rs. 5 crore,59724482,Bengaluru,Electronic City,Within 1 month,Hot,Hindi
+Synthetic Deepa Banerjee 50167,063000 00167,,,Rent,Flat,2,2,2500000,37.48 L,Mumbai,Malad,Within 1 month,warm,Hindi
+Synthetic Neha Nair 50168,91-63000-00168,6400000168,synthetic.variant.50168@example.test,Lease commercial,Flat,1,2,500 L,7.77 Cr,Mumbai,Powai,Within 1 month,Hot,English
+Synthetic Amit Sharma 50169,63000 00169,,,Purchase,Flat,2,2,0.75 Cr,₹ 106.01 Lakh,Ahmedabad,Bopal,Within 1 month,warm,Hindi
+Synthetic Neha Menon 50170,6300000170,,synthetic.variant.50170@example.test,Lease commercial,Flat,3,3,₹ 85 Lakh,"1,33,46,398/-",Chennai,OMR,Within 1 month,warm,Hindi
+Synthetic Kavya Verma 50171,+91 6300000171,,,Purchase,Office space,1,2,"2,00,00,000/-",Rs. 2.59 crore,Ahmedabad,SG Highway,Within 1 month,warm,Hindi
+Synthetic Rahul Joshi 50172,063000 00172,,synthetic.variant.50172@example.test,Purchase,Flat,2,2,Rs. 3 crore,39820738,Bengaluru,Hebbal,Within 1 month,warm,English
+Synthetic Manoj Mehta 50173,91-63000-00173,,,Rent,Flat,1,1,30000000,371.79 L,Ahmedabad,Bopal,Within 1 month,warm,Hindi
+Synthetic Priya Reddy 50174,63000 00174,,synthetic.variant.50174@example.test,Lease commercial,Office space,3,4,45 L,0.51 Cr,Mumbai,Powai,Within 1 month,warm,Hindi
+Synthetic Sunita Iyer 50175,6300000175,064000 00175,,Lease commercial,Office space,2,2,1.2 Cr,₹ 177.63 Lakh,Bengaluru,Sarjapur,Within 1 month,warm,English
+Synthetic Priya Chopra 50176,+91 6300000176,,synthetic.variant.50176@example.test,Lease commercial,Flat,2,2,₹ 25 Lakh,"37,95,256/-",Chennai,Anna Nagar,Within 1 month,Hot,Hindi
+Synthetic Ramesh Singh 50177,063000 00177,,,Purchase,Office space,1,2,"2,00,00,000/-",Rs. 2.24 crore,Chennai,OMR,Within 1 month,Hot,English
+Synthetic Diya Reddy 50178,91-63000-00178,,synthetic.variant.50178@example.test,Purchase,Office space,2,2,Rs. 2 crore,30238316,Chennai,Anna Nagar,Within 1 month,Hot,Hindi
+Synthetic Kavya Deshpande 50179,63000 00179,,,Purchase,Flat,3,3,4500000,67.26 L,Ahmedabad,Gota,Within 1 month,Hot,English
+Synthetic Ishaan Banerjee 50180,6300000180,,synthetic.variant.50180@example.test,Rent,Flat,1,2,150 L,2.05 Cr,Ahmedabad,Satellite,Within 1 month,Hot,English
+Synthetic Diya Kapoor 50181,+91 6300000181,,,Rent,Office space,2,2,0.35 Cr,₹ 50.84 Lakh,Ahmedabad,Bopal,Within 1 month,Hot,English
+Synthetic Meera Kapoor 50182,063000 00182,64000 00182,synthetic.variant.50182@example.test,Rent,Office space,2,2,₹ 150 Lakh,"2,02,36,283/-",Ahmedabad,Satellite,Within 1 month,Hot,English
+Synthetic Ramesh Das 50183,91-63000-00183,,,Rent,Flat,3,4,"85,00,000/-",Rs. 1.28 crore,Ahmedabad,Gota,Within 1 month,warm,English
+Synthetic Ishaan Shah 50184,63000 00184,,synthetic.variant.50184@example.test,Purchase,Office space,2,2,Rs. 1.2 crore,17937397,Mumbai,Chembur,Within 1 month,warm,English
+Synthetic Vihaan Banerjee 50185,6300000185,,,Rent,Flat,3,3,3500000,53.59 L,Chennai,Velachery,Within 1 month,warm,Hindi
+Synthetic Rahul Gupta 50186,+91 6300000186,,synthetic.variant.50186@example.test,Rent,Flat,1,2,75 L,1.2 Cr,Chennai,Anna Nagar,Within 1 month,Hot,English
+Synthetic Saanvi Deshpande 50187,063000 00187,,,Rent,Office space,2,2,2 Cr,₹ 250.91 Lakh,Bengaluru,Whitefield,Within 1 month,Hot,Hindi
+Synthetic Riya Patel 50188,91-63000-00188,,synthetic.variant.50188@example.test,Rent,Flat,3,3,₹ 85 Lakh,"1,09,50,025/-",Hyderabad,Gachibowli,Within 1 month,warm,Hindi
+Synthetic Pooja Reddy 50189,63000 00189,+91 6400000189,,Rent,Office space,2,3,"1,50,00,000/-",Rs. 2.22 crore,Ahmedabad,Bopal,Within 1 month,Hot,English
+Synthetic Rahul Verma 50190,6300000190,,synthetic.variant.50190@example.test,Lease commercial,Office space,1,1,Rs. 0.6 crore,8043034,Chennai,Porur,Within 1 month,Hot,Hindi
+Synthetic Manoj Das 50191,+91 6300000191,,,Lease commercial,Flat,1,1,7500000,114.66 L,Hyderabad,Kukatpally,Within 1 month,warm,Hindi
+Synthetic Pooja Rao 50192,063000 00192,,synthetic.variant.50192@example.test,Purchase,Office space,1,2,45 L,0.63 Cr,Ahmedabad,Satellite,Within 1 month,warm,English
+Synthetic Ananya Das 50193,91-63000-00193,,,Lease commercial,Office space,1,1,0.6 Cr,₹ 69.83 Lakh,Pune,Viman Nagar,Within 1 month,warm,English
+Synthetic Sunita Gupta 50194,63000 00194,,synthetic.variant.50194@example.test,Rent,Office space,2,2,₹ 300 Lakh,"4,21,81,396/-",Pune,Hinjewadi,Within 1 month,warm,Hindi
+Synthetic Saanvi Banerjee 50195,6300000195,,,Rent,Office space,1,2,"45,00,000/-",Rs. 0.56 crore,Ahmedabad,Satellite,Within 1 month,Hot,English
+Synthetic Manoj Reddy 50196,+91 6300000196,91-64000-00196,synthetic.variant.50196@example.test,Lease commercial,Office space,2,2,Rs. 3 crore,40678280,Bengaluru,Whitefield,Within 1 month,warm,Hindi
+Synthetic Reyansh Kulkarni 50197,063000 00197,,,Lease commercial,Office space,2,2,9500000,128.53 L,Mumbai,Chembur,Within 1 month,Hot,English
+Synthetic Vikram Das 50198,91-63000-00198,,synthetic.variant.50198@example.test,Rent,Flat,3,4,45 L,0.68 Cr,Pune,Wakad,Within 1 month,warm,Hindi
+Synthetic Deepa Gupta 50199,63000 00199,,,Purchase,Office space,1,1,1.5 Cr,₹ 224.15 Lakh,Ahmedabad,Satellite,Within 1 month,Hot,English
+Synthetic Ananya Menon 50200,6300000200,,synthetic.variant.50200@example.test,Rent,Flat,2,2,₹ 25 Lakh,"37,10,239/-",Pune,Kharadi,Within 1 month,warm,English
+Synthetic Vihaan Sharma 50201,+91 6300000201,,,Lease commercial,Flat,2,3,"3,00,00,000/-",Rs. 3.68 crore,Bengaluru,Yelahanka,Within 1 month,Hot,English
+Synthetic Kabir Das 50202,063000 00202,,synthetic.variant.50202@example.test,Purchase,Office space,1,1,Rs. 0.45 crore,5462625,Chennai,Velachery,Within 1 month,warm,Hindi
+Synthetic Sunita Reddy 50203,91-63000-00203,6400000203,,Rent,Flat,2,2,4500000,70.79 L,Bengaluru,HSR Layout,Within 1 month,warm,Hindi
+Synthetic Saanvi Deshpande 50204,63000 00204,,synthetic.variant.50204@example.test,Lease commercial,Flat,1,2,120 L,1.45 Cr,Hyderabad,Kukatpally,Within 1 month,Hot,English
+Synthetic Riya Chopra 50205,6300000205,,,Lease commercial,Office space,3,3,1.5 Cr,₹ 238.66 Lakh,Chennai,Anna Nagar,Within 1 month,Hot,English
+Synthetic Meera Iyer 50206,+91 6300000206,,synthetic.variant.50206@example.test,Rent,Office space,3,3,₹ 300 Lakh,"4,04,01,380/-",Mumbai,Powai,Within 1 month,warm,English
+Synthetic Aditya Kapoor 50207,063000 00207,,,Purchase,Flat,1,2,"1,50,00,000/-",Rs. 2.35 crore,Bengaluru,Hebbal,Within 1 month,Hot,Hindi
+Synthetic Lakshmi Kapoor 50208,91-63000-00208,,synthetic.variant.50208@example.test,Purchase,Office space,3,3,Rs. 0.95 crore,12530198,Hyderabad,Miyapur,Within 1 month,Hot,English
+Synthetic Neha Mehta 50209,63000 00209,,,Rent,Flat,3,3,7500000,99.36 L,Chennai,Anna Nagar,Within 1 month,warm,Hindi
+Synthetic Reyansh Singh 50210,6300000210,064000 00210,synthetic.variant.50210@example.test,Lease commercial,Office space,3,4,300 L,4.78 Cr,Pune,Wakad,Within 1 month,Hot,English
+Synthetic Arjun Pillai 50211,+91 6300000211,,,Lease commercial,Flat,1,1,0.35 Cr,₹ 44.85 Lakh,Hyderabad,Miyapur,Within 1 month,Hot,Hindi
+Synthetic Lakshmi Gupta 50212,063000 00212,,synthetic.variant.50212@example.test,Lease commercial,Office space,2,2,₹ 75 Lakh,"1,01,55,571/-",Hyderabad,Madhapur,Within 1 month,Hot,English
+Synthetic Vikram Verma 50213,91-63000-00213,,,Rent,Office space,2,3,"85,00,000/-",Rs. 1.17 crore,Hyderabad,Kondapur,Within 1 month,Hot,Hindi
+Synthetic Vikram Das 50214,63000 00214,,synthetic.variant.50214@example.test,Lease commercial,Flat,2,2,Rs. 3 crore,37420590,Chennai,Tambaram,Within 1 month,warm,English
+Synthetic Ananya Sharma 50215,6300000215,,,Lease commercial,Office space,2,2,6000000,73.63 L,Bengaluru,HSR Layout,Within 1 month,warm,Hindi
+Synthetic Riya Menon 50216,+91 6300000216,,synthetic.variant.50216@example.test,Rent,Office space,2,3,35 L,0.44 Cr,Ahmedabad,SG Highway,Within 1 month,warm,English
+Synthetic Arjun Patel 50217,063000 00217,64000 00217,,Rent,Flat,3,3,2 Cr,₹ 259.18 Lakh,Hyderabad,Kukatpally,Within 1 month,warm,English
+Synthetic Sunita Pillai 50218,91-63000-00218,,synthetic.variant.50218@example.test,Purchase,Flat,2,2,₹ 150 Lakh,"2,29,73,645/-",Ahmedabad,Gota,Within 1 month,warm,Hindi
+Synthetic Riya Mehta 50219,63000 00219,,,Lease commercial,Flat,3,4,"1,50,00,000/-",Rs. 1.96 crore,Ahmedabad,Bopal,Within 1 month,warm,English
+Synthetic Rohan Kulkarni 50220,6300000220,,synthetic.variant.50220@example.test,Rent,Flat,2,2,Rs. 5 crore,57600224,Pune,Hinjewadi,Within 1 month,warm,English
+Synthetic Aadhya Kulkarni 50221,+91 6300000221,,,Rent,Flat,2,2,2500000,35.57 L,Hyderabad,Gachibowli,Within 1 month,Hot,Hindi
+Synthetic Arjun Mehta 50222,063000 00222,,synthetic.variant.50222@example.test,Purchase,Office space,3,4,45 L,0.64 Cr,Pune,Viman Nagar,Within 1 month,warm,English
+Synthetic Ramesh Nair 50223,91-63000-00223,,,Lease commercial,Office space,3,3,0.85 Cr,₹ 95.4 Lakh,Pune,Hadapsar,Within 1 month,warm,English
+Synthetic Saanvi Sharma 50224,63000 00224,+91 6400000224,synthetic.variant.50224@example.test,Lease commercial,Office space,3,3,₹ 150 Lakh,"1,67,50,654/-",Hyderabad,Gachibowli,Within 1 month,Hot,English
+Synthetic Aadhya Singh 50225,6300000225,,,Purchase,Flat,2,3,"25,00,000/-",Rs. 0.36 crore,Mumbai,Thane,Within 1 month,warm,Hindi
+Synthetic Vikram Iyer 50226,+91 6300000226,,synthetic.variant.50226@example.test,Lease commercial,Flat,1,1,Rs. 0.95 crore,10524300,Bengaluru,Electronic City,Within 1 month,Hot,Hindi
+Synthetic Arjun Iyer 50227,063000 00227,,,Rent,Flat,1,1,4500000,55.17 L,Chennai,Velachery,Within 1 month,warm,English
+Synthetic Ramesh Kapoor 50228,91-63000-00228,,synthetic.variant.50228@example.test,Rent,Office space,2,3,95 L,1.33 Cr,Mumbai,Powai,Within 1 month,Hot,Hindi
+Synthetic Krishna Kapoor 50229,63000 00229,,,Lease commercial,Office space,3,3,0.75 Cr,₹ 105.44 Lakh,Pune,Viman Nagar,Within 1 month,Hot,Hindi
+Synthetic Diya Iyer 50230,6300000230,,synthetic.variant.50230@example.test,Rent,Flat,2,2,₹ 25 Lakh,"30,20,374/-",Ahmedabad,Gota,Within 1 month,warm,Hindi
+Synthetic Sunita Rao 50231,+91 6300000231,91-64000-00231,,Lease commercial,Flat,2,3,"3,00,00,000/-",Rs. 3.59 crore,Mumbai,Thane,Within 1 month,warm,Hindi
+Synthetic Amit Deshpande 50232,063000 00232,,synthetic.variant.50232@example.test,Lease commercial,Office space,1,1,Rs. 0.75 crore,11963960,Hyderabad,Gachibowli,Within 1 month,Hot,English
+Synthetic Ramesh Deshpande 50233,91-63000-00233,,,Rent,Office space,3,3,8500000,130.84 L,Chennai,Anna Nagar,Within 1 month,Hot,Hindi
+Synthetic Suresh Nair 50234,63000 00234,,synthetic.variant.50234@example.test,Rent,Flat,2,3,300 L,4.27 Cr,Mumbai,Goregaon,Within 1 month,warm,English
+Synthetic Amit Kulkarni 50235,6300000235,,,Lease commercial,Flat,1,1,0.85 Cr,₹ 123.13 Lakh,Hyderabad,Miyapur,Within 1 month,Hot,English
+Synthetic Ananya Kapoor 50236,+91 6300000236,,synthetic.variant.50236@example.test,Rent,Flat,1,1,₹ 85 Lakh,"1,02,64,703/-",Pune,Wakad,Within 1 month,warm,English
+Synthetic Kavya Deshpande 50237,063000 00237,,,Lease commercial,Office space,3,4,"2,00,00,000/-",Rs. 3.1 crore,Bengaluru,Yelahanka,Within 1 month,warm,Hindi
+Synthetic Manoj Menon 50238,91-63000-00238,6400000238,synthetic.variant.50238@example.test,Rent,Flat,2,2,Rs. 1.5 crore,23039683,Bengaluru,Whitefield,Within 1 month,warm,English
+Synthetic Kabir Reddy 50239,63000 00239,,,Rent,Flat,2,2,9500000,111.04 L,Chennai,Anna Nagar,Within 1 month,Hot,English
+Synthetic Meera Rao 50240,6300000240,,synthetic.variant.50240@example.test,Rent,Office space,1,2,85 L,1.11 Cr,Chennai,Velachery,Within 1 month,warm,Hindi
+Synthetic Riya Iyer 50241,+91 6300000241,,,Purchase,Office space,2,2,1.2 Cr,₹ 184.17 Lakh,Mumbai,Andheri,Within 1 month,Hot,English
+Synthetic Deepa Verma 50242,063000 00242,,synthetic.variant.50242@example.test,Rent,Office space,3,3,₹ 150 Lakh,"2,37,75,901/-",Hyderabad,Kukatpally,Within 1 month,warm,English
+Synthetic Arjun Pillai 50243,91-63000-00243,,,Purchase,Flat,2,3,"75,00,000/-",Rs. 0.89 crore,Mumbai,Malad,Within 1 month,Hot,Hindi
+Synthetic Aditya Reddy 50244,63000 00244,,synthetic.variant.50244@example.test,Purchase,Flat,3,3,Rs. 0.75 crore,11131113,Pune,Viman Nagar,Within 1 month,warm,Hindi
+Synthetic Rahul Nair 50245,6300000245,064000 00245,,Purchase,Flat,2,2,9500000,144.45 L,Bengaluru,Yelahanka,Within 1 month,Hot,English
+Synthetic Suresh Shah 50246,+91 6300000246,,synthetic.variant.50246@example.test,Lease commercial,Flat,1,2,85 L,1.2 Cr,Mumbai,Andheri,Within 1 month,warm,Hindi
+Synthetic Ira Deshpande 50247,063000 00247,,,Lease commercial,Flat,1,1,1.2 Cr,₹ 168.74 Lakh,Mumbai,Powai,Within 1 month,warm,Hindi
+Synthetic Ishaan Sharma 50248,91-63000-00248,,synthetic.variant.50248@example.test,Rent,Office space,1,1,₹ 60 Lakh,"94,50,062/-",Bengaluru,Hebbal,Within 1 month,warm,Hindi
+Synthetic Arjun Deshpande 50249,63000 00249,,,Lease commercial,Office space,2,3,"95,00,000/-",Rs. 1.42 crore,Chennai,Anna Nagar,Within 1 month,Hot,English
+Synthetic Meera Gupta 50250,6300000250,,synthetic.variant.50250@example.test,Rent,Flat,1,1,Rs. 0.25 crore,3302402,Pune,Hadapsar,Within 1 month,warm,Hindi
+Synthetic Ananya Shah 50251,+91 6300000251,,,Purchase,Flat,2,2,20000000,235.64 L,Bengaluru,Yelahanka,Within 1 month,Hot,Hindi
+Synthetic Kabir Mehta 50252,063000 00252,64000 00252,synthetic.variant.50252@example.test,Purchase,Office space,3,4,95 L,1.47 Cr,Ahmedabad,Satellite,Within 1 month,Hot,Hindi
+Synthetic Saanvi Verma 50253,91-63000-00253,,,Rent,Flat,2,2,2 Cr,₹ 266.75 Lakh,Mumbai,Malad,Within 1 month,warm,Hindi
+Synthetic Kavya Joshi 50254,63000 00254,,synthetic.variant.50254@example.test,Rent,Office space,2,2,₹ 500 Lakh,"7,52,54,991/-",Chennai,Porur,Within 1 month,warm,Hindi
+Synthetic Ishaan Das 50255,6300000255,,,Rent,Office space,1,2,"1,20,00,000/-",Rs. 1.44 crore,Pune,Wakad,Within 1 month,warm,English
+Synthetic Rohan Joshi 50256,+91 6300000256,,synthetic.variant.50256@example.test,Rent,Office space,2,2,Rs. 5 crore,75632238,Bengaluru,Sarjapur,Within 1 month,warm,English
+Synthetic Sai Gupta 50257,063000 00257,,,Lease commercial,Office space,3,3,30000000,352.53 L,Mumbai,Goregaon,Within 1 month,warm,English
+Synthetic Saanvi Deshpande 50258,91-63000-00258,,synthetic.variant.50258@example.test,Purchase,Flat,2,3,60 L,0.87 Cr,Mumbai,Chembur,Within 1 month,warm,Hindi
+Synthetic Krishna Singh 50259,63000 00259,+91 6400000259,,Purchase,Office space,3,3,2 Cr,₹ 307.8 Lakh,Hyderabad,Kondapur,Within 1 month,Hot,English
+Synthetic Aditya Reddy 50260,6300000260,,synthetic.variant.50260@example.test,Rent,Office space,3,3,₹ 25 Lakh,"28,85,160/-",Hyderabad,Kondapur,Within 1 month,Hot,Hindi
+Synthetic Ramesh Das 50261,+91 6300000261,,,Purchase,Office space,3,4,"5,00,00,000/-",Rs. 6.74 crore,Bengaluru,Whitefield,Within 1 month,Hot,Hindi
+Synthetic Neha Deshpande 50262,063000 00262,,synthetic.variant.50262@example.test,Rent,Flat,2,2,Rs. 0.95 crore,11011133,Chennai,Porur,Within 1 month,Hot,English
+Synthetic Rahul Iyer 50263,91-63000-00263,,,Rent,Flat,3,3,20000000,234.31 L,Mumbai,Malad,Within 1 month,warm,English
+Synthetic Lakshmi Iyer 50264,63000 00264,,synthetic.variant.50264@example.test,Lease commercial,Flat,2,3,85 L,1.21 Cr,Hyderabad,Kondapur,Within 1 month,Hot,Hindi
+Synthetic Kabir Nair 50265,6300000265,,,Rent,Office space,3,3,0.6 Cr,₹ 73 Lakh,Mumbai,Powai,Within 1 month,warm,Hindi
+Synthetic Amit Pillai 50266,+91 6300000266,91-64000-00266,synthetic.variant.50266@example.test,Rent,Flat,1,1,₹ 150 Lakh,"1,72,58,079/-",Chennai,OMR,Within 1 month,warm,English
+Synthetic Vihaan Gupta 50267,063000 00267,,,Rent,Flat,1,2,"60,00,000/-",Rs. 0.9 crore,Chennai,OMR,Within 1 month,Hot,Hindi
+Synthetic Sunita Sharma 50268,91-63000-00268,,synthetic.variant.50268@example.test,Purchase,Flat,1,1,Rs. 2 crore,29425822,Ahmedabad,SG Highway,Within 1 month,Hot,Hindi
+Synthetic Krishna Patel 50269,63000 00269,,,Lease commercial,Flat,3,3,20000000,264.51 L,Chennai,Anna Nagar,Within 1 month,warm,Hindi
+Synthetic Aditya Mehta 50270,6300000270,,synthetic.variant.50270@example.test,Purchase,Office space,3,4,75 L,1.09 Cr,Pune,Hadapsar,Within 1 month,Hot,Hindi
+Synthetic Ishaan Reddy 50271,+91 6300000271,,,Purchase,Flat,1,1,0.25 Cr,₹ 36.65 Lakh,Pune,Aundh,Within 1 month,Hot,Hindi
+Synthetic Aarav Verma 50272,063000 00272,,synthetic.variant.50272@example.test,Lease commercial,Flat,3,3,₹ 150 Lakh,"1,74,97,908/-",Mumbai,Goregaon,Within 1 month,Hot,Hindi
+Synthetic Pooja Nair 50273,91-63000-00273,6400000273,,Rent,Office space,2,3,"85,00,000/-",Rs. 0.95 crore,Ahmedabad,Bopal,Within 1 month,warm,English
+Synthetic Suresh Patel 50274,63000 00274,,synthetic.variant.50274@example.test,Purchase,Flat,2,2,Rs. 0.85 crore,10086175,Mumbai,Goregaon,Within 1 month,Hot,Hindi
+Synthetic Lakshmi Kulkarni 50275,6300000275,,,Lease commercial,Flat,1,1,12000000,132.18 L,Bengaluru,Sarjapur,Within 1 month,Hot,Hindi
+Synthetic Vikram Banerjee 50276,+91 6300000276,,synthetic.variant.50276@example.test,Lease commercial,Flat,1,2,60 L,0.92 Cr,Pune,Viman Nagar,Within 1 month,Hot,Hindi
+Synthetic Sunita Chopra 50277,063000 00277,,,Purchase,Flat,3,3,0.25 Cr,₹ 39.11 Lakh,Bengaluru,Yelahanka,Within 1 month,Hot,Hindi
+Synthetic Sunita Gupta 50278,91-63000-00278,,synthetic.variant.50278@example.test,Rent,Office space,1,1,₹ 25 Lakh,"32,60,067/-",Pune,Hinjewadi,Within 1 month,Hot,Hindi
+Synthetic Aditya Iyer 50279,63000 00279,,,Rent,Flat,1,2,"3,00,00,000/-",Rs. 4.77 crore,Mumbai,Powai,Within 1 month,Hot,Hindi
+Synthetic Aarav Reddy 50280,6300000280,064000 00280,synthetic.variant.50280@example.test,Lease commercial,Flat,2,2,Rs. 0.95 crore,13807863,Mumbai,Andheri,Within 1 month,Hot,Hindi
+Synthetic Kavya Shah 50281,+91 6300000281,,,Purchase,Office space,1,1,7500000,106.65 L,Chennai,Velachery,Within 1 month,warm,Hindi
+Synthetic Arjun Das 50282,063000 00282,,synthetic.variant.50282@example.test,Lease commercial,Flat,3,4,120 L,1.77 Cr,Bengaluru,Yelahanka,Within 1 month,warm,English
+Synthetic Riya Shah 50283,91-63000-00283,,,Purchase,Office space,3,3,0.85 Cr,₹ 134.23 Lakh,Mumbai,Goregaon,Within 1 month,Hot,English
+Synthetic Suresh Shah 50284,63000 00284,,synthetic.variant.50284@example.test,Purchase,Flat,1,1,₹ 500 Lakh,"6,07,61,673/-",Bengaluru,Yelahanka,Within 1 month,Hot,English
+Synthetic Manoj Reddy 50285,6300000285,,,Lease commercial,Flat,3,4,"35,00,000/-",Rs. 0.52 crore,Bengaluru,HSR Layout,Within 1 month,warm,English
+Synthetic Deepa Deshpande 50286,+91 6300000286,,synthetic.variant.50286@example.test,Rent,Flat,1,1,Rs. 0.95 crore,13846933,Ahmedabad,Satellite,Within 1 month,Hot,English
+Synthetic Amit Chopra 50287,063000 00287,64000 00287,,Purchase,Office space,1,1,2500000,27.89 L,Bengaluru,Yelahanka,Within 1 month,warm,English
+Synthetic Pooja Das 50288,91-63000-00288,,synthetic.variant.50288@example.test,Rent,Flat,1,2,85 L,1.26 Cr,Hyderabad,Kondapur,Within 1 month,Hot,English
+Synthetic Manoj Iyer 50289,63000 00289,,,Lease commercial,Flat,2,2,0.85 Cr,₹ 130.03 Lakh,Ahmedabad,Satellite,Within 1 month,warm,English
+Synthetic Ishaan Gupta 50290,6300000290,,synthetic.variant.50290@example.test,Rent,Office space,3,3,₹ 200 Lakh,"2,76,25,650/-",Hyderabad,Kukatpally,Within 1 month,Hot,Hindi
+Synthetic Aditya Singh 50291,+91 6300000291,,,Rent,Flat,1,2,"2,00,00,000/-",Rs. 2.99 crore,Bengaluru,HSR Layout,Within 1 month,Hot,Hindi
+Synthetic Saanvi Shah 50292,063000 00292,,synthetic.variant.50292@example.test,Purchase,Office space,1,1,Rs. 5 crore,58158539,Ahmedabad,Gota,Within 1 month,Hot,Hindi
+Synthetic Kavya Banerjee 50293,91-63000-00293,,,Purchase,Flat,3,3,20000000,297.95 L,Hyderabad,Kukatpally,Within 1 month,warm,Hindi
+Synthetic Kavya Nair 50294,63000 00294,+91 6400000294,synthetic.variant.50294@example.test,Purchase,Office space,1,2,200 L,3.08 Cr,Pune,Baner,Within 1 month,warm,Hindi
+Synthetic Aadhya Kapoor 50295,6300000295,,,Rent,Flat,1,1,0.85 Cr,₹ 100.11 Lakh,Mumbai,Powai,Within 1 month,warm,Hindi
+Synthetic Kavya Nair 50296,+91 6300000296,,synthetic.variant.50296@example.test,Rent,Office space,3,3,₹ 120 Lakh,"1,71,95,425/-",Mumbai,Thane,Within 1 month,warm,English
+Synthetic Sunita Gupta 50297,063000 00297,,,Rent,Flat,3,4,"75,00,000/-",Rs. 1.03 crore,Bengaluru,Sarjapur,Within 1 month,Hot,Hindi
+Synthetic Krishna Joshi 50298,91-63000-00298,,synthetic.variant.50298@example.test,Rent,Office space,1,1,Rs. 3 crore,45664527,Mumbai,Thane,Within 1 month,warm,Hindi
+Synthetic Pooja Singh 50299,63000 00299,,,Lease commercial,Flat,2,2,2500000,29.49 L,Hyderabad,Gachibowli,Within 1 month,warm,English
+Synthetic Aarav Rao 50300,6300000300,,synthetic.variant.50300@example.test,Purchase,Flat,2,3,200 L,2.99 Cr,Hyderabad,Kondapur,Within 1 month,warm,English
+Synthetic Sai Patel 50301,+91 6300000301,91-64000-00301,,Lease commercial,Flat,1,1,5 Cr,₹ 619.88 Lakh,Hyderabad,Kukatpally,Within 1 month,warm,Hindi
+Synthetic Kabir Joshi 50302,063000 00302,,synthetic.variant.50302@example.test,Rent,Office space,2,2,₹ 500 Lakh,"7,20,28,814/-",Pune,Kharadi,Within 1 month,warm,English
+Synthetic Suresh Chopra 50303,91-63000-00303,,,Purchase,Flat,2,3,"3,00,00,000/-",Rs. 4.59 crore,Chennai,OMR,Within 1 month,warm,Hindi
+Synthetic Aditya Mehta 50304,63000 00304,,synthetic.variant.50304@example.test,Purchase,Office space,3,3,Rs. 0.25 crore,3410232,Hyderabad,Madhapur,Within 1 month,Hot,Hindi
+Synthetic Manoj Nair 50305,6300000305,,,Lease commercial,Office space,3,3,6000000,67.46 L,Chennai,Velachery,Within 1 month,Hot,Hindi
+Synthetic Krishna Mehta 50306,+91 6300000306,,synthetic.variant.50306@example.test,Rent,Flat,1,2,60 L,0.88 Cr,Chennai,Anna Nagar,Within 1 month,warm,English
+Synthetic Rohan Shah 50307,063000 00307,,,Rent,Flat,1,1,0.6 Cr,₹ 92.53 Lakh,Ahmedabad,Bopal,Within 1 month,warm,English
+Synthetic Lakshmi Das 50308,91-63000-00308,6400000308,synthetic.variant.50308@example.test,Lease commercial,Flat,2,2,₹ 300 Lakh,"4,63,62,793/-",Pune,Baner,Within 1 month,warm,English
+Synthetic Reyansh Banerjee 50309,63000 00309,,,Lease commercial,Flat,2,3,"1,50,00,000/-",Rs. 2.4 crore,Chennai,Velachery,Within 1 month,Hot,English
+Synthetic Deepa Banerjee 50310,6300000310,,synthetic.variant.50310@example.test,Lease commercial,Office space,1,1,Rs. 0.95 crore,11583598,Pune,Kharadi,Within 1 month,Hot,English
+Synthetic Krishna Banerjee 50311,+91 6300000311,,,Lease commercial,Flat,1,1,20000000,292.93 L,Mumbai,Goregaon,Within 1 month,warm,English
+Synthetic Sunita Rao 50312,063000 00312,,synthetic.variant.50312@example.test,Lease commercial,Flat,3,4,60 L,0.92 Cr,Bengaluru,Yelahanka,Within 1 month,Hot,Hindi
+Synthetic Meera Reddy 50313,91-63000-00313,,,Rent,Flat,3,3,0.95 Cr,₹ 150.8 Lakh,Pune,Wakad,Within 1 month,warm,English
+Synthetic Meera Rao 50314,63000 00314,,synthetic.variant.50314@example.test,Purchase,Office space,1,1,₹ 95 Lakh,"1,11,66,830/-",Chennai,Velachery,Within 1 month,Hot,Hindi
+Synthetic Vikram Kulkarni 50315,6300000315,064000 00315,,Lease commercial,Office space,3,4,"85,00,000/-",Rs. 1.25 crore,Hyderabad,Madhapur,Within 1 month,warm,Hindi
+Synthetic Kavya Iyer 50316,+91 6300000316,,synthetic.variant.50316@example.test,Lease commercial,Flat,2,2,Rs. 2 crore,28496572,Chennai,Velachery,Within 1 month,warm,English
+Synthetic Sai Shah 50317,063000 00317,,,Rent,Office space,3,3,30000000,411.19 L,Pune,Hinjewadi,Within 1 month,warm,Hindi
+Synthetic Diya Mehta 50318,91-63000-00318,,synthetic.variant.50318@example.test,Purchase,Flat,2,3,120 L,1.56 Cr,Mumbai,Powai,Within 1 month,warm,Hindi
+Synthetic Meera Patel 50319,63000 00319,,,Lease commercial,Flat,2,2,3 Cr,₹ 406.12 Lakh,Pune,Hinjewadi,Within 1 month,warm,English
+Synthetic Aadhya Joshi 50320,6300000320,,synthetic.variant.50320@example.test,Lease commercial,Office space,1,1,₹ 120 Lakh,"1,71,53,413/-",Bengaluru,Yelahanka,Within 1 month,Hot,English
+Synthetic Ramesh Deshpande 50321,+91 6300000321,,,Purchase,Flat,3,4,"1,50,00,000/-",Rs. 2.28 crore,Mumbai,Goregaon,Within 1 month,Hot,Hindi
+Synthetic Kavya Deshpande 50322,063000 00322,64000 00322,synthetic.variant.50322@example.test,Purchase,Flat,2,2,Rs. 0.25 crore,3634099,Ahmedabad,Gota,Within 1 month,warm,Hindi
+Synthetic Kavya Pillai 50323,91-63000-00323,,,Rent,Office space,1,1,4500000,55.83 L,Mumbai,Malad,Within 1 month,Hot,English
+Synthetic Kavya Joshi 50324,63000 00324,,synthetic.variant.50324@example.test,Lease commercial,Flat,1,2,25 L,0.39 Cr,Hyderabad,Miyapur,Within 1 month,Hot,Hindi
+Synthetic Riya Reddy 50325,6300000325,,,Rent,Office space,1,1,0.85 Cr,₹ 112.61 Lakh,Ahmedabad,SG Highway,Within 1 month,Hot,Hindi
+Synthetic Ramesh Mehta 50326,+91 6300000326,,synthetic.variant.50326@example.test,Purchase,Flat,1,1,₹ 75 Lakh,"1,11,73,678/-",Ahmedabad,Satellite,Within 1 month,Hot,English
+Synthetic Deepa Singh 50327,063000 00327,,,Purchase,Flat,2,3,"35,00,000/-",Rs. 0.5 crore,Pune,Hadapsar,Within 1 month,warm,Hindi
+Synthetic Lakshmi Gupta 50328,91-63000-00328,,synthetic.variant.50328@example.test,Rent,Office space,3,3,Rs. 0.6 crore,9189413,Mumbai,Malad,Within 1 month,warm,Hindi
+Synthetic Amit Pillai 50329,63000 00329,+91 6400000329,,Lease commercial,Flat,3,3,4500000,69.76 L,Pune,Viman Nagar,Within 1 month,warm,English
+Synthetic Ira Deshpande 50330,6300000330,,synthetic.variant.50330@example.test,Lease commercial,Office space,1,2,95 L,1.09 Cr,Bengaluru,Electronic City,Within 1 month,Hot,English
+Synthetic Rahul Shah 50331,+91 6300000331,,,Lease commercial,Office space,2,2,0.25 Cr,₹ 28.57 Lakh,Ahmedabad,Satellite,Within 1 month,warm,Hindi
+Synthetic Sunita Shah 50332,063000 00332,,synthetic.variant.50332@example.test,Purchase,Flat,1,1,₹ 200 Lakh,"2,99,65,148/-",Pune,Hadapsar,Within 1 month,Hot,English
+Synthetic Sunita Patel 50333,91-63000-00333,,,Purchase,Flat,2,3,"35,00,000/-",Rs. 0.46 crore,Bengaluru,Whitefield,Within 1 month,Hot,Hindi
+Synthetic Aditya Shah 50334,63000 00334,,synthetic.variant.50334@example.test,Purchase,Flat,3,3,Rs. 0.35 crore,5173280,Ahmedabad,SG Highway,Within 1 month,warm,English
+Synthetic Kavya Joshi 50335,6300000335,,,Purchase,Office space,1,1,9500000,132.59 L,Ahmedabad,Satellite,Within 1 month,warm,Hindi
+Synthetic Kabir Das 50336,+91 6300000336,91-64000-00336,synthetic.variant.50336@example.test,Lease commercial,Office space,3,4,200 L,2.44 Cr,Bengaluru,Sarjapur,Within 1 month,warm,English
+Synthetic Sunita Chopra 50337,063000 00337,,,Purchase,Office space,1,1,0.85 Cr,₹ 96.84 Lakh,Pune,Hinjewadi,Within 1 month,warm,Hindi
+Synthetic Vihaan Mehta 50338,91-63000-00338,,synthetic.variant.50338@example.test,Rent,Office space,1,1,₹ 60 Lakh,"67,45,580/-",Bengaluru,HSR Layout,Within 1 month,warm,Hindi
+Synthetic Amit Joshi 50339,63000 00339,,,Lease commercial,Office space,1,2,"1,50,00,000/-",Rs. 1.86 crore,Bengaluru,Electronic City,Within 1 month,Hot,English
+Synthetic Sunita Patel 50340,6300000340,,synthetic.variant.50340@example.test,Rent,Office space,3,3,Rs. 2 crore,26850482,Pune,Kharadi,Within 1 month,warm,Hindi
+Synthetic Pooja Mehta 50341,+91 6300000341,,,Lease commercial,Flat,1,1,7500000,110.84 L,Mumbai,Chembur,Within 1 month,Hot,English
+Synthetic Neha Patel 50342,063000 00342,,synthetic.variant.50342@example.test,Purchase,Flat,3,4,85 L,1.07 Cr,Mumbai,Borivali,Within 1 month,warm,Hindi
+Synthetic Suresh Sharma 50343,91-63000-00343,6400000343,,Rent,Office space,2,2,0.25 Cr,₹ 34.47 Lakh,Chennai,Tambaram,Within 1 month,warm,Hindi
+Synthetic Rohan Nair 50344,63000 00344,,synthetic.variant.50344@example.test,Lease commercial,Flat,2,2,₹ 35 Lakh,"43,08,941/-",Hyderabad,Miyapur,Within 1 month,Hot,English
+Synthetic Lakshmi Das 50345,6300000345,,,Lease commercial,Office space,3,4,"5,00,00,000/-",Rs. 7.32 crore,Mumbai,Borivali,Within 1 month,warm,Hindi
+Synthetic Reyansh Verma 50346,+91 6300000346,,synthetic.variant.50346@example.test,Lease commercial,Office space,3,3,Rs. 0.45 crore,5061261,Chennai,Tambaram,Within 1 month,Hot,English
+Synthetic Aarav Patel 50347,063000 00347,,,Purchase,Office space,3,3,3500000,49.85 L,Chennai,OMR,Within 1 month,warm,Hindi
+Synthetic Vikram Gupta 50348,91-63000-00348,,synthetic.variant.50348@example.test,Lease commercial,Flat,2,3,300 L,4.17 Cr,Pune,Hinjewadi,Within 1 month,warm,English
+Synthetic Vikram Shah 50349,63000 00349,,,Purchase,Flat,2,2,0.25 Cr,₹ 35.56 Lakh,Ahmedabad,Gota,Within 1 month,Hot,Hindi
+Synthetic Vikram Banerjee 50350,6300000350,064000 00350,synthetic.variant.50350@example.test,Rent,Office space,3,3,₹ 150 Lakh,"2,20,30,541/-",Hyderabad,Gachibowli,Within 1 month,Hot,English
+Synthetic Aarav Das 50351,+91 6300000351,,,Rent,Office space,2,3,"1,20,00,000/-",Rs. 1.56 crore,Pune,Hadapsar,Within 1 month,Hot,Hindi
+Synthetic Diya Pillai 50352,063000 00352,,synthetic.variant.50352@example.test,Purchase,Office space,1,1,Rs. 0.95 crore,12782119,Hyderabad,Kukatpally,Within 1 month,Hot,Hindi
+Synthetic Arjun Das 50353,91-63000-00353,,,Purchase,Office space,2,2,2500000,32.34 L,Ahmedabad,Gota,Within 1 month,Hot,Hindi
+Synthetic Kavya Kapoor 50354,63000 00354,,synthetic.variant.50354@example.test,Rent,Flat,3,4,200 L,3.06 Cr,Chennai,Anna Nagar,Within 1 month,warm,Hindi
+Synthetic Neha Verma 50355,6300000355,,,Lease commercial,Flat,2,2,0.75 Cr,₹ 87.38 Lakh,Pune,Hinjewadi,Within 1 month,Hot,Hindi
+Synthetic Rahul Sharma 50356,+91 6300000356,,synthetic.variant.50356@example.test,Purchase,Office space,3,3,₹ 35 Lakh,"43,43,067/-",Chennai,Velachery,Within 1 month,warm,Hindi
+Synthetic Deepa Chopra 50357,063000 00357,64000 00357,,Lease commercial,Flat,1,2,"2,00,00,000/-",Rs. 2.38 crore,Bengaluru,Sarjapur,Within 1 month,warm,English
+Synthetic Neha Gupta 50358,91-63000-00358,,synthetic.variant.50358@example.test,Rent,Office space,3,3,Rs. 0.75 crore,9715419,Chennai,Velachery,Within 1 month,warm,Hindi
+Synthetic Amit Nair 50359,63000 00359,,,Rent,Office space,3,3,7500000,87.4 L,Chennai,Anna Nagar,Within 1 month,Hot,English
+Synthetic Vihaan Mehta 50360,6300000360,,synthetic.variant.50360@example.test,Lease commercial,Office space,1,2,200 L,2.39 Cr,Pune,Viman Nagar,Within 1 month,Hot,Hindi
+Synthetic Aadhya Mehta 50361,+91 6300000361,,,Lease commercial,Flat,2,2,0.95 Cr,₹ 144.88 Lakh,Ahmedabad,Bopal,Within 1 month,Hot,English
+Synthetic Amit Gupta 50362,063000 00362,,synthetic.variant.50362@example.test,Purchase,Office space,2,2,₹ 500 Lakh,"7,36,96,010/-",Hyderabad,Madhapur,Within 1 month,warm,English
+Synthetic Manoj Mehta 50363,91-63000-00363,,,Purchase,Flat,1,2,"1,50,00,000/-",Rs. 1.82 crore,Chennai,Anna Nagar,Within 1 month,warm,English
+Synthetic Aditya Menon 50364,63000 00364,+91 6400000364,synthetic.variant.50364@example.test,Lease commercial,Flat,3,3,Rs. 1.2 crore,14361334,Hyderabad,Kukatpally,Within 1 month,Hot,Hindi
+Synthetic Amit Das 50365,6300000365,,,Rent,Office space,2,2,4500000,50.46 L,Mumbai,Borivali,Within 1 month,warm,Hindi
+Synthetic Aarav Chopra 50366,+91 6300000366,,synthetic.variant.50366@example.test,Lease commercial,Office space,2,3,45 L,0.51 Cr,Bengaluru,Sarjapur,Within 1 month,warm,English
+Synthetic Ramesh Banerjee 50367,063000 00367,,,Purchase,Office space,1,1,0.45 Cr,₹ 63.72 Lakh,Pune,Viman Nagar,Within 1 month,Hot,English
+Synthetic Lakshmi Gupta 50368,91-63000-00368,,synthetic.variant.50368@example.test,Lease commercial,Office space,2,2,₹ 150 Lakh,"1,99,81,699/-",Chennai,Velachery,Within 1 month,warm,English
+Synthetic Kavya Banerjee 50369,63000 00369,,,Lease commercial,Office space,3,4,"45,00,000/-",Rs. 0.72 crore,Pune,Hinjewadi,Within 1 month,Hot,Hindi
+Synthetic Rohan Singh 50370,6300000370,,synthetic.variant.50370@example.test,Rent,Flat,1,1,Rs. 3 crore,45228411,Chennai,Porur,Within 1 month,Hot,English
+Synthetic Saanvi Reddy 50371,+91 6300000371,91-64000-00371,,Purchase,Office space,1,1,15000000,171.22 L,Mumbai,Goregaon,Within 1 month,Hot,English
+Synthetic Aditya Rao 50372,063000 00372,,synthetic.variant.50372@example.test,Lease commercial,Office space,3,4,25 L,0.38 Cr,Chennai,Tambaram,Within 1 month,warm,Hindi
+Synthetic Reyansh Shah 50373,91-63000-00373,,,Purchase,Office space,3,3,0.6 Cr,₹ 87.64 Lakh,Mumbai,Borivali,Within 1 month,Hot,Hindi
+Synthetic Neha Rao 50374,63000 00374,,synthetic.variant.50374@example.test,Lease commercial,Office space,3,3,₹ 35 Lakh,"44,07,031/-",Ahmedabad,Satellite,Within 1 month,warm,Hindi
+Synthetic Rohan Chopra 50375,6300000375,,,Rent,Office space,1,2,"5,00,00,000/-",Rs. 5.57 crore,Mumbai,Chembur,Within 1 month,warm,Hindi
+Synthetic Ananya Chopra 50376,+91 6300000376,,synthetic.variant.50376@example.test,Lease commercial,Flat,3,3,Rs. 3 crore,41985210,Bengaluru,Yelahanka,Within 1 month,warm,Hindi
+Synthetic Ramesh Mehta 50377,063000 00377,,,Lease commercial,Flat,1,1,20000000,270.2 L,Chennai,OMR,Within 1 month,warm,Hindi
+Synthetic Ananya Menon 50378,91-63000-00378,6400000378,synthetic.variant.50378@example.test,Purchase,Flat,1,2,75 L,1 Cr,Bengaluru,Electronic City,Within 1 month,Hot,English
+Synthetic Aarav Iyer 50379,63000 00379,,,Rent,Flat,2,2,3 Cr,₹ 365.43 Lakh,Mumbai,Borivali,Within 1 month,Hot,Hindi
+Synthetic Aarav Menon 50380,6300000380,,synthetic.variant.50380@example.test,Rent,Flat,2,2,₹ 300 Lakh,"3,59,54,576/-",Ahmedabad,Gota,Within 1 month,warm,Hindi
+Synthetic Vikram Joshi 50381,+91 6300000381,,,Lease commercial,Flat,3,4,"2,00,00,000/-",Rs. 2.87 crore,Mumbai,Goregaon,Within 1 month,Hot,English
+Synthetic Pooja Shah 50382,063000 00382,,synthetic.variant.50382@example.test,Purchase,Flat,2,2,Rs. 0.85 crore,12748983,Chennai,Porur,Within 1 month,warm,Hindi
+Synthetic Ira Chopra 50383,91-63000-00383,,,Rent,Office space,3,3,3500000,47.69 L,Chennai,Porur,Within 1 month,warm,English
+Synthetic Krishna Verma 50384,63000 00384,,synthetic.variant.50384@example.test,Purchase,Flat,1,2,120 L,1.85 Cr,Bengaluru,Electronic City,Within 1 month,warm,Hindi
+Synthetic Aarav Singh 50385,6300000385,064000 00385,,Rent,Flat,2,2,3 Cr,₹ 402.5 Lakh,Chennai,Tambaram,Within 1 month,Hot,Hindi
+Synthetic Manoj Shah 50386,+91 6300000386,,synthetic.variant.50386@example.test,Rent,Flat,2,2,₹ 25 Lakh,"38,99,671/-",Pune,Baner,Within 1 month,warm,English
+Synthetic Aditya Singh 50387,063000 00387,,,Rent,Flat,2,3,"45,00,000/-",Rs. 0.68 crore,Hyderabad,Kondapur,Within 1 month,Hot,English
+Synthetic Kavya Singh 50388,91-63000-00388,,synthetic.variant.50388@example.test,Purchase,Office space,2,2,Rs. 0.6 crore,8753865,Bengaluru,Electronic City,Within 1 month,warm,English
+Synthetic Priya Menon 50389,63000 00389,,,Rent,Office space,3,3,2500000,37.94 L,Bengaluru,Electronic City,Within 1 month,Hot,English
+Synthetic Meera Reddy 50390,6300000390,,synthetic.variant.50390@example.test,Rent,Flat,1,2,300 L,3.93 Cr,Chennai,Porur,Within 1 month,warm,English
+Synthetic Aarav Verma 50391,+91 6300000391,,,Rent,Flat,3,3,0.45 Cr,₹ 64.11 Lakh,Mumbai,Powai,Within 1 month,warm,Hindi
+Synthetic Meera Joshi 50392,063000 00392,64000 00392,synthetic.variant.50392@example.test,Lease commercial,Flat,1,1,₹ 45 Lakh,"59,74,154/-",Pune,Aundh,Within 1 month,Hot,English
+Synthetic Ira Joshi 50393,91-63000-00393,,,Lease commercial,Flat,2,3,"95,00,000/-",Rs. 1.45 crore,Chennai,Velachery,Within 1 month,warm,English
+Synthetic Reyansh Verma 50394,63000 00394,,synthetic.variant.50394@example.test,Rent,Office space,3,3,Rs. 0.75 crore,11914467,Pune,Hinjewadi,Within 1 month,warm,English
+Synthetic Manoj Pillai 50395,6300000395,,,Rent,Office space,3,3,4500000,49.72 L,Bengaluru,HSR Layout,Within 1 month,Hot,Hindi
+Synthetic Aarav Pillai 50396,+91 6300000396,,synthetic.variant.50396@example.test,Rent,Office space,1,2,500 L,6.87 Cr,Bengaluru,Hebbal,Within 1 month,warm,English
+Synthetic Aadhya Kapoor 50397,063000 00397,,,Rent,Office space,1,1,1.5 Cr,₹ 169.77 Lakh,Hyderabad,Madhapur,Within 1 month,warm,Hindi
+Synthetic Arjun Patel 50398,91-63000-00398,,synthetic.variant.50398@example.test,Lease commercial,Office space,3,3,₹ 35 Lakh,"54,15,875/-",Mumbai,Goregaon,Within 1 month,warm,English
+Synthetic Lakshmi Nair 50399,63000 00399,+91 6400000399,,Rent,Office space,1,2,"35,00,000/-",Rs. 0.46 crore,Mumbai,Thane,Within 1 month,warm,Hindi
+Synthetic Meera Menon 50400,6300000400,,synthetic.variant.50400@example.test,Purchase,Office space,1,1,Rs. 1.5 crore,22483383,Pune,Baner,Within 1 month,warm,Hindi
+Synthetic Lakshmi Gupta 50401,+91 6300000401,,,Rent,Flat,2,2,7500000,90.7 L,Bengaluru,Yelahanka,Within 1 month,warm,Hindi
+Synthetic Vikram Deshpande 50402,063000 00402,,synthetic.variant.50402@example.test,Rent,Office space,3,4,85 L,1.28 Cr,Mumbai,Thane,Within 1 month,Hot,Hindi
+Synthetic Pooja Iyer 50403,91-63000-00403,,,Lease commercial,Flat,1,1,0.25 Cr,₹ 28.74 Lakh,Pune,Wakad,Within 1 month,Hot,Hindi
+Synthetic Meera Joshi 50404,63000 00404,,synthetic.variant.50404@example.test,Rent,Office space,2,2,₹ 75 Lakh,"1,06,63,897/-",Mumbai,Borivali,Within 1 month,Hot,Hindi
+Synthetic Ishaan Banerjee 50405,6300000405,,,Rent,Flat,1,2,"85,00,000/-",Rs. 1.28 crore,Bengaluru,HSR Layout,Within 1 month,Hot,English
+Synthetic Suresh Sharma 50406,+91 6300000406,91-64000-00406,synthetic.variant.50406@example.test,Purchase,Flat,2,2,Rs. 0.95 crore,10535850,Mumbai,Powai,Within 1 month,warm,English
+Synthetic Krishna Rao 50407,063000 00407,,,Purchase,Flat,1,1,3500000,51.8 L,Mumbai,Powai,Within 1 month,warm,English
+Synthetic Pooja Das 50408,91-63000-00408,,synthetic.variant.50408@example.test,Purchase,Flat,1,2,500 L,5.78 Cr,Ahmedabad,SG Highway,Within 1 month,warm,English
+Synthetic Neha Banerjee 50409,63000 00409,,,Rent,Office space,2,2,1.5 Cr,₹ 208.51 Lakh,Pune,Wakad,Within 1 month,Hot,English
+Synthetic Meera Gupta 50410,6300000410,,synthetic.variant.50410@example.test,Lease commercial,Flat,3,3,₹ 60 Lakh,"95,01,148/-",Ahmedabad,SG Highway,Within 1 month,warm,English
+Synthetic Sai Patel 50411,+91 6300000411,,,Rent,Office space,2,3,"25,00,000/-",Rs. 0.28 crore,Hyderabad,Kukatpally,Within 1 month,warm,English
+Synthetic Saanvi Iyer 50412,063000 00412,,synthetic.variant.50412@example.test,Rent,Flat,1,1,Rs. 0.6 crore,8118269,Mumbai,Thane,Within 1 month,Hot,English
+Synthetic Rohan Reddy 50413,91-63000-00413,6400000413,,Purchase,Flat,2,2,9500000,149.6 L,Bengaluru,HSR Layout,Within 1 month,Hot,English
+Synthetic Amit Kulkarni 50414,63000 00414,,synthetic.variant.50414@example.test,Lease commercial,Office space,3,4,75 L,1.19 Cr,Bengaluru,Hebbal,Within 1 month,warm,Hindi
+Synthetic Aditya Mehta 50415,6300000415,,,Rent,Flat,2,2,1.5 Cr,₹ 189.81 Lakh,Bengaluru,Sarjapur,Within 1 month,warm,Hindi
+Synthetic Amit Joshi 50416,+91 6300000416,,synthetic.variant.50416@example.test,Purchase,Office space,2,2,₹ 95 Lakh,"1,15,22,512/-",Chennai,OMR,Within 1 month,warm,Hindi
+Synthetic Ira Kapoor 50417,063000 00417,,,Purchase,Flat,3,4,"45,00,000/-",Rs. 0.61 crore,Pune,Hinjewadi,Within 1 month,warm,English
+Synthetic Riya Kapoor 50418,91-63000-00418,,synthetic.variant.50418@example.test,Lease commercial,Flat,1,1,Rs. 0.35 crore,5226993,Hyderabad,Gachibowli,Within 1 month,warm,Hindi
+Synthetic Reyansh Gupta 50419,63000 00419,,,Lease commercial,Office space,2,2,4500000,67.83 L,Ahmedabad,Satellite,Within 1 month,Hot,English
+Synthetic Sunita Reddy 50420,6300000420,064000 00420,synthetic.variant.50420@example.test,Rent,Office space,3,4,60 L,0.73 Cr,Chennai,Porur,Within 1 month,Hot,Hindi
+Synthetic Aditya Rao 50421,+91 6300000421,,,Lease commercial,Flat,2,2,0.95 Cr,₹ 137.44 Lakh,Hyderabad,Miyapur,Within 1 month,Hot,Hindi
+Synthetic Sunita Deshpande 50422,063000 00422,,synthetic.variant.50422@example.test,Purchase,Flat,2,2,₹ 200 Lakh,"2,85,50,304/-",Bengaluru,Hebbal,Within 1 month,Hot,English
+Synthetic Manoj Pillai 50423,91-63000-00423,,,Lease commercial,Flat,1,2,"1,50,00,000/-",Rs. 1.99 crore,Chennai,Porur,Within 1 month,warm,English
+Synthetic Deepa Pillai 50424,63000 00424,,synthetic.variant.50424@example.test,Purchase,Flat,2,2,Rs. 0.45 crore,6196016,Bengaluru,HSR Layout,Within 1 month,Hot,Hindi
+Synthetic Sunita Kulkarni 50425,6300000425,,,Rent,Office space,3,3,50000000,779.42 L,Bengaluru,Hebbal,Within 1 month,warm,Hindi
+Synthetic Pooja Nair 50426,+91 6300000426,,synthetic.variant.50426@example.test,Purchase,Office space,1,2,45 L,0.65 Cr,Hyderabad,Kukatpally,Within 1 month,warm,Hindi
+Synthetic Sai Menon 50427,063000 00427,64000 00427,,Lease commercial,Office space,2,2,1.5 Cr,₹ 227.91 Lakh,Chennai,Velachery,Within 1 month,Hot,English
+Synthetic Riya Patel 50428,91-63000-00428,,synthetic.variant.50428@example.test,Rent,Flat,3,3,₹ 95 Lakh,"1,34,03,721/-",Mumbai,Borivali,Within 1 month,Hot,English
+Synthetic Priya Pillai 50429,63000 00429,,,Purchase,Office space,2,3,"5,00,00,000/-",Rs. 6.2 crore,Bengaluru,Electronic City,Within 1 month,warm,Hindi
+Synthetic Ananya Rao 50430,6300000430,,synthetic.variant.50430@example.test,Lease commercial,Flat,2,2,Rs. 0.25 crore,3696031,Hyderabad,Kukatpally,Within 1 month,warm,English
+Synthetic Kabir Pillai 50431,+91 6300000431,,,Purchase,Office space,2,2,12000000,156.1 L,Ahmedabad,SG Highway,Within 1 month,Hot,Hindi
+Synthetic Kavya Gupta 50432,063000 00432,,synthetic.variant.50432@example.test,Lease commercial,Office space,3,4,95 L,1.41 Cr,Ahmedabad,Bopal,Within 1 month,Hot,English
+Synthetic Aarav Shah 50433,91-63000-00433,,,Lease commercial,Office space,1,1,5 Cr,₹ 611.98 Lakh,Mumbai,Goregaon,Within 1 month,warm,English
+Synthetic Rahul Nair 50434,63000 00434,+91 6400000434,synthetic.variant.50434@example.test,Lease commercial,Flat,2,2,₹ 95 Lakh,"1,23,96,153/-",Mumbai,Malad,Within 1 month,warm,English
+Synthetic Sunita Deshpande 50435,6300000435,,,Rent,Office space,3,4,"25,00,000/-",Rs. 0.3 crore,Hyderabad,Kondapur,Within 1 month,warm,Hindi
+Synthetic Kabir Mehta 50436,+91 6300000436,,synthetic.variant.50436@example.test,Purchase,Office space,2,2,Rs. 0.85 crore,12161892,Hyderabad,Kondapur,Within 1 month,Hot,Hindi
+Synthetic Diya Reddy 50437,063000 00437,,,Purchase,Office space,3,3,3500000,47.99 L,Hyderabad,Miyapur,Within 1 month,warm,Hindi
+Synthetic Saanvi Mehta 50438,91-63000-00438,,synthetic.variant.50438@example.test,Rent,Flat,1,2,45 L,0.66 Cr,Mumbai,Powai,Within 1 month,Hot,Hindi
+Synthetic Reyansh Kulkarni 50439,63000 00439,,,Purchase,Office space,2,2,0.45 Cr,₹ 52.26 Lakh,Ahmedabad,Bopal,Within 1 month,Hot,Hindi
+Synthetic Diya Das 50440,6300000440,,synthetic.variant.50440@example.test,Rent,Flat,3,3,₹ 150 Lakh,"2,02,77,837/-",Mumbai,Goregaon,Within 1 month,warm,Hindi
+Synthetic Sai Banerjee 50441,+91 6300000441,91-64000-00441,,Rent,Flat,2,3,"45,00,000/-",Rs. 0.59 crore,Chennai,Tambaram,Within 1 month,Hot,Hindi
+Synthetic Neha Sharma 50442,063000 00442,,synthetic.variant.50442@example.test,Rent,Flat,1,1,Rs. 3 crore,41762597,Ahmedabad,Bopal,Within 1 month,warm,Hindi
+Synthetic Vikram Kapoor 50443,91-63000-00443,,,Lease commercial,Office space,3,3,2500000,33.8 L,Pune,Wakad,Within 1 month,warm,Hindi
+Synthetic Ananya Kulkarni 50444,63000 00444,,synthetic.variant.50444@example.test,Rent,Flat,1,2,500 L,6.76 Cr,Mumbai,Chembur,Within 1 month,Hot,English
+Synthetic Ananya Das 50445,6300000445,,,Lease commercial,Flat,1,1,0.75 Cr,₹ 117.67 Lakh,Bengaluru,Whitefield,Within 1 month,warm,English
+Synthetic Ramesh Deshpande 50446,+91 6300000446,,synthetic.variant.50446@example.test,Rent,Office space,3,3,₹ 500 Lakh,"7,13,78,780/-",Mumbai,Goregaon,Within 1 month,warm,Hindi
+Synthetic Ananya Reddy 50447,063000 00447,,,Lease commercial,Office space,2,3,"35,00,000/-",Rs. 0.45 crore,Chennai,Tambaram,Within 1 month,Hot,English
+Synthetic Saanvi Nair 50448,91-63000-00448,6400000448,synthetic.variant.50448@example.test,Lease commercial,Flat,2,2,Rs. 0.25 crore,3892793,Chennai,OMR,Within 1 month,Hot,Hindi
+Synthetic Rahul Reddy 50449,63000 00449,,,Lease commercial,Flat,1,1,20000000,220.85 L,Mumbai,Malad,Within 1 month,Hot,English
+Synthetic Krishna Kapoor 50450,6300000450,,synthetic.variant.50450@example.test,Purchase,Flat,2,3,25 L,0.3 Cr,Ahmedabad,SG Highway,Within 1 month,warm,Hindi
+Synthetic Vihaan Chopra 50451,+91 6300000451,,,Lease commercial,Office space,2,2,2 Cr,₹ 264.12 Lakh,Mumbai,Andheri,Within 1 month,Hot,Hindi
+Synthetic Kabir Verma 50452,063000 00452,,synthetic.variant.50452@example.test,Rent,Flat,2,2,₹ 500 Lakh,"6,70,11,582/-",Ahmedabad,SG Highway,Within 1 month,Hot,Hindi
+Synthetic Amit Iyer 50453,91-63000-00453,,,Rent,Flat,1,2,"2,00,00,000/-",Rs. 2.61 crore,Ahmedabad,Bopal,Within 1 month,Hot,English
+Synthetic Aarav Reddy 50454,63000 00454,,synthetic.variant.50454@example.test,Lease commercial,Flat,3,3,Rs. 0.35 crore,5270799,Mumbai,Chembur,Within 1 month,warm,Hindi
+Synthetic Neha Sharma 50455,6300000455,064000 00455,,Purchase,Flat,2,2,4500000,66.52 L,Chennai,Velachery,Within 1 month,warm,English
+Synthetic Ramesh Verma 50456,+91 6300000456,,synthetic.variant.50456@example.test,Lease commercial,Flat,1,2,35 L,0.55 Cr,Pune,Aundh,Within 1 month,warm,Hindi
+Synthetic Lakshmi Shah 50457,063000 00457,,,Purchase,Office space,2,2,0.6 Cr,₹ 91.82 Lakh,Mumbai,Borivali,Within 1 month,Hot,English
+Synthetic Lakshmi Das 50458,91-63000-00458,,synthetic.variant.50458@example.test,Purchase,Flat,3,3,₹ 150 Lakh,"1,97,95,421/-",Hyderabad,Kondapur,Within 1 month,warm,Hindi
+Synthetic Rahul Reddy 50459,63000 00459,,,Lease commercial,Office space,1,2,"3,00,00,000/-",Rs. 3.99 crore,Mumbai,Thane,Within 1 month,Hot,English
+Synthetic Ramesh Verma 50460,6300000460,,synthetic.variant.50460@example.test,Purchase,Flat,3,3,Rs. 0.45 crore,5355766,Bengaluru,Whitefield,Within 1 month,warm,Hindi
+Synthetic Kabir Nair 50461,+91 6300000461,,,Purchase,Office space,2,2,20000000,273.47 L,Pune,Aundh,Within 1 month,warm,English
+Synthetic Diya Sharma 50462,063000 00462,64000 00462,synthetic.variant.50462@example.test,Lease commercial,Flat,2,3,45 L,0.56 Cr,Hyderabad,Gachibowli,Within 1 month,Hot,Hindi
+Synthetic Vihaan Pillai 50463,91-63000-00463,,,Lease commercial,Flat,3,3,0.35 Cr,₹ 44.54 Lakh,Chennai,Porur,Within 1 month,Hot,English
+Synthetic Amit Iyer 50464,63000 00464,,synthetic.variant.50464@example.test,Purchase,Office space,3,3,₹ 45 Lakh,"66,76,925/-",Chennai,Velachery,Within 1 month,Hot,Hindi
+Synthetic Riya Das 50465,6300000465,,,Purchase,Flat,1,2,"5,00,00,000/-",Rs. 6.63 crore,Pune,Hadapsar,Within 1 month,warm,Hindi
+Synthetic Aadhya Kapoor 50466,+91 6300000466,,synthetic.variant.50466@example.test,Lease commercial,Flat,1,1,Rs. 0.95 crore,13041684,Ahmedabad,Bopal,Within 1 month,Hot,English
+Synthetic Deepa Singh 50467,063000 00467,,,Lease commercial,Office space,1,1,8500000,127.08 L,Mumbai,Thane,Within 1 month,warm,Hindi
+Synthetic Deepa Banerjee 50468,91-63000-00468,,synthetic.variant.50468@example.test,Purchase,Office space,1,2,500 L,6.9 Cr,Ahmedabad,SG Highway,Within 1 month,warm,Hindi
+Synthetic Reyansh Deshpande 50469,63000 00469,+91 6400000469,,Lease commercial,Flat,2,2,5 Cr,₹ 605.45 Lakh,Bengaluru,Hebbal,Within 1 month,warm,English
+Synthetic Kavya Rao 50470,6300000470,,synthetic.variant.50470@example.test,Rent,Flat,1,1,₹ 25 Lakh,"30,81,499/-",Chennai,Porur,Within 1 month,Hot,Hindi
+Synthetic Vihaan Chopra 50471,+91 6300000471,,,Lease commercial,Office space,1,2,"3,00,00,000/-",Rs. 3.46 crore,Hyderabad,Gachibowli,Within 1 month,warm,English
+Synthetic Sai Iyer 50472,063000 00472,,synthetic.variant.50472@example.test,Purchase,Flat,3,3,Rs. 0.45 crore,6791455,Chennai,Tambaram,Within 1 month,Hot,Hindi
+Synthetic Neha Reddy 50473,91-63000-00473,,,Rent,Office space,3,3,7500000,117.97 L,Pune,Hadapsar,Within 1 month,warm,Hindi
+Synthetic Reyansh Menon 50474,63000 00474,,synthetic.variant.50474@example.test,Purchase,Office space,1,2,35 L,0.46 Cr,Mumbai,Malad,Within 1 month,Hot,Hindi
+Synthetic Kavya Gupta 50475,6300000475,,,Lease commercial,Flat,2,2,0.85 Cr,₹ 125.99 Lakh,Mumbai,Goregaon,Within 1 month,warm,English
+Synthetic Deepa Pillai 50476,+91 6300000476,91-64000-00476,synthetic.variant.50476@example.test,Lease commercial,Office space,2,2,₹ 150 Lakh,"1,90,72,239/-",Pune,Kharadi,Within 1 month,Hot,Hindi
+Synthetic Vihaan Chopra 50477,063000 00477,,,Purchase,Office space,3,4,"2,00,00,000/-",Rs. 2.36 crore,Bengaluru,Electronic City,Within 1 month,Hot,English
+Synthetic Ishaan Kulkarni 50478,91-63000-00478,,synthetic.variant.50478@example.test,Purchase,Flat,1,1,Rs. 0.75 crore,9938403,Ahmedabad,Satellite,Within 1 month,warm,English
+Synthetic Rohan Chopra 50479,63000 00479,,,Lease commercial,Flat,3,3,4500000,68.01 L,Chennai,Anna Nagar,Within 1 month,warm,Hindi
+Synthetic Meera Sharma 50480,6300000480,,synthetic.variant.50480@example.test,Rent,Office space,1,2,300 L,4.48 Cr,Bengaluru,Whitefield,Within 1 month,warm,English
+Synthetic Rohan Gupta 50481,+91 6300000481,,,Rent,Office space,3,3,0.85 Cr,₹ 100.24 Lakh,Mumbai,Chembur,Within 1 month,warm,Hindi
+Synthetic Lakshmi Rao 50482,063000 00482,,synthetic.variant.50482@example.test,Rent,Flat,2,2,₹ 120 Lakh,"1,79,60,327/-",Mumbai,Malad,Within 1 month,warm,Hindi
+Synthetic Neha Iyer 50483,91-63000-00483,6400000483,,Rent,Flat,1,2,"45,00,000/-",Rs. 0.64 crore,Chennai,OMR,Within 1 month,warm,Hindi
+Synthetic Priya Sharma 50484,63000 00484,,synthetic.variant.50484@example.test,Rent,Flat,3,3,Rs. 0.45 crore,6525124,Chennai,Velachery,Within 1 month,Hot,English
+Synthetic Kabir Chopra 50485,6300000485,,,Rent,Office space,1,1,30000000,333.63 L,Mumbai,Borivali,Within 1 month,Hot,Hindi
+Synthetic Kavya Rao 50486,+91 6300000486,,synthetic.variant.50486@example.test,Purchase,Flat,1,2,60 L,0.66 Cr,Pune,Viman Nagar,Within 1 month,Hot,English
+Synthetic Kavya Singh 50487,063000 00487,,,Purchase,Flat,1,1,5 Cr,₹ 626.31 Lakh,Bengaluru,Whitefield,Within 1 month,warm,Hindi
+Synthetic Aarav Kulkarni 50488,91-63000-00488,,synthetic.variant.50488@example.test,Rent,Office space,1,1,₹ 500 Lakh,"6,92,12,038/-",Ahmedabad,Bopal,Within 1 month,Hot,Hindi
+Synthetic Pooja Reddy 50489,63000 00489,,,Lease commercial,Flat,2,3,"35,00,000/-",Rs. 0.43 crore,Ahmedabad,SG Highway,Within 1 month,warm,English
+Synthetic Aditya Nair 50490,6300000490,064000 00490,synthetic.variant.50490@example.test,Lease commercial,Flat,2,2,Rs. 1.2 crore,15754457,Ahmedabad,Satellite,Within 1 month,warm,English
+Synthetic Ira Menon 50491,+91 6300000491,,,Lease commercial,Flat,1,1,9500000,143.57 L,Bengaluru,Whitefield,Within 1 month,warm,English
+Synthetic Manoj Rao 50492,063000 00492,,synthetic.variant.50492@example.test,Lease commercial,Flat,2,3,200 L,2.7 Cr,Hyderabad,Kondapur,Within 1 month,Hot,English
+Synthetic Vihaan Reddy 50493,91-63000-00493,,,Rent,Office space,2,2,0.6 Cr,₹ 77.6 Lakh,Hyderabad,Madhapur,Within 1 month,warm,Hindi
+Synthetic Pooja Nair 50494,63000 00494,,synthetic.variant.50494@example.test,Purchase,Office space,2,2,₹ 60 Lakh,"77,86,178/-",Bengaluru,Electronic City,Within 1 month,Hot,English
+Synthetic Reyansh Reddy 50495,6300000495,,,Lease commercial,Office space,3,4,"1,20,00,000/-",Rs. 1.59 crore,Ahmedabad,SG Highway,Within 1 month,Hot,English
+Synthetic Vikram Kapoor 50496,+91 6300000496,,synthetic.variant.50496@example.test,Purchase,Flat,3,3,Rs. 0.95 crore,12219804,Hyderabad,Madhapur,Within 1 month,Hot,English
+Synthetic Arjun Reddy 50497,063000 00497,64000 00497,,Lease commercial,Flat,3,3,2500000,34.64 L,Pune,Kharadi,Within 1 month,Hot,Hindi
+Synthetic Reyansh Shah 50498,91-63000-00498,,synthetic.variant.50498@example.test,Purchase,Office space,3,4,60 L,0.86 Cr,Chennai,Anna Nagar,Within 1 month,warm,English
+Synthetic Deepa Kulkarni 50499,63000 00499,,,Rent,Office space,2,2,1.2 Cr,₹ 146.23 Lakh,Pune,Hadapsar,Within 1 month,Hot,Hindi
+Synthetic Suresh Pillai 50500,6300000500,,synthetic.variant.50500@example.test,Lease commercial,Office space,2,2,₹ 25 Lakh,"32,46,056/-",Pune,Kharadi,Within 1 month,warm,English

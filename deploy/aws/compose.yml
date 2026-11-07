@@ -1,0 +1,73 @@
+# Pilot production on one AWS EC2 host, ap-south-1 (ADR-0024). Not used locally.
+# Web + worker + Valkey + Caddy (HTTPS). PostgreSQL and file storage are Supabase Free.
+# Images come from Amazon ECR, built by .github/workflows/release.yml; IMAGE_TAG picks the build.
+# Secrets live only on the server, in /opt/crm/*.env (mode 600). See docs/runbooks/aws-ec2-pilot-deploy.md.
+name: cbr-crm
+
+x-app: &app
+  restart: unless-stopped
+  depends_on:
+    valkey:
+      condition: service_healthy
+  volumes:
+    # Supabase's CA certificate (public, not a secret). Role URLs end with
+    # ?sslmode=verify-full&sslrootcert=/run/crm/supabase-ca.crt
+    - /opt/crm/supabase-ca.crt:/run/crm/supabase-ca.crt:ro
+  logging:
+    driver: json-file
+    options: { max-size: '10m', max-file: '5' }
+
+services:
+  web:
+    <<: *app
+    image: ${ECR_REGISTRY:?}/cbr-crm-web:${IMAGE_TAG:?}
+    # The web process only enqueues mail; SMTP credentials go to the worker alone.
+    env_file: [/opt/crm/shared.env]
+    environment:
+      # 1 GB host: keep the heaps small and let swap absorb peaks.
+      NODE_OPTIONS: --max-old-space-size=384
+
+  worker:
+    <<: *app
+    image: ${ECR_REGISTRY:?}/cbr-crm-worker:${IMAGE_TAG:?}
+    env_file: [/opt/crm/shared.env, /opt/crm/worker.env]
+    environment:
+      NODE_OPTIONS: --max-old-space-size=256
+
+  valkey:
+    image: valkey/valkey:9.0.6-alpine
+    restart: unless-stopped
+    # BullMQ requires noeviction (ADR-0005). No published port: reachable only from web and worker.
+    command: ['valkey-server', '--maxmemory-policy', 'noeviction', '--appendonly', 'yes']
+    volumes:
+      - valkeydata:/data
+    healthcheck:
+      test: ['CMD', 'valkey-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '3' }
+
+  caddy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    depends_on: [web]
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '3' }
+
+volumes:
+  valkeydata:
+  caddydata:
+  caddyconfig:

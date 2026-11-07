@@ -1,0 +1,95 @@
+# CI: static checks, unit tests, then integration + e2e + security regression suites against
+# the same Docker Compose services used locally. Actions are pinned to commit SHAs.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0 (version from packageManager)
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install (frozen lockfile, release-age + build allow-list enforced)
+        run: pnpm install --frozen-lockfile
+        env:
+          DATABASE_MIGRATOR_URL: postgresql://ci:ci@localhost:5432/ci
+      - run: pnpm exec prisma validate
+        env:
+          DATABASE_MIGRATOR_URL: postgresql://ci:ci@localhost:5432/ci
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: Dependency audit (production, high+)
+        run: pnpm audit --prod --audit-level high
+
+  secrets-scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --redact --exit-code 1
+
+  integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    needs: checks
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Local environment (CI-only secrets, never reused)
+        run: |
+          cp .env.example .env
+          sed -i "s|^BETTER_AUTH_SECRET=.*|BETTER_AUTH_SECRET=$(openssl rand -base64 32)|" .env
+      - run: pnpm install --frozen-lockfile
+      - name: Start Postgres 18, Valkey, Mailpit
+        run: docker compose up -d --wait postgres valkey mailpit
+      - name: Migrate (crm_test, spikes)
+        run: |
+          set -a; . ./.env; set +a
+          DATABASE_MIGRATOR_URL="$TEST_MIGRATOR_URL" pnpm db:migrate
+          pnpm spike:s1:migrate && pnpm spike:s1:generate
+          pnpm spike:s2:migrate && pnpm spike:s2:generate
+      - name: Integration + security regression (RLS, roles, cross-org)
+        run: pnpm test:integration
+      - name: Build (web + worker)
+        run: pnpm build && pnpm build:worker
+      - name: E2E on the built server (real routes, Server Actions, email)
+        run: pnpm test:e2e
+      - name: Spike S2 (identity)
+        run: pnpm spike:s2:test
+      - name: Spike S1 (tenant isolation incl. 50k-transaction concurrency, 250k-row perf)
+        run: pnpm spike:s1:test
+
+  docker:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    needs: checks
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: docker build --target web -t cbr-crm:web .
+      - run: docker build --target worker -t cbr-crm:worker .
+      - run: docker build --target migrate -t cbr-crm:migrate .

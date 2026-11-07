@@ -1,0 +1,3 @@
+# Copy to /opt/crm/deploy.conf on the server. Not secret.
+ECR_REGISTRY=<account-id>.dkr.ecr.ap-south-1.amazonaws.com
+SITE_DOMAIN=<your-domain>

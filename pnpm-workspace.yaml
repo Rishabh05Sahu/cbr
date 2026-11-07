@@ -1,0 +1,35 @@
+# Supply-chain policy (security-and-threat-model T21, repository-structure §2).
+# Versions in package.json are exact pins. pnpm settings live here, not in .npmrc.
+
+# Refuse any version published less than 7 days ago (minutes).
+minimumReleaseAge: 10080
+
+# Exceptions are deliberate and reviewed. Each needs a reason.
+minimumReleaseAgeExclude:
+  # Next.js / React security release of 2026-10-14 (critical RSC RCE advisory).
+  # Security floor next >= 16.4.1; React back-ported the fix to 19.1/19.2 the same day.
+  - next@16.4.2
+  - '@next/*'
+  - eslint-config-next@16.4.2
+  - react@19.3.1
+  - react-dom@19.3.1
+  - scheduler
+  # Pinned in the approved Phase 0 blueprint (ADR-0002, ADR-0003).
+  # Prisma 7.10.1: latest 7.x; `prisma@latest` is an 8.0 RC and must not be used.
+  - prisma@7.10.1
+  - '@prisma/*'
+  # Better Auth 1.7.11: version the ADR-0003 fit review was done against; fixes
+  # type errors under exactOptionalPropertyTypes and includes 1.7.8 cookie fixes.
+  - better-auth@1.7.11
+  - '@better-auth/*'
+
+# Only these packages may run install scripts; anything else fails the install.
+strictDepBuilds: true
+allowBuilds:
+  '@prisma/engines': true
+  prisma: true
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+  # Optional native accelerator for msgpackr (BullMQ); pure-JS fallback is used.
+  msgpackr-extract: false

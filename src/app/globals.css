@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+
+/*
+ * Touch targets (M5 §K): below the desktop breakpoint, links and buttons marked `tap` are at
+ * least 44 × 44 CSS px (WCAG 2.5.5 target size), so inline links such as lead names, "Clear"
+ * or "Refresh" are easy to hit on a phone. Desktop keeps the compact layout.
+ */
+@utility tap {
+  @media (width < 64rem) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+}
