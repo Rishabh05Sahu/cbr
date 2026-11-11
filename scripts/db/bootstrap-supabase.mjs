@@ -27,6 +27,10 @@
 //   --allow-ddl-logging drops the quiet_ddl guard, for a local admin that may not SET the
 //   logging parameters (a plain non-superuser); never use it against Supabase.
 //
+// --target qa|prod reads .env.supabase-qa / .env.supabase-prod instead of .env (same ACCEPTANCE_*
+// names); --run and --run-extensions on prod first ask for a backup confirmation and the typed
+// project ref.
+//
 // Errors name variables, never values.
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -36,9 +40,11 @@ import {
   CA_GUARD_EXIT,
   PSQL_IMAGE,
   ROLES,
+  confirmProduction,
   dockerPsql,
+  loadTargetEnv,
   maskRef,
-  readEnvFile,
+  takeTarget,
   validateAcceptance,
 } from './acceptance-env.mjs';
 import { scramVerifier } from './scram.mjs';
@@ -57,10 +63,20 @@ function fail(message) {
   process.exit(1);
 }
 
+/** --target qa|prod (takeTarget); undefined = the acceptance project in .env. */
+let envTarget;
+
 function target(need) {
-  const { errors, target } = validateAcceptance(readEnvFile(), need);
+  let env;
+  try {
+    env = loadTargetEnv(envTarget);
+  } catch (e) {
+    fail(e.message);
+  }
+  const { errors, target } = validateAcceptance(env, need);
+  const file = envTarget ? `.env.supabase-${envTarget}` : '.env';
   if (errors.length)
-    fail(`acceptance configuration in .env is not valid:\n  - ${errors.join('\n  - ')}`);
+    fail(`acceptance configuration in ${file} is not valid:\n  - ${errors.join('\n  - ')}`);
   return target;
 }
 
@@ -88,8 +104,10 @@ export function extensionsScript() {
   );
 }
 
-function run(step, input) {
+async function run(step, input) {
   const t = target('all'); // includes the CA file checks; nothing starts if any fails
+  if (envTarget === 'prod' && !(await confirmProduction(t.ref, `bootstrap ${step}`)))
+    fail('not confirmed; nothing was applied');
   const { command, args, env } = dockerPsql(t, [
     '-X',
     '-q',
@@ -101,7 +119,7 @@ function run(step, input) {
     '-',
   ]);
   console.error(
-    `bootstrap-supabase: ${step} on acceptance project ${maskRef(t.ref)}; psql (${PSQL_IMAGE}), sslmode=verify-full`,
+    `bootstrap-supabase: ${step} on ${envTarget ?? 'acceptance'} project ${maskRef(t.ref)}; psql (${PSQL_IMAGE}), sslmode=verify-full`,
   );
   const r = spawnSync(command, args, {
     input: input(t),
@@ -125,18 +143,25 @@ function emit(sql) {
 
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain) {
-  const [mode, ...flags] = process.argv.slice(2);
+  let parsed;
+  try {
+    parsed = takeTarget(process.argv.slice(2));
+  } catch (e) {
+    fail(e.message);
+  }
+  envTarget = parsed.target;
+  const [mode, ...flags] = parsed.rest;
   const allowLogging = flags.includes('--allow-ddl-logging');
   if (flags.some((f) => f !== '--allow-ddl-logging') || (allowLogging && mode !== '--emit-sql'))
     fail('unknown or misplaced option (see the header)');
-  if (mode === '--run') run('step A (roles and grants)', (t) => rolesScript(t.passwords));
+  if (mode === '--run') await run('step A (roles and grants)', (t) => rolesScript(t.passwords));
   else if (mode === '--run-extensions')
-    run('step B (extensions and uuidv7)', () => extensionsScript());
+    await run('step B (extensions and uuidv7)', () => extensionsScript());
   else if (mode === '--emit-sql')
     emit(() => rolesScript(target('roles').passwords, { quietDdl: !allowLogging }));
   else if (mode === '--emit-extensions-sql') emit(() => extensionsScript());
   else
     fail(
-      'usage: --run | --run-extensions | --emit-sql [--allow-ddl-logging] | --emit-extensions-sql',
+      'usage: [--target qa|prod] --run | --run-extensions | --emit-sql [--allow-ddl-logging] | --emit-extensions-sql',
     );
 }

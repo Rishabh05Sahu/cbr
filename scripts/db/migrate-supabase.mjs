@@ -21,6 +21,10 @@
 //       Recovery only, after review: records a migration whose SQL committed but whose Prisma
 //       record is missing (see "Crash gap" below). Never runs migration SQL.
 //
+// --target qa|prod reads the same variables from .env.supabase-qa / .env.supabase-prod instead
+// (acceptance-env.mjs loadTargetEnv); --deploy and --record-committed on prod first ask for a
+// backup confirmation and the typed project ref (confirmProduction).
+//
 // Target: ONLY ACCEPTANCE_DATABASE_MIGRATOR_URL from .env, after the full acceptance validation
 // (acceptance-env.mjs: project ref, pooler host, port 5432, database postgres, user
 // crm_migrator.<ref>, password, CA file). The unprefixed DATABASE_MIGRATOR_URL (the local
@@ -63,9 +67,11 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   CA_GUARD_EXIT,
+  confirmProduction,
   dockerPsql,
+  loadTargetEnv,
   maskRef,
-  readEnvFile,
+  takeTarget,
   validateAcceptance,
 } from './acceptance-env.mjs';
 
@@ -860,19 +866,40 @@ export function runVerify(t, opts = {}) {
 
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain) {
-  const [mode, arg, ...rest] = process.argv.slice(2);
-  const usage = 'usage: --status | --verify | --deploy | --record-committed <migration>';
+  const usage =
+    'usage: [--target qa|prod] --status | --verify | --deploy | --record-committed <migration>';
   let t;
+  let envTarget;
+  let mode;
+  let arg;
   try {
+    const parsed = takeTarget(process.argv.slice(2));
+    envTarget = parsed.target;
+    let rest;
+    [mode, arg, ...rest] = parsed.rest;
     if (
       !['--status', '--verify', '--deploy', '--record-committed'].includes(mode) ||
       rest.length ||
       (mode === '--record-committed') !== !!arg
     )
       throw new Error(usage);
-    t = migratorTarget(readEnvFile());
+    t = migratorTarget(loadTargetEnv(envTarget));
   } catch (e) {
     console.error(`migrate-supabase: ${e.message}`);
+    process.exit(1);
+  }
+  console.log(
+    `migrate-supabase: target ${envTarget ?? 'acceptance (.env)'}, project ${maskRef(t.ref)}`,
+  );
+  if (
+    envTarget === 'prod' &&
+    (mode === '--deploy' || mode === '--record-committed') &&
+    !(await confirmProduction(
+      t.ref,
+      mode === '--deploy' ? 'apply pending migrations' : `record ${arg} as applied`,
+    ))
+  ) {
+    console.error('migrate-supabase: not confirmed; nothing was changed');
     process.exit(1);
   }
   const r =

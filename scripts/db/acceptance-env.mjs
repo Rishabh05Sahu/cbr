@@ -9,9 +9,17 @@
 // with sslmode=verify-full against Supabase's root CA (ACCEPTANCE_PGSSLROOTCERT, a local file).
 // The file is checked before anything starts, bind-mounted READ-ONLY at a fixed container path,
 // and re-checked inside the container before psql runs. There is no unverified fallback.
+//
+// Targets (owner, 2026-11-11): `--target qa` or `--target prod` reads the same ACCEPTANCE_*
+// names from a separate git-ignored file per environment, .env.supabase-qa or
+// .env.supabase-prod, so the two projects can never share one set of variables. Without
+// --target, .env is read as before. Writes to prod need a typed confirmation
+// (confirmProduction).
+import { spawnSync } from 'node:child_process';
 import { X509Certificate } from 'node:crypto';
-import { accessSync, constants, readFileSync, statSync } from 'node:fs';
+import { accessSync, constants, existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'dotenv';
 
@@ -113,6 +121,98 @@ export function readEnvFile(path = ENV_FILE) {
   return parse(readFileSync(path));
 }
 
+export const TARGETS = ['qa', 'prod'];
+export const targetEnvFile = (target, dir = REPO) => join(dir, `.env.supabase-${target}`);
+
+/**
+ * Splits `--target qa|prod` out of the arguments: { target, rest }. target is undefined when the
+ * option is absent (the acceptance project in .env). Throws on a missing or unknown value or a
+ * repeated option.
+ */
+export function takeTarget(args) {
+  const rest = [];
+  let target;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] !== '--target') {
+      rest.push(args[i]);
+      continue;
+    }
+    const v = args[++i];
+    if (target !== undefined) throw new Error('--target given twice');
+    if (!TARGETS.includes(v)) throw new Error(`--target must be one of ${TARGETS.join(', ')}`);
+    target = v;
+  }
+  return { target, rest };
+}
+
+/**
+ * The variables to validate. Without a target: .env, unchanged. With one: .env's unprefixed
+ * variables (so the local-reuse and older-project checks still apply) plus ONLY the ACCEPTANCE_*
+ * variables of .env.supabase-<target>, plus the other target's values as OTHER_TARGET_* so no
+ * password can be shared between QA and production. Throws (naming files and variables, never
+ * values) if the target file is missing, not git-ignored, tracked, holds anything but ACCEPTANCE_*
+ * variables, or names the same project as the other target.
+ */
+export function loadTargetEnv(target, { dir = REPO, checkGit = true } = {}) {
+  const base = existsSync(join(dir, '.env')) ? readEnvFile(join(dir, '.env')) : {};
+  if (target === undefined) return base;
+  if (!TARGETS.includes(target)) throw new Error(`unknown target ${target}`);
+  const file = targetEnvFile(target, dir);
+  const name = `.env.supabase-${target}`;
+  if (!existsSync(file)) throw new Error(`${name} does not exist (see docs/runbooks)`);
+  if (checkGit) {
+    const git = (args) => spawnSync('git', args, { cwd: dir, stdio: 'ignore' }).status;
+    if (git(['check-ignore', '-q', file]) !== 0) throw new Error(`${name} is not git-ignored`);
+    if (git(['ls-files', '--error-unmatch', file]) === 0)
+      throw new Error(`${name} is tracked by git; remove it from the index`);
+  }
+  const own = readEnvFile(file);
+  const foreign = Object.keys(own).filter((k) => !k.startsWith('ACCEPTANCE_'));
+  if (foreign.length)
+    throw new Error(`${name} may hold only ACCEPTANCE_* variables (found ${foreign.join(', ')})`);
+  const env = Object.fromEntries(
+    Object.entries(base).filter(([k]) => !k.startsWith('ACCEPTANCE_')),
+  );
+  const other = TARGETS.find((t) => t !== target);
+  const otherFile = targetEnvFile(other, dir);
+  if (existsSync(otherFile)) {
+    const theirs = readEnvFile(otherFile);
+    const ref = (own.ACCEPTANCE_PROJECT_REF ?? '').trim();
+    if (ref && ref === (theirs.ACCEPTANCE_PROJECT_REF ?? '').trim())
+      throw new Error(`${name} and .env.supabase-${other} name the same Supabase project`);
+    for (const [k, v] of Object.entries(theirs)) env[`OTHER_TARGET_${k}`] = v;
+  }
+  return { ...env, ...own };
+}
+
+/**
+ * Production writes only after the operator confirms a fresh backup and types the first four
+ * characters of the production project ref. Resolves true only on an exact answer; refuses
+ * without an interactive terminal. Never prints more than the masked ref.
+ */
+export async function confirmProduction(
+  ref,
+  action,
+  io = { input: process.stdin, output: process.stderr },
+) {
+  if (!io.input.isTTY) {
+    io.output.write('refusing: production writes need an interactive terminal\n');
+    return false;
+  }
+  const rl = createInterface(io);
+  try {
+    io.output.write(`\nPRODUCTION (${maskRef(ref)}): ${action}\n`);
+    const backup = await rl.question(
+      'Has the production database been backed up (supabase-free-setup.md section 8) and the dump checked? (yes/no) ',
+    );
+    if (backup.trim() !== 'yes') return false;
+    const typed = await rl.question('Type the first 4 characters of the production project ref: ');
+    return typed.trim() === ref.slice(0, 4);
+  } finally {
+    rl.close();
+  }
+}
+
 /** Every password-like value in the file that is NOT an acceptance variable (for reuse checks). */
 function localSecrets(env) {
   const out = new Set();
@@ -190,7 +290,7 @@ export function validateAcceptance(env, need = 'all') {
   check(
     'role passwords not reused from local settings',
     given.every((p) => !local.has(p)),
-    'an ACCEPTANCE_CRM_*_PASSWORD value is also used by a local (unprefixed) setting; generate new ones',
+    'an ACCEPTANCE_CRM_*_PASSWORD value is also used by a local (unprefixed) setting or by the other target; generate new ones',
   );
 
   const target = { ref, passwords: Object.fromEntries(ROLES.map((r, i) => [r, passwords[i]])) };
