@@ -14,6 +14,7 @@
 //       transaction that is rolled back: version, database, user, extensions, crm_* roles and
 //       leftovers of an earlier setup. Stops (exit 1) if anything differs from a fresh project.
 //       No CRM role is tried: none exists before the bootstrap.
+//   --target qa|prod (either mode) checks .env.supabase-qa / .env.supabase-prod instead of .env.
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -22,8 +23,10 @@ import {
   CA_GUARD_EXIT,
   ENV_FILE,
   dockerPsql,
+  loadTargetEnv,
   maskRef,
-  readEnvFile,
+  takeTarget,
+  targetEnvFile,
   validateAcceptance,
 } from './acceptance-env.mjs';
 
@@ -56,15 +59,25 @@ const UUIDV7_ACL = [
 ];
 const mark = (ok) => (ok ? 'pass' : 'FAIL');
 
-function localChecks() {
+/** envTarget: --target qa|prod (.env.supabase-<target>), or undefined for .env. */
+function localChecks(envTarget) {
   const results = [];
-  const exists = existsSync(ENV_FILE);
-  results.push(['.env exists', exists]);
+  const file = envTarget ? targetEnvFile(envTarget) : ENV_FILE;
+  const name = envTarget ? `.env.supabase-${envTarget}` : '.env';
+  const exists = existsSync(file);
+  results.push([`${name} exists`, exists]);
   if (!exists) return { results, ok: false };
   const git = (args) => spawnSync('git', args, { cwd: process.cwd(), stdio: 'ignore' }).status;
-  results.push(['.env ignored by git', git(['check-ignore', '-q', ENV_FILE]) === 0]);
-  results.push(['.env not tracked', git(['ls-files', '--error-unmatch', ENV_FILE]) !== 0]);
-  const { errors, checks, target } = validateAcceptance(readEnvFile(), 'all');
+  results.push([`${name} ignored by git`, git(['check-ignore', '-q', file]) === 0]);
+  results.push([`${name} not tracked`, git(['ls-files', '--error-unmatch', file]) !== 0]);
+  let env;
+  try {
+    env = loadTargetEnv(envTarget);
+  } catch (e) {
+    results.push([e.message, false]);
+    return { results, ok: false };
+  }
+  const { errors, checks, target } = validateAcceptance(env, 'all');
   results.push(...checks);
   return { results, ok: results.every(([, ok]) => ok), errors, target };
 }
@@ -380,18 +393,28 @@ export function evaluate(rows, { bootstrapped = false } = {}) {
 
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain) {
-  const [mode, ...flags] = process.argv.slice(2);
+  let parsed;
+  try {
+    parsed = takeTarget(process.argv.slice(2));
+  } catch (e) {
+    console.error(e.message);
+    process.exit(2);
+  }
+  const envTarget = parsed.target;
+  const [mode, ...flags] = parsed.rest;
   const bootstrapped = flags.includes('--bootstrapped');
   if (
     (mode !== '--config' && mode !== '--read-only') ||
     flags.some((f) => f !== '--bootstrapped') ||
     (bootstrapped && mode !== '--read-only')
   ) {
-    console.error('usage: --config | --read-only [--bootstrapped]');
+    console.error('usage: [--target qa|prod] --config | --read-only [--bootstrapped]');
     process.exit(2);
   }
-  console.log('Local configuration (.env, ACCEPTANCE_* only):');
-  const local = localChecks();
+  console.log(
+    `Local configuration (${envTarget ? `.env.supabase-${envTarget}` : '.env'}, ACCEPTANCE_* only):`,
+  );
+  const local = localChecks(envTarget);
   report(local.results);
   console.log(`  project ref ${maskRef(local.target?.ref)}`);
   if (!local.ok) {

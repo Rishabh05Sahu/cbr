@@ -1,7 +1,9 @@
 # Release: build the web and worker images and push them to Amazon ECR (ap-south-1), tagged
 # with the commit SHA. Manual only; deploying is a separate step on the host (deploy/aws/deploy.sh).
+# Run it on `qa`: the QA server tests that SHA, and production later deploys the SAME images
+# (runbook §5). Running it on `main` is also allowed.
 # AWS access is short-lived via GitHub OIDC (no stored keys). Repository variables:
-#   AWS_RELEASE_ROLE_ARN  the IAM role from docs/runbooks/aws-ec2-pilot-deploy.md step 4
+#   AWS_RELEASE_ROLE_ARN  the IAM role from docs/runbooks/aws-ec2-pilot-deploy.md §3
 #   ECR_REGISTRY          <account-id>.dkr.ecr.ap-south-1.amazonaws.com
 name: release
 
@@ -20,7 +22,7 @@ jobs:
   images:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: AWS credentials (OIDC, 1 hour)
