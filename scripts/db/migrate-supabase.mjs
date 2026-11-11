@@ -14,7 +14,7 @@
 //       READ ONLY, after --deploy: scans scripts/db/verify-supabase.sql for anything that could
 //       write (refuses to run it if so), runs --status, then runs the file as crm_migrator inside
 //       BEGIN TRANSACTION READ ONLY ... ROLLBACK. Every check 1-14 must appear once with ok = t,
-//       and the CRM tables must be exactly the migrations' 27 plus _crm_migration_marker.
+//       and the CRM tables must be exactly the migrations' 44 plus _crm_migration_marker.
 //   node scripts/db/migrate-supabase.mjs --deploy
 //       Applies every pending migration in order; stops at the first problem.
 //   node scripts/db/migrate-supabase.mjs --record-committed <migration>
@@ -96,6 +96,39 @@ export const MANIFEST = [
     '4f26dbdc82a7c581a1020723d30d335046c02912abe7b9b879976ff2483d4936',
   ],
   ['0008_lead_name_sort_index', 'd241074bcf2db17869cb05de0d610a95f05659c88d6ff6860acb789d671cbabb'],
+  // Reviewed 2026-11-11 for PostgreSQL 17 / Supabase and rehearsed on a PostgreSQL 17 server set
+  // up like Supabase (docs/runbooks/supabase-free-setup.md §9).
+  [
+    '0009_import_mapping_templates',
+    '7a0bb7b700f21e993beffd2321f002940723020e48710c7856a8e60cf9db8c32',
+  ],
+  [
+    '0010_import_finished_notification',
+    '9cde12fabe41dce48d19914f727912c37390f974c09b4224c4fc1b60c0d59f73',
+  ],
+  ['0011_lead_tags', '3e6aed1e71c0329b17e8ae6e489dd49378943f51b3ca3f0a34d69123ec6fc6b9'],
+  ['0012_follow_ups', '8be9f55ca76536aaf1fb5ae33b0219a55d527d7d757f00524b9390734fb9f3cc'],
+  ['0013_follow_up_lifecycle', 'eeede535fff42111a2b7c00a0d89d80ccc643761401488e84c0d4a8cdee4f513'],
+  ['0014_call_scripts', '77eba71dfc5ec6e58bea931c8e191e130378886e6cd770343b2a239a9e87ee26'],
+  ['0015_contact_status', '5715d7cc405ae01b55a3110a9ddc757999a03d511e076747e94e7a369901c0cb'],
+  ['0016_phone_masking', 'e8c104b68b13da65b3cb31e8661e9201d58964113ca0fdb329033afea2bb7772'],
+  ['0017_interactions', 'c6dcc88ee37ac82c75bece1b1f35b06d5138e1cd8569982f54a01f89934192e2'],
+  [
+    '0018_interaction_fingerprint',
+    '5379126bbcb7851afbfdce6e8075dce054f007c6d9309f5df6aff26cffb1a283',
+  ],
+  [
+    '0019_interaction_script_version',
+    '5daaacbc4364d0a073f2cc4b6377584f94375074d95b7286c91a2969968c1f25',
+  ],
+  ['0020_task_types', 'f068fcb5da93f15c3a448a94c2536a77d8c855ea96da5c26269af6d3c1010b11'],
+  ['0021_task_assignment', '55af2606220f06d02293080047de6b42dbfa841cb564654d9b12f4e1f58000e9'],
+  ['0022_meeting_details', '4c0dff8332bdcf983d37e3d0141b986a6f40a7e8f9f70da64286cfe0242e2a44'],
+  ['0023_task_reminders', 'ee2fe014fb64571dfb91a40c6f209237dda45c302b1991a8ec5fc81a346330bc'],
+  ['0024_task_series', '87b805b9ee152f17ae82bc560d07afbbf9bfe703df8c307d847c260b1687647d'],
+  ['0025_properties', 'f00c318000be3a05e5bfeb059c127fe89daca6020769f31adbca8d90ca3155d7'],
+  ['0026_site_visits', '8f325ae2c4917dac96abf5f43064c7775211e2e2b8287a3ab927f3d033f4cece'],
+  ['0027_site_visit_dnc_guard', 'b9b39ee4a09486db46cbe18be100ac3c5af559cae11d2b14bd1aea3ff9f94048'],
 ];
 
 const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');

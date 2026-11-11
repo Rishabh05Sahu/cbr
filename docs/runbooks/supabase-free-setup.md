@@ -172,25 +172,26 @@ Run migrations **only** through `scripts/db/migrate-supabase.mjs`, never `prisma
 - **Connection:** it reads only `ACCEPTANCE_DATABASE_MIGRATOR_URL`, after the full acceptance validation, and never the local `DATABASE_MIGRATOR_URL`.
 - **One transaction per migration:** each migration runs in psql with `verify-full` against the read-only CA mount. The transaction takes an advisory lock, checks that the recorded history is exactly the migrations before it, runs the unchanged `migration.sql`, and adds a row to `public._crm_migration_marker`. That small table has RLS forced and no grants.
 - **Recording:** after `COMMIT`, Prisma records the migration (`migrate resolve --applied`) using `scripts/db/prisma.supabase.config.mjs`. That config doesn't load `.env`, and the connection uses `sslmode=require&sslcert=<CA>&sslaccept=strict`, which checks both the chain and the host name. The wrapper then reads the ledger back.
-- **Before anything runs:** the eight migrations must match their reviewed SHA-256 and pass a static check: no transaction control, no `CONCURRENTLY`, no psql meta-commands or variables.
+- **Before anything runs:** the 27 reviewed migrations (0001–0027) must match their reviewed SHA-256 and pass a static check: no transaction control, no `CONCURRENTLY`, no psql meta-commands or variables.
 - **Crash gap:** if the SQL committed but Prisma didn't record it, every later run detects this from the marker and stops without re-running anything. After review, `--record-committed <migration>` records it without running SQL.
 - **Concurrency:** a lock file stops a second run on the same machine. The advisory lock and history check stop the same migration being applied twice from elsewhere. Neither stops other tools.
 
-1. **APPROVAL: read-only status:** `node scripts/db/migrate-supabase.mjs --status`. It runs a read-only psql transaction, then `prisma migrate status`, which only runs `SELECT`s (checked offline with every statement logged). It must show the session as `crm_migrator`, read-only and using TLS, show Prisma connected with strict TLS, list exactly 0001–0008 as pending, and report no problems. `--deploy` runs this check first, so a Prisma TLS failure stops it before anything is committed.
+1. **APPROVAL: read-only status:** `node scripts/db/migrate-supabase.mjs --status`. It runs a read-only psql transaction, then `prisma migrate status`, which only runs `SELECT`s (checked offline with every statement logged). It must show the session as `crm_migrator`, read-only and using TLS, show Prisma connected with strict TLS, list exactly 0001–0027 as pending, and report no problems. `--deploy` runs this check first, so a Prisma TLS failure stops it before anything is committed.
    - **0001–0006:** schema, RLS, roles' grants.
    - **0007:** stored generated column. It rewrites `lead`, which is empty on a new project.
    - **0008:** index. It's built without `CONCURRENTLY`, which is fine on an empty table.
+   - **0009–0027** (reviewed 2026-11-11): imports, tags, tasks and follow-ups, call scripts, contact status, phone masking, interactions, properties, site visits. Each new table has RLS forced and grants only to CRM roles; three new SECURITY DEFINER functions (`script_version_is_published`, `task_reminders_claim`, `site_visit_reminders_claim`) follow 0002's pattern. Nothing needs PostgreSQL 18: no function body calls `uuidv7()` (column defaults bind to `public.uuidv7()` when the table is created). Rehearsed on PostgreSQL 17 (§9).
 2. **APPROVAL: apply:** `node scripts/db/migrate-supabase.mjs --deploy`. It stops at the first problem: a failed migration is rolled back, and the migrations after it don't run.
 3. **APPROVAL: verify (read-only):** `node scripts/db/migrate-supabase.mjs --verify`.
    - **How it runs:**
      - First it scans `scripts/db/verify-supabase.sql` and refuses to run it if it finds anything that could write: write or DDL keywords, `SELECT INTO`, state-changing functions, `DO` blocks, or any psql meta-command except `\set ON_ERROR_STOP on`.
-     - It then runs `--status`, which needs all eight migrations applied and both TLS paths verified.
+     - It then runs `--status`, which needs all 27 migrations applied and both TLS paths verified.
      - It runs the file as `crm_migrator` inside `BEGIN TRANSACTION READ ONLY … ROLLBACK`.
    - **What passes:** every check 1–14 must appear exactly once with `ok = t`. A missing check, a duplicate or a psql error is a failure.
    - **The 14 checks:**
-     - exactly migrations 0001–0008 in the history;
-     - exactly 27 application tables, plus the marker table owned by `crm_migrator`;
-     - RLS enabled and forced on all 28;
+     - exactly migrations 0001–0027 in the history;
+     - exactly 44 application tables, plus the marker table owned by `crm_migrator`;
+     - RLS enabled and forced on all 45;
      - the API roles exist, so their checks aren't vacuous;
      - no table or column privilege for the API roles or `PUBLIC`;
      - no `EXECUTE` on CRM functions and no `USAGE` on `app` for the API roles;
@@ -198,8 +199,8 @@ Run migrations **only** through `scripts/db/migrate-supabase.mjs`, never `prisma
      - `uuidv7` executable by `crm_app` and not by `PUBLIC`;
      - the extensions are in `public`;
      - schema `app` is owned by `crm_migrator`;
-     - exactly 8 security-definer functions, owned by `crm_definer`, with a fixed `search_path` and no `PUBLIC` `EXECUTE`.
-   - **Table names:** the wrapper also compares every table name against the 27 `CREATE TABLE`s in the migrations, plus `_crm_migration_marker`. Expect 28.
+     - exactly 11 security-definer functions, owned by `crm_definer`, with a fixed `search_path` and no `PUBLIC` `EXECUTE`.
+   - **Table names:** the wrapper also compares every table name against the 44 tables the migrations create, plus `_crm_migration_marker`. Expect 45.
    - **Rehearsed offline (2026-10-28):**
      - it passed with no writes in the server log;
      - each piece of tampering failed the expected check: `anon` given `SELECT`, RLS not forced, `PUBLIC` given `EXECUTE` on `uuidv7` or on a definer function, a stray table;
@@ -284,6 +285,18 @@ Run migrations **only** through `scripts/db/migrate-supabase.mjs`, never `prisma
 | B as `supa_admin` | **OK** |
 
 A first run of this rehearsal also caught a wrapper bug: the `\set` lines lost their backslash, so psql variables reached the server as SQL. It was fixed before the 30/30 run, and `supabase-bootstrap.test.ts` now asserts that every verifier line is a client-side `\set`.
+
+**Migrations 0001–0027, rehearsed (2026-11-11)** on a disposable `postgres:17-alpine` container (PostgreSQL 17.11), memory-only, removed afterwards, synthetic passwords only.
+- `supa_admin`: NOSUPERUSER, CREATEROLE, CREATEDB, BYPASSRLS, owning the database and `public`; `anon`, `authenticated` and `service_role` with default privileges granting them ALL on tables, sequences and functions in `public`.
+
+| Step | Result |
+|---|---|
+| Bootstrap steps A and B as `supa_admin` (`rolesScript`, `extensionsScript`) | **OK.** `uuidv7` = compat |
+| All 27 migrations as `crm_migrator`, each in one transaction shaped like the wrapper's (advisory lock, `search_path = public`, marker table, unchanged SQL, marker row), then `prisma migrate resolve --applied` | **27 of 27 OK** |
+| `verify-supabase.sql` read-only as `crm_migrator`, evaluated by the wrapper's `evaluateVerify` | **14 of 14 `ok = t`.** 44 application tables + marker = 45, all with RLS forced. **No** privilege for the API roles on any CRM table or function despite the permissive defaults. 11 SECURITY DEFINER functions, all owned by `crm_definer` |
+| **Full integration project on this server** (`TEST_*` URLs pointed at it for that run only) | **48 files, 754/754** |
+
+Not covered by this rehearsal: the wrapper's TLS paths (the container had no TLS; Prisma recorded through `prisma.config.ts`). Those were rehearsed on 2026-10-27/28 and are unchanged.
 
 **Not proven by the rehearsal** (needs the real project):
 - Supavisor itself;
