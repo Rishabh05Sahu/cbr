@@ -59,7 +59,10 @@ type Mod = {
   prismaUrl: (t: Target) => string;
   prismaEnv: (t: Target) => Record<string, string>;
   migrationProblems: (sql: string) => string[];
-  loadMigrations: () => { migrations: unknown[]; problems: string[] };
+  loadMigrations: (
+    dir?: string,
+    manifest?: [string, string][],
+  ) => { migrations: unknown[]; problems: string[] };
   analyse: (rows: string[][]) => {
     applied: string[];
     pending: string[];
@@ -149,23 +152,21 @@ describe('Prisma connection', () => {
 });
 
 describe('static migration checks', () => {
-  it('the eight reviewed migrations are present, unchanged and transaction-safe', () => {
+  it('the 27 reviewed migrations are present, unchanged and transaction-safe', () => {
     const r = mod.loadMigrations();
-    // Newer local migrations (0009+, not yet reviewed for Supabase) are reported, never deployed.
-    const unreviewed = r.problems.filter((p) => p.startsWith('unreviewed migration directories'));
-    expect(r.problems.filter((p) => !unreviewed.includes(p))).toEqual([]);
-    expect(unreviewed.join()).not.toMatch(/000[1-8]_/);
-    expect(r.migrations).toHaveLength(8);
-    expect(mod.MANIFEST.map(([n]) => n)).toEqual([
-      '0001_foundation',
-      '0002_security',
-      '0003_leads',
-      '0004_assignment',
-      '0005_imports',
-      '0006_hygiene',
-      '0007_lead_email_normalized',
-      '0008_lead_name_sort_index',
-    ]);
+    // A newer local migration (0028+, not yet reviewed for Supabase) would be reported here and
+    // never deployed; today every directory is pinned.
+    expect(r.problems).toEqual([]);
+    expect(r.migrations).toHaveLength(27);
+    const names = mod.MANIFEST.map(([n]) => n);
+    expect(names[0]).toBe('0001_foundation');
+    expect(names[26]).toBe('0027_site_visit_dnc_guard');
+    expect(names).toEqual([...names].sort());
+  });
+
+  it('reports a migration directory that is not pinned, and deploys nothing from it', () => {
+    const r = mod.loadMigrations(undefined, mod.MANIFEST.slice(0, 26));
+    expect(r.problems.join()).toMatch(/unreviewed migration directories present \(0027_/);
   });
 
   it.each([
@@ -208,7 +209,7 @@ describe('history analysis', () => {
 
   it('fresh database: all pending, no problems', () => {
     const a = mod.analyse([]);
-    expect(a.pending).toHaveLength(8);
+    expect(a.pending).toHaveLength(27);
     expect(a.problems).toEqual([]);
   });
 
@@ -260,11 +261,12 @@ describe('post-migration verification (--verify)', () => {
     ).toEqual([]);
   });
 
-  it('expects exactly the 27 tables the migrations create', () => {
+  it('expects exactly the 44 tables the migrations create', () => {
     const tables = mod.expectedAppTables(mod.loadMigrations().migrations);
-    expect(tables).toHaveLength(27);
+    expect(tables).toHaveLength(44);
     expect(tables).toContain('public.lead');
     expect(tables).toContain('public.import_job');
+    expect(tables).toContain('public.site_visit_reminder');
     expect(tables.every((t) => t.startsWith('public.'))).toBe(true);
   });
 

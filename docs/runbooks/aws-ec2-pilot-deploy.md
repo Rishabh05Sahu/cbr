@@ -126,7 +126,7 @@ Replace `<env>` with `qa` or `prod`.
 4. Private storage bucket in this project: [supabase-storage-setup.md](supabase-storage-setup.md).
 5. Download the project's CA certificate (**Database Settings → SSL Configuration**) and copy it to that server as `/opt/crm/supabase-ca.crt`.
 
-> **Open item before the first deploy:** `migrate-supabase.mjs` only runs migrations pinned in its reviewed list (0001–0008), and `verify-supabase.sql` checks for exactly those. Migrations 0009–0027 must be reviewed and pinned, and the verification updated, before `--deploy` will run. This is a separate, owner-approved step.
+> **New migrations:** `migrate-supabase.mjs` only runs migrations pinned in its reviewed list (today 0001–0027, reviewed and rehearsed on PostgreSQL 17 on 2026-11-11), and `verify-supabase.sql` checks for exactly those. Every new migration (0028 onwards) must be reviewed, pinned and added to the verification before it can be deployed to QA or production.
 
 ### 4.3 E-mail (Gmail)
 
