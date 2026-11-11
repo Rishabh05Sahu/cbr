@@ -218,4 +218,12 @@ describe('DATABASE_CA_CERT (CA as text, for hosts without a CA file)', () => {
     });
     expect(r.success).toBe(false);
   });
+  it('accepts the name supabase-root-2021 for the bundled Supabase root CA', () => {
+    const ca = serverEnvSchema.parse({
+      ...valid,
+      DATABASE_CA_CERT: ' supabase-root-2021 ',
+    }).DATABASE_CA_CERT;
+    expect(ca).toMatch(/^-----BEGIN CERTIFICATE-----\nMIIDxDCCAqygAwIBAgIUbLxMod62P2ktCiAkxnKJ/);
+    expect(ca).toMatch(/-----END CERTIFICATE-----$/);
+  });
 });
