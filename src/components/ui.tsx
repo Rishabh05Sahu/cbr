@@ -23,11 +23,11 @@ export function Button({
     <button
       type={type}
       className={cx(
-        'tap inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-        variant === 'primary' && 'bg-blue-900 text-white hover:bg-blue-800',
+        'tap inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50',
+        variant === 'primary' && 'bg-blue-900 text-white shadow-sm hover:bg-blue-800',
         variant === 'secondary' &&
-          'border border-slate-300 bg-white text-slate-900 hover:bg-slate-50',
-        variant === 'danger' && 'bg-red-700 text-white hover:bg-red-600',
+          'border border-slate-300 bg-white text-slate-900 shadow-sm hover:border-slate-400 hover:bg-slate-50',
+        variant === 'danger' && 'bg-red-700 text-white shadow-sm hover:bg-red-600',
         variant === 'ghost' && 'text-slate-700 hover:bg-slate-100',
         className,
       )}
@@ -80,7 +80,7 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return (
     <input
       className={cx(
-        'block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600',
+        'block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/25 disabled:bg-slate-100',
         className,
       )}
       {...props}
@@ -92,7 +92,7 @@ export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectE
   return (
     <select
       className={cx(
-        'block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600',
+        'block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/25 disabled:bg-slate-100',
         className,
       )}
       {...props}
@@ -112,7 +112,7 @@ export function Card({
   actions?: ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+    <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-900/5 sm:p-6">
       {(title || actions) && (
         <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
           <div>
@@ -138,11 +138,11 @@ export function Alert({
     <div
       role={tone === 'error' ? 'alert' : 'status'}
       className={cx(
-        'rounded-md px-3 py-2 text-sm',
-        tone === 'info' && 'bg-blue-50 text-blue-900',
-        tone === 'error' && 'bg-red-50 text-red-800',
-        tone === 'success' && 'bg-green-50 text-green-800',
-        tone === 'warn' && 'bg-amber-50 text-amber-900',
+        'rounded-lg border px-3 py-2 text-sm',
+        tone === 'info' && 'border-blue-200 bg-blue-50 text-blue-900',
+        tone === 'error' && 'border-red-200 bg-red-50 text-red-800',
+        tone === 'success' && 'border-green-200 bg-green-50 text-green-800',
+        tone === 'warn' && 'border-amber-200 bg-amber-50 text-amber-900',
       )}
     >
       {children}
@@ -174,15 +174,16 @@ export function Badge({
 export function PageHeader({ title, description }: { title: string; description?: string }) {
   return (
     <header className="mb-6">
-      <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
-      {description && <p className="mt-1 text-sm text-slate-600">{description}</p>}
+      <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
+      <div aria-hidden="true" className="mt-2 h-0.5 w-12 rounded-full bg-gold-400" />
+      {description && <p className="mt-2 text-sm text-slate-600">{description}</p>}
     </header>
   );
 }
 
 export function EmptyState({ children }: { children: ReactNode }) {
   return (
-    <p className="rounded-md border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
+    <p className="rounded-xl border border-dashed border-slate-300 bg-white/60 p-6 text-center text-sm text-slate-500">
       {children}
     </p>
   );
