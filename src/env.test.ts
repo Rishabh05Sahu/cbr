@@ -174,3 +174,35 @@ describe('Supabase shared-pooler user names (<role>.<project-ref>)', () => {
       ).toBe(false);
   });
 });
+
+describe('DATABASE_CA_CERT (CA as text, for hosts without a CA file)', () => {
+  const pem = '-----BEGIN CERTIFICATE-----\nMIIBfake\n-----END CERTIFICATE-----';
+
+  it('accepts a PEM written on one line with literal \n and restores the line breaks', () => {
+    const e = serverEnvSchema.parse({ ...valid, DATABASE_CA_CERT: pem });
+    expect(e.DATABASE_CA_CERT).toBe(
+      '-----BEGIN CERTIFICATE-----\nMIIBfake\n-----END CERTIFICATE-----',
+    );
+  });
+
+  it('treats a blank value as unset', () => {
+    expect(
+      serverEnvSchema.parse({ ...valid, DATABASE_CA_CERT: '' }).DATABASE_CA_CERT,
+    ).toBeUndefined();
+  });
+
+  it('rejects text that is not a PEM certificate', () => {
+    expect(serverEnvSchema.safeParse({ ...valid, DATABASE_CA_CERT: 'not a cert' }).success).toBe(
+      false,
+    );
+  });
+
+  it('rejects ssl* URL parameters, which would override the CA', () => {
+    const r = serverEnvSchema.safeParse({
+      ...valid,
+      DATABASE_CA_CERT: pem,
+      AUTH_DATABASE_URL: `${valid.AUTH_DATABASE_URL}?sslmode=no-verify`,
+    });
+    expect(r.success).toBe(false);
+  });
+});

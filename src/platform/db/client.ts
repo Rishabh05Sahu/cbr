@@ -23,8 +23,12 @@ const handles = (g.__crmDb ??= {});
 function handle(name: 'app' | 'auth' | 'platform' | 'cleanup', url: string, max: number): Handle {
   const existing = handles[name];
   if (existing) return existing;
+  // Hosts that cannot mount a CA file (Vercel) pass the PEM in DATABASE_CA_CERT instead of
+  // sslrootcert=; the server certificate and host name are still fully verified.
+  const ca = serverEnv().DATABASE_CA_CERT;
   const pool = new pg.Pool({
     connectionString: url,
+    ...(ca ? { ssl: { ca, rejectUnauthorized: true } } : {}),
     max,
     connectionTimeoutMillis: 10_000,
     idleTimeoutMillis: 30_000,

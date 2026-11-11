@@ -39,6 +39,17 @@ export const serverEnvSchema = z
     AUTH_DATABASE_URL: roleUrl('crm_auth'),
     PLATFORM_DATABASE_URL: roleUrl('crm_platform'),
     DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(50).default(10),
+    // PEM of the database CA, for hosts that cannot mount a CA file (Vercel). When set, every
+    // database URL must leave out ssl* parameters (they would override it) and TLS is verified
+    // against this CA. A literal "\n" is accepted for single-line env editors.
+    DATABASE_CA_CERT: unsetIfBlank(
+      z
+        .string()
+        .transform((s) => s.replace(/\\n/g, '\n').trim())
+        .refine((s) => /^-----BEGIN CERTIFICATE-----[\s\S]+-----END CERTIFICATE-----$/.test(s), {
+          message: 'must be a PEM certificate',
+        }),
+    ),
     // Worker only: the import-file cleanup sweep (role crm_cleanup, M4). Optional: without it
     // the sweep does not run. Only the worker opens this connection.
     CLEANUP_DATABASE_URL: unsetIfBlank(roleUrl('crm_cleanup')),
@@ -90,6 +101,17 @@ export const serverEnvSchema = z
      */
     IMPORT_COMMIT_STRATEGY: unsetIfBlank(z.enum(['row', 'set'])).transform((v) => v ?? 'set'),
   })
+  .refine(
+    (e) =>
+      !e.DATABASE_CA_CERT ||
+      [e.DATABASE_URL, e.AUTH_DATABASE_URL, e.PLATFORM_DATABASE_URL, e.CLEANUP_DATABASE_URL].every(
+        (u) => !u || !/[?&]ssl/i.test(u),
+      ),
+    {
+      message: 'with DATABASE_CA_CERT set, database URLs must not carry ssl* parameters',
+      path: ['DATABASE_CA_CERT'],
+    },
+  )
   .refine((e) => !e.SUPABASE_URL === !e.SUPABASE_SERVICE_ROLE_KEY, {
     message: 'SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set together',
     path: ['SUPABASE_SERVICE_ROLE_KEY'],
