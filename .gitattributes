@@ -1,0 +1,8 @@
+# LF everywhere, whatever core.autocrlf says. Migrations are pinned by the SHA-256 of their exact
+# bytes (scripts/db/migrate-supabase.mjs MANIFEST), and deploy/aws/*.sh run under bash on Linux;
+# a CRLF checkout would break both.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
+*.xlsx binary
