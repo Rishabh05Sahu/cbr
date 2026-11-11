@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SUPABASE_ROOT_2021_CA } from './platform/db/supabase-root-ca';
 
 /**
  * Server environment, validated once on first use (repository-structure §2). Shared by the
@@ -59,8 +60,13 @@ export const serverEnvSchema = z
     DATABASE_CA_CERT: unsetIfBlank(
       z
         .string()
-        .transform((s) => normalizePem(s))
-        .refine((s) => s !== null, { message: 'must be a PEM certificate' })
+        .transform((s) =>
+          s.trim() === 'supabase-root-2021' ? SUPABASE_ROOT_2021_CA : normalizePem(s),
+        )
+        .refine((s) => s !== null, {
+          message:
+            'must be a PEM certificate (BEGIN to END CERTIFICATE) or the name supabase-root-2021',
+        })
         .transform((s) => s as string),
     ),
     // Worker only: the import-file cleanup sweep (role crm_cleanup, M4). Optional: without it
