@@ -18,6 +18,19 @@ export function databaseRoleOf(username: string): string {
   return /^[a-z_][a-z0-9_]*\.[a-z0-9]{20}$/.test(name) ? name.split('.')[0]! : name;
 }
 
+/**
+ * Rebuilds one PEM certificate from text whose line breaks were lost or escaped. Null when the
+ * text holds no BEGIN/END CERTIFICATE pair with a base64 body.
+ */
+export function normalizePem(raw: string): string | null {
+  const m = /-----BEGIN CERTIFICATE-----([\s\S]*?)-----END CERTIFICATE-----/.exec(raw);
+  if (!m) return null;
+  const body = m[1]!.replace(/\\[nr]/g, '').replace(/\s+/g, '');
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(body)) return null;
+  const lines = body.match(/.{1,64}/g)!;
+  return ['-----BEGIN CERTIFICATE-----', ...lines, '-----END CERTIFICATE-----'].join('\n');
+}
+
 const roleUrl = (expectedRole: string) =>
   z
     .url()
@@ -41,14 +54,14 @@ export const serverEnvSchema = z
     DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(50).default(10),
     // PEM of the database CA, for hosts that cannot mount a CA file (Vercel). When set, every
     // database URL must leave out ssl* parameters (they would override it) and TLS is verified
-    // against this CA. A literal "\n" is accepted for single-line env editors.
+    // against this CA. Env editors mangle line breaks (literal "\n", spaces, quotes, CRLF), so
+    // the base64 body is extracted and the PEM rebuilt.
     DATABASE_CA_CERT: unsetIfBlank(
       z
         .string()
-        .transform((s) => s.replace(/\\n/g, '\n').trim())
-        .refine((s) => /^-----BEGIN CERTIFICATE-----[\s\S]+-----END CERTIFICATE-----$/.test(s), {
-          message: 'must be a PEM certificate',
-        }),
+        .transform((s) => normalizePem(s))
+        .refine((s) => s !== null, { message: 'must be a PEM certificate' })
+        .transform((s) => s as string),
     ),
     // Worker only: the import-file cleanup sweep (role crm_cleanup, M4). Optional: without it
     // the sweep does not run. Only the worker opens this connection.

@@ -176,13 +176,24 @@ describe('Supabase shared-pooler user names (<role>.<project-ref>)', () => {
 });
 
 describe('DATABASE_CA_CERT (CA as text, for hosts without a CA file)', () => {
-  const pem = '-----BEGIN CERTIFICATE-----\nMIIBfake\n-----END CERTIFICATE-----';
+  const body = 'A'.repeat(64) + 'B'.repeat(10) + '==';
+  const want = `-----BEGIN CERTIFICATE-----\n${'A'.repeat(64)}\n${'B'.repeat(10)}==\n-----END CERTIFICATE-----`;
+  const BS = String.fromCharCode(92);
 
-  it('accepts a PEM written on one line with literal \n and restores the line breaks', () => {
-    const e = serverEnvSchema.parse({ ...valid, DATABASE_CA_CERT: pem });
-    expect(e.DATABASE_CA_CERT).toBe(
-      '-----BEGIN CERTIFICATE-----\nMIIBfake\n-----END CERTIFICATE-----',
-    );
+  it.each([
+    ['real line breaks', `-----BEGIN CERTIFICATE-----\n${body}\n-----END CERTIFICATE-----`],
+    ['CRLF line breaks', `-----BEGIN CERTIFICATE-----\r\n${body}\r\n-----END CERTIFICATE-----\r\n`],
+    [
+      'literal \n on one line',
+      `-----BEGIN CERTIFICATE-----${BS}n${body}${BS}n-----END CERTIFICATE-----`,
+    ],
+    [
+      'spaces instead of line breaks',
+      `-----BEGIN CERTIFICATE----- ${body.slice(0, 40)} ${body.slice(40)} -----END CERTIFICATE-----`,
+    ],
+    ['surrounding quotes', `"-----BEGIN CERTIFICATE-----\n${body}\n-----END CERTIFICATE-----"`],
+  ])('rebuilds the PEM from %s', (_name, raw) => {
+    expect(serverEnvSchema.parse({ ...valid, DATABASE_CA_CERT: raw }).DATABASE_CA_CERT).toBe(want);
   });
 
   it('treats a blank value as unset', () => {
@@ -191,16 +202,18 @@ describe('DATABASE_CA_CERT (CA as text, for hosts without a CA file)', () => {
     ).toBeUndefined();
   });
 
-  it('rejects text that is not a PEM certificate', () => {
-    expect(serverEnvSchema.safeParse({ ...valid, DATABASE_CA_CERT: 'not a cert' }).success).toBe(
-      false,
-    );
+  it.each([
+    ['not a cert'],
+    ['-----BEGIN CERTIFICATE-----'],
+    ['-----BEGIN CERTIFICATE-----\nnot*base64!\n-----END CERTIFICATE-----'],
+  ])('rejects %j', (raw) => {
+    expect(serverEnvSchema.safeParse({ ...valid, DATABASE_CA_CERT: raw }).success).toBe(false);
   });
 
   it('rejects ssl* URL parameters, which would override the CA', () => {
     const r = serverEnvSchema.safeParse({
       ...valid,
-      DATABASE_CA_CERT: pem,
+      DATABASE_CA_CERT: `-----BEGIN CERTIFICATE-----\n${body}\n-----END CERTIFICATE-----`,
       AUTH_DATABASE_URL: `${valid.AUTH_DATABASE_URL}?sslmode=no-verify`,
     });
     expect(r.success).toBe(false);
