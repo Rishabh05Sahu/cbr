@@ -19,7 +19,7 @@ const isCurrent = (path: string, href: string) =>
 
 function Badge({ n }: { n: number }) {
   return (
-    <span className="ml-1 rounded-full bg-blue-900 px-1.5 text-xs text-white">
+    <span className="ml-1.5 rounded-full bg-gold-500 px-1.5 text-xs font-semibold text-white">
       {n > 99 ? '99+' : n}
       <span className="sr-only"> unread</span>
     </span>
@@ -36,8 +36,8 @@ export function MainNav({ links }: { links: NavLink[] }) {
 
   return (
     <>
-      <details ref={menu} className="group mx-auto max-w-6xl px-4 pb-2 lg:hidden">
-        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-md border border-slate-300 px-3 text-sm font-medium text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 [&::-webkit-details-marker]:hidden">
+      <details ref={menu} id="main-menu" className="group mx-auto max-w-6xl px-4 pb-3 lg:hidden">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 [&::-webkit-details-marker]:hidden">
           <span>
             Menu
             {current && <span className="font-normal text-slate-600"> · {current.label}</span>}
@@ -47,13 +47,13 @@ export function MainNav({ links }: { links: NavLink[] }) {
           </span>
         </summary>
         <nav aria-label="Main">
-          <ul className="mt-2 grid gap-1 sm:grid-cols-2">
+          <ul className="mt-2 grid gap-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm sm:grid-cols-2">
             {links.map((l) => (
               <li key={l.href}>
                 <Link
                   href={l.href as '/app'}
                   aria-current={isCurrent(path, l.href) ? 'page' : undefined}
-                  className="flex min-h-11 items-center rounded-md px-3 text-sm text-slate-800 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 aria-[current=page]:bg-slate-100 aria-[current=page]:font-semibold"
+                  className="flex min-h-11 items-center rounded-lg px-3 text-sm text-slate-800 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 aria-[current=page]:bg-blue-50 aria-[current=page]:font-semibold aria-[current=page]:text-blue-900"
                 >
                   {l.label}
                   {l.badge ? <Badge n={l.badge} /> : null}
@@ -64,13 +64,13 @@ export function MainNav({ links }: { links: NavLink[] }) {
         </nav>
       </details>
       <nav aria-label="Main" className="mx-auto hidden max-w-6xl px-4 lg:block">
-        <ul className="flex flex-wrap gap-1 pb-2 text-sm">
+        <ul className="flex flex-wrap gap-1 pb-2.5 text-sm">
           {links.map((l) => (
             <li key={l.href}>
               <Link
                 href={l.href as '/app'}
                 aria-current={isCurrent(path, l.href) ? 'page' : undefined}
-                className="block whitespace-nowrap rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 aria-[current=page]:bg-slate-100 aria-[current=page]:font-semibold"
+                className="block whitespace-nowrap rounded-full px-3.5 py-1.5 text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 aria-[current=page]:bg-blue-900 aria-[current=page]:font-medium aria-[current=page]:text-white"
               >
                 {l.label}
                 {l.badge ? <Badge n={l.badge} /> : null}
