@@ -1,4 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "DATABASE_MIGRATOR_URL=postgresql://build:build@localhost:5432/build pnpm exec prisma generate && pnpm run build"
+  "buildCommand": "DATABASE_MIGRATOR_URL=postgresql://build:build@localhost:5432/build pnpm exec prisma generate && pnpm run build",
+  "regions": ["syd1"]
 }
