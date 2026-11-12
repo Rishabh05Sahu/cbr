@@ -1,4 +1,4 @@
--- Read-only checks after migrations 0001-0027 on the Supabase pilot database (runbook
+-- Read-only checks after migrations 0001-0028 on the Supabase pilot database (runbook
 -- docs/runbooks/supabase-free-setup.md §6). Run ONLY through the wrapper, as crm_migrator (it owns
 -- the CRM objects), with strict TLS and inside a READ ONLY transaction that is rolled back:
 --
@@ -36,9 +36,9 @@ WITH app_tables AS (
   SELECT migration_name, finished_at IS NOT NULL AND rolled_back_at IS NULL AS applied
     FROM public._prisma_migrations
 ), checks AS (
-  SELECT 1 AS n, 'migrations: exactly 0001-0027 applied, no other ledger entries' AS item,
+  SELECT 1 AS n, 'migrations: exactly 0001-0028 applied, no other ledger entries' AS item,
          (SELECT count(*) FILTER (WHERE applied) || ' applied of ' || count(*) FROM ledger) AS detail,
-         (SELECT count(*) FROM ledger) = 27
+         (SELECT count(*) FROM ledger) = 28
            AND (SELECT count(*) FROM ledger WHERE applied AND migration_name IN (
                   '0001_foundation', '0002_security', '0003_leads',
                   '0004_assignment', '0005_imports', '0006_hygiene',
@@ -48,20 +48,21 @@ WITH app_tables AS (
                   '0016_phone_masking', '0017_interactions', '0018_interaction_fingerprint',
                   '0019_interaction_script_version', '0020_task_types', '0021_task_assignment',
                   '0022_meeting_details', '0023_task_reminders', '0024_task_series',
-                  '0025_properties', '0026_site_visits', '0027_site_visit_dnc_guard')) = 27 AS ok
+                  '0025_properties', '0026_site_visits', '0027_site_visit_dnc_guard',
+                  '0028_call_intents')) = 28 AS ok
   UNION ALL
-  SELECT 2, 'application tables: exactly 44 owned by crm_migrator in public/app',
-         (SELECT count(*) FROM app_tables)::text, (SELECT count(*) FROM app_tables) = 44
+  SELECT 2, 'application tables: exactly 45 owned by crm_migrator in public/app',
+         (SELECT count(*) FROM app_tables)::text, (SELECT count(*) FROM app_tables) = 45
   UNION ALL
   SELECT 3, 'migration marker table: present, owned by crm_migrator',
          coalesce((SELECT owner FROM marker), 'missing'),
          coalesce((SELECT owner = 'crm_migrator' FROM marker), false)
   UNION ALL
-  SELECT 4, 'every CRM table (44 + marker = 45): RLS enabled and forced',
+  SELECT 4, 'every CRM table (45 + marker = 46): RLS enabled and forced',
          (SELECT count(*) FROM crm_tables)::text || ' tables; not forced: '
            || coalesce((SELECT string_agg(relname, ',') FROM crm_tables
                          WHERE NOT (relrowsecurity AND relforcerowsecurity)), 'none'),
-         (SELECT count(*) FROM crm_tables) = 45
+         (SELECT count(*) FROM crm_tables) = 46
            AND NOT EXISTS (SELECT 1 FROM crm_tables WHERE NOT (relrowsecurity AND relforcerowsecurity))
   UNION ALL
   SELECT 5, 'API roles exist (anon, authenticated, service_role), so checks 6-8 are not vacuous',

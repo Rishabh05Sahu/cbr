@@ -166,8 +166,9 @@ export async function contactStatusHistory(
  * The server-side outbound check for future launchers and integration sends (FR-065, T16;
  * integration-strategy §6 step 1). Call it inside the transaction that records the intent or
  * send: it takes FOR SHARE on the lead, so a concurrent change to DO_NOT_CONTACT either commits
- * first (and blocks the send) or waits for it. No launcher calls this yet (FR-080–FR-082 are not
- * built), so end-to-end outbound enforcement is not complete until they exist and are tested.
+ * first (and blocks the send) or waits for it. Called by manual interaction logging (FR-083) and
+ * by the Call/WhatsApp launchers (FR-080/081, recordCallIntent); provider sends (Phase 6) must call
+ * it too.
  */
 export async function assertOutboundAllowed(
   tx: Tx,

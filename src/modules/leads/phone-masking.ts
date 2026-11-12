@@ -71,15 +71,7 @@ export async function revealLeadPhone(ctx: RequestContext, leadId: string): Prom
     await findInScope(tx, ctx, scope, id, { id: true });
     const policy = await phoneMaskingPolicy(tx, ctx.orgId);
     if (!policy.enabled) throw ruleViolation('Phone masking is off: numbers are already shown');
-    const used = await revealsToday(tx, ctx.orgId, ctx.userId);
-    if (used >= policy.dailyCap)
-      throw ruleViolation(
-        `You have reached today's limit of ${policy.dailyCap} number reveals. Ask your Owner if you need more.`,
-      );
-    await tx.leadPhoneReveal.create({
-      data: { orgId: ctx.orgId, leadId: id, revealedBy: ctx.userId },
-      select: { id: true },
-    });
+    const { used } = await recordReveal(tx, ctx, policy, id);
     const l = await tx.lead.findUniqueOrThrow({
       where: { id },
       select: { primaryPhoneE164: true, alternatePhoneE164: true, contactStatus: true },
@@ -91,4 +83,51 @@ export async function revealLeadPhone(ctx: RequestContext, leadId: string): Prom
       contactStatus: l.contactStatus as ContactStatus,
     };
   });
+}
+
+/** One capped reveal row (its trigger writes the lead.phone_revealed audit row). */
+async function recordReveal(
+  tx: Tx,
+  ctx: RequestContext & { kind: 'member' },
+  policy: PhoneMaskingPolicy,
+  leadId: string,
+): Promise<{ revealId: string; used: number }> {
+  const used = await revealsToday(tx, ctx.orgId, ctx.userId);
+  if (used >= policy.dailyCap)
+    throw ruleViolation(
+      `You have reached today's limit of ${policy.dailyCap} number reveals. Ask your Owner if you need more.`,
+    );
+  const r = await tx.leadPhoneReveal.create({
+    data: { orgId: ctx.orgId, leadId, revealedBy: ctx.userId },
+    select: { id: true },
+  });
+  return { revealId: r.id, used };
+}
+
+export type DialNumberKind = 'PRIMARY' | 'ALTERNATE';
+
+/**
+ * FR-080/081 (ADR-0025): the number a Call or WhatsApp tap opens, for a lead the caller already
+ * locked in scope. With masking on, dialling is a reveal (ADR-0013): it needs lead.reveal_phone in
+ * the lead's scope, counts towards the daily cap and is audited; the reveal id goes on the call
+ * intent. With masking off the number is already shown, so nothing extra is recorded.
+ */
+export async function dialNumberIn(
+  tx: Tx,
+  ctx: RequestContext & { kind: 'member' },
+  leadId: string,
+  kind: DialNumberKind,
+): Promise<{ e164: string; revealId: string | null }> {
+  const l = await tx.lead.findUniqueOrThrow({
+    where: { id: leadId },
+    select: { primaryPhoneE164: true, alternatePhoneE164: true },
+  });
+  const e164 = kind === 'PRIMARY' ? l.primaryPhoneE164 : l.alternatePhoneE164;
+  if (!e164) throw ruleViolation('This lead has no alternate number');
+  const policy = await phoneMaskingPolicy(tx, ctx.orgId);
+  if (!policy.enabled) return { e164, revealId: null };
+  const scope = authorize(ctx, 'lead.reveal_phone');
+  await findInScope(tx, ctx, scope, leadId, { id: true });
+  const { revealId } = await recordReveal(tx, ctx, policy, leadId);
+  return { e164, revealId };
 }

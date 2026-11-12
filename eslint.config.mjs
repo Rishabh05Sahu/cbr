@@ -147,6 +147,9 @@ const config = [
       // M6 load-test harness (operator tooling, local crm_perf only): verifies role identities
       // and asserts on the database; never imported by the app.
       'scripts/perf/**',
+      // First platform admin (operator tooling, run locally): writes as crm_auth and hashes the
+      // password with the auth library's own function; never imported by the app.
+      'scripts/platform/**',
     ],
     rules: { 'no-restricted-imports': 'off' },
   },

@@ -152,21 +152,21 @@ describe('Prisma connection', () => {
 });
 
 describe('static migration checks', () => {
-  it('the 27 reviewed migrations are present, unchanged and transaction-safe', () => {
+  it('the 28 reviewed migrations are present, unchanged and transaction-safe', () => {
     const r = mod.loadMigrations();
-    // A newer local migration (0028+, not yet reviewed for Supabase) would be reported here and
+    // A newer local migration (0029+, not yet reviewed for Supabase) would be reported here and
     // never deployed; today every directory is pinned.
     expect(r.problems).toEqual([]);
-    expect(r.migrations).toHaveLength(27);
+    expect(r.migrations).toHaveLength(28);
     const names = mod.MANIFEST.map(([n]) => n);
     expect(names[0]).toBe('0001_foundation');
-    expect(names[26]).toBe('0027_site_visit_dnc_guard');
+    expect(names[27]).toBe('0028_call_intents');
     expect(names).toEqual([...names].sort());
   });
 
   it('reports a migration directory that is not pinned, and deploys nothing from it', () => {
-    const r = mod.loadMigrations(undefined, mod.MANIFEST.slice(0, 26));
-    expect(r.problems.join()).toMatch(/unreviewed migration directories present \(0027_/);
+    const r = mod.loadMigrations(undefined, mod.MANIFEST.slice(0, 27));
+    expect(r.problems.join()).toMatch(/unreviewed migration directories present \(0028_/);
   });
 
   it.each([
@@ -209,7 +209,7 @@ describe('history analysis', () => {
 
   it('fresh database: all pending, no problems', () => {
     const a = mod.analyse([]);
-    expect(a.pending).toHaveLength(27);
+    expect(a.pending).toHaveLength(28);
     expect(a.problems).toEqual([]);
   });
 
@@ -261,9 +261,10 @@ describe('post-migration verification (--verify)', () => {
     ).toEqual([]);
   });
 
-  it('expects exactly the 44 tables the migrations create', () => {
+  it('expects exactly the 45 tables the migrations create', () => {
     const tables = mod.expectedAppTables(mod.loadMigrations().migrations);
-    expect(tables).toHaveLength(44);
+    expect(tables).toHaveLength(45);
+    expect(tables).toContain('public.call_intent');
     expect(tables).toContain('public.lead');
     expect(tables).toContain('public.import_job');
     expect(tables).toContain('public.site_visit_reminder');
