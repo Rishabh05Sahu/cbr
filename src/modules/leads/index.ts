@@ -136,8 +136,10 @@ export {
   type ContactStatusRequest,
 } from './contact-status';
 export {
+  dialNumberIn,
   maskPhone,
   revealLeadPhone,
+  type DialNumberKind,
   type PhoneMaskingPolicy,
   type RevealedPhone,
 } from './phone-masking';

@@ -170,6 +170,7 @@ model Organization {
   contactStatusEvents LeadContactStatusEvent[]
   phoneReveals        LeadPhoneReveal[]
   interactions        Interaction[]
+  callIntents         CallIntent[]
 
   @@map("organization")
 }
@@ -229,6 +230,7 @@ model Member {
   contactStatusChanges    LeadContactStatusEvent[]
   phoneReveals            LeadPhoneReveal[]
   interactions            Interaction[]
+  callIntents             CallIntent[]
 
   @@unique([organizationId, userId])
   @@unique([organizationId, id])
@@ -455,6 +457,7 @@ model Lead {
   phoneReveals               LeadPhoneReveal[]
   relatedContactStatusEvents LeadContactStatusEvent[] @relation("ContactStatusRelatedLead")
   interactions               Interaction[]
+  callIntents                CallIntent[]
 
   @@unique([orgId, id])
   @@index([orgId, ownerUserId, stage])
@@ -579,6 +582,7 @@ model LeadPhoneReveal {
   organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   lead         Lead         @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
   revealer     Member       @relation(fields: [orgId, revealedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  callIntents  CallIntent[]
 
   @@unique([orgId, id])
   @@index([orgId, revealedBy, revealedAt])
@@ -633,6 +637,37 @@ model Interaction {
   @@index([orgId, leadId, occurredAt(sort: Desc)])
   @@index([orgId, userId, occurredAt])
   @@map("interaction")
+}
+
+/// FR-080/081 (migration 0028, ADR-0025): one tap on the lead page's Call or WhatsApp button (L0).
+/// Never a call: a web page cannot see whether a call happened. Append-only; call_intent_guard
+/// refuses Do-Not-Contact leads, unconfirmed taps on an Invalid number, and (with phone masking
+/// on) a tap without this person's reveal of this lead in the same transaction.
+model CallIntent {
+  id                     String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId                  String   @map("org_id") @db.Uuid
+  leadId                 String   @map("lead_id") @db.Uuid
+  userId                 String   @map("user_id") @db.Uuid
+  /// PHONE_NATIVE (tel:) | WHATSAPP_APP (wa.me)
+  channel                String
+  /// PRIMARY | ALTERNATE: which of the lead's numbers was opened
+  numberKind             String   @map("number_kind")
+  /// The lead's contact status at the tap (checked against the lead by the trigger)
+  contactStatusAtTap     String   @map("contact_status_at_tap")
+  invalidNumberConfirmed Boolean  @default(false) @map("invalid_number_confirmed")
+  /// With phone masking on: the reveal this tap made (dialling a masked number is a reveal)
+  phoneRevealId          String?  @map("phone_reveal_id") @db.Uuid
+  createdAt              DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+
+  organization Organization     @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  lead         Lead             @relation(fields: [orgId, leadId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  user         Member           @relation(fields: [orgId, userId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  phoneReveal  LeadPhoneReveal? @relation(fields: [orgId, phoneRevealId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, userId, leadId, createdAt(sort: Desc)])
+  @@index([orgId, createdAt])
+  @@map("call_intent")
 }
 
 model LeadActivity {

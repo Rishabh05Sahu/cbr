@@ -14,7 +14,7 @@
 //       READ ONLY, after --deploy: scans scripts/db/verify-supabase.sql for anything that could
 //       write (refuses to run it if so), runs --status, then runs the file as crm_migrator inside
 //       BEGIN TRANSACTION READ ONLY ... ROLLBACK. Every check 1-14 must appear once with ok = t,
-//       and the CRM tables must be exactly the migrations' 44 plus _crm_migration_marker.
+//       and the CRM tables must be exactly the migrations' 45 plus _crm_migration_marker.
 //   node scripts/db/migrate-supabase.mjs --deploy
 //       Applies every pending migration in order; stops at the first problem.
 //   node scripts/db/migrate-supabase.mjs --record-committed <migration>
@@ -129,6 +129,8 @@ export const MANIFEST = [
   ['0025_properties', 'f00c318000be3a05e5bfeb059c127fe89daca6020769f31adbca8d90ca3155d7'],
   ['0026_site_visits', '8f325ae2c4917dac96abf5f43064c7775211e2e2b8287a3ab927f3d033f4cece'],
   ['0027_site_visit_dnc_guard', 'b9b39ee4a09486db46cbe18be100ac3c5af559cae11d2b14bd1aea3ff9f94048'],
+  // FR-080/081/082 call intents (ADR-0025); owner approved 2026-11-12 ("approve 0028 and deploy").
+  ['0028_call_intents', '54cde3d67f69fabba90d41678745907b7bb0b8a21a49650caa443dcd5df42f0e'],
 ];
 
 const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');

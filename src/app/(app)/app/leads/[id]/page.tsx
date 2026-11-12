@@ -38,7 +38,10 @@ import {
 import {
   CHANNEL_LABELS,
   DIRECTION_LABELS,
+  INTENT_CHANNEL_LABELS,
   OUTCOME_LABELS,
+  pendingCallIntent,
+  sheetChannelFor,
   sheetDefaults,
   type Channel,
   type Direction,
@@ -67,6 +70,8 @@ import { ContactStatusBanner, ContactStatusCard } from './contact-status';
 import { FollowUpRow } from './follow-up-row';
 import { VisitRow } from './visit-row';
 import { MeetingFields } from './meeting-fields';
+import { CallLaunchers } from './call-launchers';
+import { CallPrompt } from './call-prompt';
 import { InteractionSheet, type SheetFollowUp } from './interaction-sheet';
 import { PhoneReveal } from './phone-reveal';
 import { ScriptPanel, type PanelScript } from './script-panel';
@@ -148,6 +153,10 @@ export default async function LeadPage({ params }: PageProps<'/app/leads/[id]'>)
   ].join(' · ');
   // FR-083/084: the outcome sheet, for people who may log interactions on this writable lead.
   const sheet = lead.canLogInteraction ? await sheetDefaults(ctx) : null;
+  // FR-080/081: Call and WhatsApp for people who may log interactions here; with masking on a
+  // dial is a reveal, so it also needs lead.reveal_phone. FR-082: their unlogged tap, if any.
+  const canLaunch = lead.canLogInteraction && (!lead.phoneMasked || lead.canRevealPhone);
+  const pendingTap = sheet ? await pendingCallIntent(ctx, lead.id) : null;
   const ownOpen = followUps?.open.find((t) => t.assigneeUserId === ctx.userId && t.canUpdate);
   const sheetFollowUp: SheetFollowUp | null =
     followUps === null
@@ -243,6 +252,13 @@ export default async function LeadPage({ params }: PageProps<'/app/leads/[id]'>)
         ))}
       </div>
       <ContactStatusBanner status={lead.contactStatus} since={contactSince} />
+      {pendingTap && (
+        <CallPrompt
+          key={pendingTap.id}
+          intentId={pendingTap.id}
+          text={`You tapped ${INTENT_CHANNEL_LABELS[pendingTap.channel]} at ${fmtDateTime(pendingTap.createdAt)}. How did it go?`}
+        />
+      )}
       {merged && (
         <div className="mb-6">
           <Alert tone="warn">
@@ -307,25 +323,29 @@ export default async function LeadPage({ params }: PageProps<'/app/leads/[id]'>)
               />
             )}
             {sheet && (
-              <Card
-                title="Log an interaction"
-                description="Record a call, message or meeting that already happened. This page never places calls or sends messages."
-              >
-                <InteractionSheet
-                  leadId={lead.id}
-                  version={lead.version}
-                  stage={lead.stage}
-                  contactStatus={lead.contactStatus}
-                  occurredAt={sheet.occurredAt}
-                  occurredMin={sheet.occurredMin}
-                  followUp={sheetFollowUp}
-                  dncMethods={DNC_METHODS.map((m) => ({
-                    code: m,
-                    label: CONTACT_METHOD_LABELS[m] ?? m,
-                  }))}
-                  requirementFields={sheetRequirements}
-                />
-              </Card>
+              <div id="log-interaction" className="scroll-mt-4">
+                <Card
+                  title="Log an interaction"
+                  description="Record a call, message or meeting that already happened. The CRM never places calls or sends messages itself."
+                >
+                  <InteractionSheet
+                    key={pendingTap?.id ?? 'no-tap'}
+                    initialChannel={pendingTap ? sheetChannelFor(pendingTap.channel) : 'PHONE_NATIVE'}
+                    leadId={lead.id}
+                    version={lead.version}
+                    stage={lead.stage}
+                    contactStatus={lead.contactStatus}
+                    occurredAt={pendingTap?.occurredAt ?? sheet.occurredAt}
+                    occurredMin={sheet.occurredMin}
+                    followUp={sheetFollowUp}
+                    dncMethods={DNC_METHODS.map((m) => ({
+                      code: m,
+                      label: CONTACT_METHOD_LABELS[m] ?? m,
+                    }))}
+                    requirementFields={sheetRequirements}
+                  />
+                </Card>
+              </div>
             )}
             {followUps && (
               <Card
@@ -539,6 +559,16 @@ export default async function LeadPage({ params }: PageProps<'/app/leads/[id]'>)
               </Card>
             )}
             <Card title="Contact">
+              {canLaunch && (
+                <div className="mb-4">
+                  <CallLaunchers
+                    leadId={lead.id}
+                    contactStatus={lead.contactStatus}
+                    hasAlternate={lead.alternatePhoneE164 !== null}
+                    masked={lead.phoneMasked}
+                  />
+                </div>
+              )}
               {lead.phoneMasked && (
                 // FR-060: the server sent masked numbers only; revealing is audited and capped.
                 <div className="mb-3">

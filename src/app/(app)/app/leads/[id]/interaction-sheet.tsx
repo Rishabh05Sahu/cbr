@@ -1,8 +1,10 @@
 'use client';
 // FR-083/084 on the lead page: log one interaction (a contact that already happened) with its
 // outcome, notes, optional requirement changes and the next follow-up, in one submission. The
-// server re-checks everything in one transaction (src/modules/interactions). There is no call or
-// WhatsApp launcher and no tel:/wa.me link here (FR-080/081 are not built).
+// server re-checks everything in one transaction (src/modules/interactions). The Call and WhatsApp
+// launchers are a separate component (call-launchers.tsx, FR-080/081); this form has no tel: or
+// wa.me link. After a tap the page passes the tap's channel and time as the starting values
+// (FR-082) and remounts the form for each new tap.
 //
 // Idempotency: the form carries a key made when it is shown. A refused submission keeps it (a
 // corrected retry is the same submission); a saved one gets a new key, so the next interaction is
@@ -97,6 +99,7 @@ export function InteractionSheet({
   followUp,
   dncMethods,
   requirementFields,
+  initialChannel = 'PHONE_NATIVE',
 }: {
   leadId: string;
   version: number;
@@ -107,6 +110,8 @@ export function InteractionSheet({
   followUp: SheetFollowUp | null;
   dncMethods: { code: string; label: string }[];
   requirementFields: ReactNode;
+  /** FR-082: the channel of the tap the person is coming back from. */
+  initialChannel?: Channel;
 }) {
   const [state, formAction, pending] = useActionState<ActionResult<LogResult> | null, FormData>(
     logInteractionAction,
@@ -116,7 +121,7 @@ export function InteractionSheet({
   const [key, setKey] = useState(newKey);
   // FR-098: the script version last shown in the drawer on this page visit, if any.
   const { shown } = useShownScript();
-  const [channel, setChannel] = useState<Channel>('PHONE_NATIVE');
+  const [channel, setChannel] = useState<Channel>(initialChannel);
   const [direction, setDirection] = useState<Direction>(dnc ? 'INBOUND' : 'OUTBOUND');
   const [outcome, setOutcome] = useState<Outcome | ''>('');
   const [completeOwn, setCompleteOwn] = useState(false);
