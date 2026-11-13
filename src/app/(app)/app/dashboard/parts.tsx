@@ -14,6 +14,7 @@ import {
   type TileValue,
 } from '@/modules/reporting';
 import { DomainError } from '@/platform/errors';
+import { CHANNEL_LABELS } from '@/modules/interactions/rules';
 
 export type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -267,5 +268,11 @@ export function Tile({ t, filters }: { t: TileValue; filters: ReportFilters }) {
 }
 
 const human = (s: string) => s.charAt(0) + s.slice(1).toLowerCase().replaceAll('_', ' ');
-export const extraLabel = (s: string | null) =>
-  s === null ? '' : ((STAGE_LABELS as Record<string, string>)[s] ?? human(s));
+/** Drill-down badges: stages, interaction channels and the Call / WhatsApp buttons (K04). */
+const EXTRA_LABELS: Record<string, string> = {
+  ...(STAGE_LABELS as Record<string, string>),
+  ...(CHANNEL_LABELS as Record<string, string>),
+  CALL_BUTTON: 'Call button tap',
+  WHATSAPP_BUTTON: 'WhatsApp button tap',
+};
+export const extraLabel = (s: string | null) => (s === null ? '' : (EXTRA_LABELS[s] ?? human(s)));

@@ -27,8 +27,6 @@ export interface KpiDef {
   unavailable?: string;
 }
 
-const CALL_INTENTS =
-  'Needs call-button taps (CallIntent), which come with the call launchers (FR-080–082), blocked by legal gate G5.';
 const PROVIDER = 'Needs provider call data (Phase 6 integrations), not available yet.';
 const LEAVE =
   'Needs working hours and approved leave, which are not implemented yet (Phase 4 leave).';
@@ -73,8 +71,17 @@ export const KPIS: readonly KpiDef[] = [
     name: 'Call-button taps',
     lens: 'Activity',
     kind: 'count',
-    description: 'Call intents (taps).',
-    unavailable: CALL_INTENTS,
+    description:
+      "Taps on a lead's Call button in the period, by who tapped. A tap opens the dialer; it is not a call.",
+  },
+  {
+    id: 'k04-whatsapp',
+    code: 'K04',
+    name: 'WhatsApp-button taps',
+    lens: 'Activity',
+    kind: 'count',
+    description:
+      "Taps on a lead's WhatsApp button in the period, by who tapped. A tap opens the chat; it is not a message.",
   },
   {
     id: 'k05',
@@ -84,6 +91,23 @@ export const KPIS: readonly KpiDef[] = [
     kind: 'count',
     description:
       'Self-reported phone and WhatsApp call interactions in the period, by who logged them.',
+  },
+  {
+    id: 'k05-phone',
+    code: 'K05',
+    name: 'Logged phone calls',
+    lens: 'Activity',
+    kind: 'count',
+    description:
+      'Self-reported phone calls (outbound and inbound) in the period, by who logged them.',
+  },
+  {
+    id: 'k05-whatsapp',
+    code: 'K05',
+    name: 'Logged WhatsApp contacts',
+    lens: 'Activity',
+    kind: 'count',
+    description: 'Self-reported WhatsApp calls and messages in the period, by who logged them.',
   },
   {
     id: 'k06',
@@ -134,8 +158,8 @@ export const KPIS: readonly KpiDef[] = [
     name: 'Outcome logging rate',
     lens: 'Activity',
     kind: 'ratio',
-    description: 'Call taps followed by a logged interaction within 2 h.',
-    unavailable: CALL_INTENTS,
+    description:
+      'Call and WhatsApp taps in the period followed by an interaction the same person logged on that lead within 2 h.',
   },
   {
     id: 'k09',

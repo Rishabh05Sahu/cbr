@@ -280,8 +280,18 @@ const OPERATIONAL_IDS: Record<ReportScope, string[]> = {
   ORG: ['follow-ups-overdue', 'k03', 'visits-upcoming'],
 };
 /** Per-member table columns (count tiles, then ratios). */
-export const MEMBER_COUNTS = ['k02', 'k05', 'k07', 'k11', 'k12', 'k18'] as const;
-export const MEMBER_RATIOS = ['k19b', 'k20', 'k13'] as const;
+export const MEMBER_COUNTS = [
+  'k04',
+  'k04-whatsapp',
+  'k05-phone',
+  'k05-whatsapp',
+  'k02',
+  'k07',
+  'k11',
+  'k12',
+  'k18',
+] as const;
+export const MEMBER_RATIOS = ['k08b', 'k19b', 'k20', 'k13'] as const;
 
 export async function reportScope(ctx: RequestContext): Promise<ReportScope> {
   return authorize(ctx, 'report.read');
