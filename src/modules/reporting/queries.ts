@@ -130,6 +130,34 @@ function interactions(q: Params, f: Frame, connectedOnly: boolean): string {
      AND ${credit(q, f, 'x.user_id', 'x.occurred_at')}`;
 }
 
+/** Self-reported interactions on some channels (the K05 phone / WhatsApp split). */
+function interactionsOn(q: Params, f: Frame, channels: string): string {
+  return `SELECT x.id AS rec_id, l.id AS lead_id, x.user_id, x.occurred_at AS at,
+      x.outcome_group = 'CONNECTED' AS num, 'final' AS bucket, x.channel AS extra
+    FROM interaction x ${EFFECTIVE('x')}
+   WHERE x.source = 'MANUAL' AND x.channel IN ${channels}
+     AND ${inPeriod(q, f, 'x.occurred_at')} AND ${leadOk(q, f, 'l')}
+     AND ${credit(q, f, 'x.user_id', 'x.occurred_at')}`;
+}
+
+/**
+ * K04 / K08b (FR-080/081, migration 0028): Call and WhatsApp taps in the period, credited to who
+ * tapped. num (K08b) = the same person logged an interaction on the same lead within 2 h after the
+ * tap (metrics-and-kpis K08b). A tap is never counted as a call.
+ */
+function taps(q: Params, f: Frame, channel: string | null): string {
+  return `SELECT x.id AS rec_id, l.id AS lead_id, x.user_id, x.created_at AS at,
+      EXISTS (SELECT 1 FROM interaction i
+               WHERE i.lead_id = x.lead_id AND i.user_id = x.user_id
+                 AND i.logged_at >= x.created_at
+                 AND i.logged_at <= x.created_at + ${q.p('2 hours', '::interval')}) AS num,
+      'final' AS bucket,
+      CASE x.channel WHEN 'PHONE_NATIVE' THEN 'CALL_BUTTON' ELSE 'WHATSAPP_BUTTON' END AS extra
+    FROM call_intent x ${EFFECTIVE('x')}
+   WHERE ${channel ? `x.channel = ${q.p(channel)} AND ` : ''}${inPeriod(q, f, 'x.created_at')}
+     AND ${leadOk(q, f, 'l')} AND ${credit(q, f, 'x.user_id', 'x.created_at')}`;
+}
+
 function followUps(q: Params, f: Frame): string {
   return `SELECT x.id AS rec_id, l.id AS lead_id, x.assignee_user_id AS user_id, x.due_at AS at,
       (x.status = 'DONE' AND x.completed_at <= x.due_at + ${q.p(
@@ -215,9 +243,14 @@ export const BUILDERS: Record<string, Builder> = {
     FROM lead l
    WHERE l.owner_user_id IS NULL AND l.stage NOT IN ('WON', 'LOST') AND ${leadOk(q, f, 'l')}
      AND ${leadPeople(q, f, 'l', { user: false })}`,
+  k04: (q, f) => taps(q, f, 'PHONE_NATIVE'),
+  'k04-whatsapp': (q, f) => taps(q, f, 'WHATSAPP_APP'),
   k05: (q, f) => interactions(q, f, false),
+  'k05-phone': (q, f) => interactionsOn(q, f, `('PHONE_NATIVE')`),
+  'k05-whatsapp': (q, f) => interactionsOn(q, f, `('WHATSAPP_APP_CALL', 'WHATSAPP_APP_MESSAGE')`),
   k07: (q, f) => interactions(q, f, true),
   k08: (q, f) => interactions(q, f, false),
+  k08b: (q, f) => taps(q, f, null),
   k09: (q, f) => cohort(q, f, 'first_contacted_at'),
   // Activity: credited to the owner whose spell contains the milestone (§2).
   k10: (q, f) => `SELECT l.id AS rec_id, l.id AS lead_id, s.user_id, l.qualified_at AS at,

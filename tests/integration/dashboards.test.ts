@@ -391,11 +391,9 @@ describe('periods, exclusions and lenses', () => {
   it('shows unavailable KPIs as "—" with the reason, never as zero', async () => {
     const d = await reporting.dashboard(A.a.owner.ctx, around());
     for (const id of [
-      'k04',
       'k06',
       'k07-provider',
       'k08-provider',
-      'k08b',
       'k09b',
       'k12b',
       'k19',
@@ -514,5 +512,87 @@ describe('FR-133 drill-down count equality', () => {
           `${id} ${m.name}`,
         ).toBe(m.counts[id] ?? 0);
     expect(checked).toBeGreaterThan(150);
+  });
+});
+
+describe('K04 / K05 split / K08b: Call and WhatsApp taps (FR-080/081, ADR-0025)', () => {
+  const tap = (by: Actor, leadId: string, channel: 'PHONE_NATIVE' | 'WHATSAPP_APP') =>
+    interactions.recordCallIntent(by.ctx, { leadId, channel });
+  async function message(by: Actor, leadId: string) {
+    return interactions.logInteraction(by.ctx, {
+      leadId,
+      idempotencyKey: randomUUID(),
+      version: await version(leadId),
+      channel: 'WHATSAPP_APP_MESSAGE',
+      direction: 'OUTBOUND',
+      outcome: 'MESSAGE_SENT',
+      occurredAt: local(0),
+    });
+  }
+
+  it('counts taps per person and channel, in scope, and the logging rate', async () => {
+    const { a, org, west } = A;
+    const s = await source(org);
+    const e1 = await lead(a.exec1, s);
+    const e2 = await lead(a.exec2, s);
+    // exec1: 3 Call taps and 2 WhatsApp taps; logs one call and one WhatsApp message afterwards.
+    for (let i = 0; i < 3; i++) await tap(a.exec1, e1, 'PHONE_NATIVE');
+    for (let i = 0; i < 2; i++) await tap(a.exec1, e1, 'WHATSAPP_APP');
+    await call(a.exec1, e1, 'NO_ANSWER');
+    await message(a.exec1, e1);
+    // exec2 (no team): 1 Call tap, nothing logged.
+    await tap(a.exec2, e2, 'PHONE_NATIVE');
+    const f = { ...around(), source: s };
+    const count = async (by: Actor, id: string, extra: reporting.RawFilters = {}) =>
+      (await tile(by, id, { ...f, ...extra }))!.count;
+
+    expect(await count(a.owner, 'k04')).toBe(4);
+    expect(await count(a.owner, 'k04-whatsapp')).toBe(2);
+    expect(await count(a.owner, 'k04', { user: org.users.exec1.id })).toBe(3);
+    expect(await count(a.owner, 'k04', { team: west })).toBe(3);
+    // Manager: their team (exec1) only; Executives: themselves.
+    expect(await count(a.manager, 'k04')).toBe(3);
+    expect(await count(a.exec1, 'k04')).toBe(3);
+    expect(await count(a.exec2, 'k04')).toBe(1);
+    expect(await count(a.exec2, 'k04-whatsapp')).toBe(0);
+    // Logged contacts by channel: a tap is never a logged call.
+    expect(await count(a.owner, 'k05-phone')).toBe(1);
+    expect(await count(a.owner, 'k05-whatsapp')).toBe(1);
+    expect(await count(a.owner, 'k05')).toBe(1);
+    // K08b: exec1's 5 taps were each followed by a logged interaction within 2 h; exec2's was not.
+    const k08b = (await tile(a.owner, 'k08b', f))!.ratio!;
+    expect([k08b.numerator, k08b.denominator]).toEqual([5, 6]);
+    expect((await tile(a.exec2, 'k08b', f))!.ratio).toMatchObject({ numerator: 0, denominator: 1 });
+
+    // The per-member table shows the same figures, and every cell equals its drill-down.
+    const d = await reporting.dashboard(a.owner.ctx, f);
+    const row = (id: string) => d.members!.find((m) => m.userId === id)!;
+    expect(row(org.users.exec1.id).counts).toMatchObject({
+      k04: 3,
+      'k04-whatsapp': 2,
+      'k05-phone': 1,
+      'k05-whatsapp': 1,
+    });
+    expect(row(org.users.exec1.id).ratios.k08b).toMatchObject({ numerator: 5, denominator: 5 });
+    expect(row(org.users.exec2.id).counts.k04).toBe(1);
+    for (const id of ['k04', 'k04-whatsapp', 'k05-phone', 'k05-whatsapp', 'k08b']) {
+      const p = await reporting.countPair(a.owner.ctx, id, f);
+      expect([p.listed, p.listedHits], id).toEqual([p.tile, p.tileHits]);
+    }
+    const drill = await reporting.drillDown(a.owner.ctx, 'k04-whatsapp', f);
+    expect(drill.rows.map((r) => [r.leadId, r.extra])).toEqual([
+      [e1, 'WHATSAPP_BUTTON'],
+      [e1, 'WHATSAPP_BUTTON'],
+    ]);
+  });
+
+  it('HR sees no taps, and another org never sees them', async () => {
+    const { a, org } = A;
+    const s = await source(org);
+    const e1 = await lead(a.exec1, s);
+    await tap(a.exec1, e1, 'PHONE_NATIVE');
+    const f = { ...around(), source: s };
+    expect(await codeOf(reporting.dashboard(a.hr.ctx, f))).not.toBe('OK');
+    expect((await tile(B.a.owner, 'k04', around()))!.count).toBe(0);
   });
 });

@@ -19,7 +19,7 @@
 | 8 | **Opening the link:** Call navigates to `tel:`. WhatsApp opens `wa.me` in a new tab (falls back to the same tab if blocked); on a phone it hands off to the app. A "tap here" link is shown if nothing opened. | Desktop keeps the CRM open | Manual check on devices pending |
 
 ## Not built (follow-ups)
-- **Dashboards:** K04 "Call-button taps" and K08b "Outcome logging rate" still show "—". The data now exists; wiring them is a separate change.
+- ~~**Dashboards:**~~ Built 2026-11-13 (owner approval "approve K04/K08b dashboard"): **K04** Call-button taps and WhatsApp-button taps; **K05** split into logged phone calls and logged WhatsApp calls and messages (K05 itself unchanged); **K08b** taps followed by an interaction the same person logged on that lead within 2 h. These are in the KPI tiles, the per-member table and the drill-downs (`src/modules/reporting/queries.ts`, one row set per tile, the same report.read scopes). A tap is never counted as a call. Platform staff under a support grant see zero taps, because `call_intent_read` has no read-only support clause, unlike `interaction_read`.
 - **My Day:** buttons on My Day rows and an "Unlogged calls (24 h)" list (workflow B alternative path).
 - **Retention:** one year per the domain model; no purge job yet (G5 retention awaits counsel, as for interactions).
 - **Device check:** behaviour on real Android/iOS browsers has not been verified.

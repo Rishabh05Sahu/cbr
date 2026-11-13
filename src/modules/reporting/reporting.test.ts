@@ -80,16 +80,14 @@ describe('KPI catalogue', () => {
   });
   it('marks exactly the KPIs without an honest source as unavailable', () => {
     expect(KPIS.filter((k) => k.unavailable).map((k) => k.id)).toEqual([
-      'k04',
       'k06',
       'k07-provider',
       'k08-provider',
-      'k08b',
       'k09b',
       'k12b',
       'k19',
     ]);
-    expect(kpiById('k04')!.unavailable).toMatch(/G5/);
+    expect(kpiById('k06')!.unavailable).toMatch(/provider/);
     expect(kpiById('k19')!.unavailable).toMatch(/leave/);
     expect(kpiById('k12b')!.unavailable).toMatch(/who cancelled/);
   });
