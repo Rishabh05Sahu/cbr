@@ -1,6 +1,6 @@
 # ADR-0024: Pilot hosting on AWS EC2 in Mumbai, with QA and production
 
-- **Status:** Proposed (owner chose AWS for the pilot, 2026-11-01; zero-cost start 2026-11-07; separate QA and production 2026-11-11)
+- **Status:** Accepted for production as amended on 2026-11-15 (owner: "approve the $25 plan"). History: AWS chosen 2026-11-01; zero-cost start 2026-11-07; separate QA and production 2026-11-11.
 - **Date:** 2026-11-01, revised 2026-11-11
 - **Amends:** [ADR-0007](ADR-0007-deployment-strategy.md) for the pilot. ADR-0007 already listed AWS Mumbai as a conditional alternative; the database decision (Supabase Free, owner 2026-10-26) is unchanged.
 
@@ -26,3 +26,12 @@ The web app, the long-running worker and Valkey need a host; Supabase Free cover
 
 ## Reconsider when
 The credits end (choose instance sizes or move to ADR-0007's DigitalOcean plan), sustained memory pressure, a customer requires HA, or real customer data needs controls beyond a single host.
+
+## Amendment (2026-11-15): Dubai users, $25/month, own domain
+- **Users are in Dubai.** The region stays **Mumbai `ap-south-1`** (about 25–35 ms from Dubai). AWS's UAE (`me-central-1`) and Bahrain (`me-south-1`) regions were damaged in March 2026 and AWS advised customers to migrate. Re-check them on the AWS Health Dashboard before ever choosing them.
+- **Budget: about $25/month (G1 approved).** Production only: one EC2 **`t3.small`** (2 GB) with web, worker, Valkey and Caddy, plus **Supabase Free in Mumbai** for the database and files (≈ $22/month). The app and database are in the same AWS region, so per-query latency stays at about 1–2 ms. That distance was the cause of the Vercel test site's slowness.
+- **QA is the existing Vercel + Supabase test deployment** (synthetic data, $0). There is no QA server on EC2; release images are built from the `qa` commit that Vercel tested.
+- **Address and e-mail:** `https://crm.crystalbricksroofs.com` (one `A` record added at GoDaddy; the company website and Google Workspace MX are untouched). Mail goes from `noreply@crystalbricksroofs.com`, a Workspace alias, through Workspace SMTP with an app password. DuckDNS and Gmail accounts are no longer used.
+- **No backups for now (owner's choice).** Supabase Free keeps none. The nightly dump and the restore drill (G4) are required before real customer data.
+- **Later, measured:** CloudFront in front (Dubai/Fujairah edges, free tier; runbook §8), CloudWatch log shipping and Sentry (free tiers), and `t3.medium` if memory runs short.
+- **Legal:** G5 now covers the UAE PDPL (UAE residents' data hosted in India).

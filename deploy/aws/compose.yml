@@ -1,4 +1,5 @@
-# Pilot production on one AWS EC2 host, ap-south-1 (ADR-0024). Not used locally.
+# Production on one AWS EC2 t3.small (2 GB), ap-south-1, https://crm.crystalbricksroofs.com
+# (ADR-0024, amended 2026-11-15). Not used locally.
 # Web + worker + Valkey + Caddy (HTTPS). PostgreSQL and file storage are Supabase Free.
 # Images come from Amazon ECR, built by .github/workflows/release.yml; IMAGE_TAG picks the build.
 # Secrets live only on the server, in /opt/crm/*.env (mode 600). See docs/runbooks/aws-ec2-pilot-deploy.md.
@@ -24,15 +25,15 @@ services:
     # The web process only enqueues mail; SMTP credentials go to the worker alone.
     env_file: [/opt/crm/shared.env]
     environment:
-      # 1 GB host: keep the heaps small and let swap absorb peaks.
-      NODE_OPTIONS: --max-old-space-size=384
+      # 2 GB host (t3.small) shared with the worker, Valkey and Caddy; swap absorbs peaks.
+      NODE_OPTIONS: --max-old-space-size=768
 
   worker:
     <<: *app
     image: ${ECR_REGISTRY:?}/cbr-crm-worker:${IMAGE_TAG:?}
     env_file: [/opt/crm/shared.env, /opt/crm/worker.env]
     environment:
-      NODE_OPTIONS: --max-old-space-size=256
+      NODE_OPTIONS: --max-old-space-size=384
 
   valkey:
     image: valkey/valkey:9.0.6-alpine
