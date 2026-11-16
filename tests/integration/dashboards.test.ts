@@ -49,7 +49,7 @@ const QUALIFIABLE = {
   transactionType: 'BUY',
   propertyType: 'APARTMENT',
   preferredCity: 'Pune',
-  budgetMax: '1 Cr',
+  budgetMax: '10M',
 };
 
 async function lead(by: Actor, sourceId: string): Promise<string> {
@@ -390,14 +390,7 @@ describe('periods, exclusions and lenses', () => {
 
   it('shows unavailable KPIs as "—" with the reason, never as zero', async () => {
     const d = await reporting.dashboard(A.a.owner.ctx, around());
-    for (const id of [
-      'k06',
-      'k07-provider',
-      'k08-provider',
-      'k09b',
-      'k12b',
-      'k19',
-    ]) {
+    for (const id of ['k06', 'k07-provider', 'k08-provider', 'k09b', 'k12b', 'k19']) {
       const t = d.kpis.find((k) => k.id === id)!;
       expect(t.unavailable, id).toBeTruthy();
       expect(t.count, id).toBeNull();

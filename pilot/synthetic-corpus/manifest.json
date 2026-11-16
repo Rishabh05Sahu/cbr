@@ -19,8 +19,8 @@
     },
     {
       "name": "corpus_multisheet.xlsx",
-      "bytes": 14868,
-      "sha256": "a509020e8abcbd29382406c0dd1baa7200e91b6a9935306dff0ae91c629689dd",
+      "bytes": 15066,
+      "sha256": "d54c185b04e0897f9d0c224d6702e8b7c320d95a6d48dc8d143964590368c5f9",
       "sheet": "Leads Q4",
       "purpose": "sheet selection; a second header vocabulary; numeric phone cells on Q3",
       "expected": {
@@ -34,9 +34,9 @@
     },
     {
       "name": "corpus_variants.csv",
-      "bytes": 76891,
-      "sha256": "2bfb2cbcd78e58b521eb60e837d983e043356d5d01bd1552eeb0cc421f1867a1",
-      "purpose": "a third header vocabulary; +91/0/91-/spaced phones; L, Cr, Lakh, crore, Indian grouping and plain INR budgets",
+      "bytes": 78132,
+      "sha256": "88a6fa9298b29c9f5758e4c63efccccc29f15f0442d313dab0fe3e8f17f5e815",
+      "purpose": "a third header vocabulary; +91/0/91-/spaced phones; M, K, million, AED/Dhs prefixes, grouping and plain AED budgets",
       "expected": {
         "total": 500,
         "valid": 500,
@@ -48,8 +48,8 @@
     },
     {
       "name": "corpus_large_100k.csv",
-      "bytes": 19950650,
-      "sha256": "eadf44df45695f19411d96a008b62fd4cc90dc20758299f7c12356b1800db3e1",
+      "bytes": 19998717,
+      "sha256": "654377170f3ae4bbcf5b1fa8029adba8d6040de94f3ace6a47b6748f19e08a40",
       "purpose": "100,000 rows just under 20 MB; fixed mix of invalid, empty, in-file duplicate and existing-lead rows",
       "expected": {
         "total": 100000,
@@ -62,8 +62,8 @@
     },
     {
       "name": "corpus_xlsx_20k.xlsx",
-      "bytes": 1082353,
-      "sha256": "c7aafeb50c4fc2a0616c52c41a8d36217fc4c2e2199e5b53d4fb745194555c99",
+      "bytes": 1074879,
+      "sha256": "fc74511618265759f85386d3fd74b5e5510ea00b911b3f0380c60151632e1b52",
       "sheet": "Leads",
       "purpose": "20,000 rows as XLSX with numeric phone and budget cells; same mix",
       "expected": {

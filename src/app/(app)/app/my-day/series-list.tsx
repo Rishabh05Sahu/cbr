@@ -2,6 +2,7 @@
 // FR-107: the caller's active recurring series on My Day, each with Edit (future occurrences only)
 // and Stop (no further occurrences; the open task stays). Stopping asks for a second, in-page
 // confirmation; no browser dialog. The server re-checks ownership, the version and every value.
+import { DISPLAY_TIME_ZONE } from '@/lib/display';
 import { startTransition, useActionState, useState, type FormEvent } from 'react';
 import { fieldErrorLines } from '@/components/action-form';
 import { Alert, Badge, Button } from '@/components/ui';
@@ -27,7 +28,7 @@ const due = (d: Date) =>
     month: 'short',
     hour: 'numeric',
     minute: '2-digit',
-    timeZone: 'Asia/Kolkata',
+    timeZone: DISPLAY_TIME_ZONE,
   });
 
 export function SeriesList({

@@ -413,7 +413,7 @@ export function corpusFiles() {
       type: 'csv' as const,
       bytes: variantsCsv,
       purpose:
-        'a third header vocabulary; +91/0/91-/spaced phones; L, Cr, Lakh, crore, Indian grouping and plain INR budgets',
+        'a third header vocabulary; +91/0/91-/spaced phones; M, K, million, AED/Dhs prefixes, grouping and plain AED budgets',
       expected: {
         total: VARIANT_ROWS,
         valid: VARIANT_ROWS,

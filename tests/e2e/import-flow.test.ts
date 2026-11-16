@@ -151,6 +151,26 @@ describe('import over HTTP', () => {
     expect(await migrator().importJob.count({ where: { id: importId } })).toBe(1);
   }, 120_000);
 
+  it('the import page offers a template whose headings map themselves', async () => {
+    const page = await owner.get(IMPORTS);
+    expect(await page.text()).toContain('/app/leads/import/template.csv');
+    const res = await owner.get(`${IMPORTS}/template.csv`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toMatch(/^text\/csv/);
+    expect(res.headers.get('content-disposition')).toContain('lead-import-template.csv');
+    expect(res.headers.get('cache-control')).toMatch(/no-store/);
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf]); // BOM: Excel reads it as UTF-8
+    const text = new TextDecoder().decode(bytes); // the decoder drops the BOM
+    expect(text).toMatch(/^Name,Phone,Alternate phone,Email,/);
+    expect(text.trim().split('\r\n')).toHaveLength(1); // headings only, no data rows
+
+    const exec = await browserFor(A.users.exec1, A.orgId);
+    expect((await exec.get(`${IMPORTS}/template.csv`)).status).toBe(404);
+    const anon = new Browser();
+    expect([302, 303, 307]).toContain((await anon.get(`${IMPORTS}/template.csv`)).status);
+  });
+
   it('roles, anonymous callers and another org are refused', async () => {
     const body = csv(['9701234571', '9701234572']);
     const started = await owner.call(IMPORTS, I, 'startImportAction', [

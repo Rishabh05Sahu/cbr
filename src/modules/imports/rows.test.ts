@@ -89,7 +89,7 @@ describe('validateRow', () => {
       9876543210,
       'ASHA@example.test',
       '99acres',
-      '1.2 Cr',
+      '12M',
       'Purchase',
       'Wants 2BHK near station',
     ]);
@@ -136,7 +136,7 @@ describe('validateRow', () => {
   });
 
   it('reports every problem with row, field and code, and never the cell values', () => {
-    const r = row(['', '12345', 'not-an-email', 'Facebook', '50-75 L', 'Timeshare', 'x']);
+    const r = row(['', '12345', 'not-an-email', 'Facebook', '5-7.5M', 'Timeshare', 'x']);
     expect(r.status).toBe('INVALID');
     if (r.status !== 'INVALID') return;
     const codes = r.issues.map((i) => `${i.field}:${i.code}`);
@@ -160,9 +160,9 @@ describe('validateRow', () => {
     const phone = row(['A', '+1 415 555 0100', '', '', '', '', '']);
     expect(phone).toMatchObject({
       status: 'INVALID',
-      issues: [{ field: 'primaryPhone', code: 'PHONE_NOT_INDIAN' }],
+      issues: [{ field: 'primaryPhone', code: 'PHONE_COUNTRY_NOT_SUPPORTED' }],
     });
-    const budget = row(['A', '9876543210', '', '', '50-75 L', '', '']);
+    const budget = row(['A', '9876543210', '', '', '5-7.5M', '', '']);
     expect(budget).toMatchObject({
       status: 'INVALID',
       issues: [{ field: 'budgetMin', code: 'BUDGET_RANGE_NOT_SUPPORTED' }],

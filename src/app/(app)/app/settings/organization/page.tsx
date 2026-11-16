@@ -6,8 +6,8 @@ import { pageContext } from '@/platform/auth/session';
 import { can } from '@/platform/authz';
 
 const ZONES = [
-  'Asia/Kolkata',
   'Asia/Dubai',
+  'Asia/Kolkata',
   'Asia/Singapore',
   'Europe/London',
   'America/New_York',

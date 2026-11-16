@@ -24,7 +24,7 @@ if ! command -v aws >/dev/null; then
   rm -rf "$tmp"
 fi
 
-# 2 GB swap: the 1 GB instance runs web, worker, Valkey and Caddy together.
+# 2 GB swap: the 2 GB t3.small runs web, worker, Valkey and Caddy together.
 if ! swapon --show | grep -q /swapfile; then
   sudo fallocate -l 2G /swapfile
   sudo chmod 600 /swapfile

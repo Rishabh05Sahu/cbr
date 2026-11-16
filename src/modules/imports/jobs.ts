@@ -29,6 +29,7 @@ import {
   CUSTOM_PREFIX,
   customKeyOf,
   FIELD_SPEC,
+  templateHeaders,
   validateMapping,
   type ColumnMapping,
   type ImportField,
@@ -801,4 +802,21 @@ export async function importIssuesCsv(ctx: RequestContext, rawId: unknown): Prom
       i.leadId ?? '',
     ]);
   return lines.map((l) => l.map(csvCell).join(',')).join('\r\n') + '\r\n';
+}
+
+/**
+ * The import template (CSV, UTF-8 with BOM so Excel opens it correctly): one header row whose
+ * headings map themselves (TEMPLATE_HEADINGS), including the org's active custom fields. No data
+ * rows: anything under the header would be imported. Owner/Admin (lead.import + lead.create).
+ */
+export async function importTemplateCsv(ctx: RequestContext): Promise<string> {
+  const me = requireImporter(ctx);
+  const custom = await tenantRunner().withTenant(me.tenant, (tx) =>
+    tx.customFieldDefinition.findMany({
+      where: { archivedAt: null },
+      orderBy: { label: 'asc' },
+      select: { key: true, label: true, required: true },
+    }),
+  );
+  return '\uFEFF' + templateHeaders(custom).map(csvCell).join(',') + '\r\n';
 }

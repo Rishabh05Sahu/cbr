@@ -1,19 +1,24 @@
 // A site visit assigned to the signed-in member, as My Day and the calendar list it (owner decision
 // 2026-10-30): time, status, the lead (a link only within their lead scope, otherwise its name) and
 // the meeting point. Read-only: visits are changed on the lead's page. No call or message links.
+import { DISPLAY_TIME_ZONE } from '@/lib/display';
 import Link from 'next/link';
 import { Badge } from '@/components/ui';
 import { VISIT_LABELS, type AssignedVisit } from '@/modules/visits';
 
 const time = (d: Date) =>
-  d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata' });
+  d.toLocaleTimeString('en-IN', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: DISPLAY_TIME_ZONE,
+  });
 const dateTime = (d: Date) =>
   d.toLocaleString('en-IN', {
     day: 'numeric',
     month: 'short',
     hour: 'numeric',
     minute: '2-digit',
-    timeZone: 'Asia/Kolkata',
+    timeZone: DISPLAY_TIME_ZONE,
   });
 
 export function VisitEntry({ v, withDate = false }: { v: AssignedVisit; withDate?: boolean }) {

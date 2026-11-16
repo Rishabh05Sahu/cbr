@@ -1,3 +1,4 @@
+import { DISPLAY_TIME_ZONE } from '@/lib/display';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { ActionForm } from '@/components/action-form';
@@ -23,7 +24,7 @@ const fmt = (d: Date) =>
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
-    timeZone: 'Asia/Kolkata',
+    timeZone: DISPLAY_TIME_ZONE,
   });
 
 export default async function PlatformPage() {

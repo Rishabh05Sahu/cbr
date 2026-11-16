@@ -1,3 +1,4 @@
+import { DISPLAY_TIME_ZONE } from '@/lib/display';
 import { ActionForm } from '@/components/action-form';
 import { ActionFormButton } from '@/components/action-form-button';
 import { Badge, Card, EmptyState, Field, Input, PageHeader, Select } from '@/components/ui';
@@ -23,7 +24,7 @@ const dateFmt = (d: Date) =>
     day: 'numeric',
     month: 'short',
     year: 'numeric',
-    timeZone: 'Asia/Kolkata',
+    timeZone: DISPLAY_TIME_ZONE,
   });
 
 export default async function MembersPage() {

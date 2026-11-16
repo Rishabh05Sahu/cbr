@@ -124,7 +124,7 @@ export function CreateLeadForm({
               required: true,
               inputMode: 'tel',
               autoComplete: 'off',
-              placeholder: '98765 43210',
+              placeholder: '050 123 4567',
             })}
             {input('alternatePhone', 'Alternate mobile (optional)', { inputMode: 'tel' })}
             {input('email', 'Email (optional)', { type: 'email', maxLength: 254 })}
@@ -157,8 +157,8 @@ export function CreateLeadForm({
             {choice('transactionType', 'Looking to')}
             {choice('propertyType', 'Property type')}
             {input('preferredCity', 'City', { maxLength: 100 })}
-            {input('budgetMin', 'Budget from', { placeholder: '50 L' })}
-            {input('budgetMax', 'Budget up to', { placeholder: '1.2 Cr' })}
+            {input('budgetMin', 'Budget from', { placeholder: '1M' })}
+            {input('budgetMax', 'Budget up to', { placeholder: '2M' })}
             {input('preferredLocalities', 'Localities (comma-separated)')}
             {input('bhkMin', 'BHK from', { type: 'number', min: 0, max: 20 })}
             {input('bhkMax', 'BHK up to', { type: 'number', min: 0, max: 20 })}

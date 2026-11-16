@@ -1,7 +1,7 @@
 // FR-140 property rules (ADR-0021): price basis and status by listing type, deposits, amounts in
-// rupees (numeric(15,2)), amenities, codes; and the rupee display format.
+// AED amounts (numeric(15,2)), amenities, codes; and the AED display format.
 import { describe, expect, it } from 'vitest';
-import { priceText, rupees } from '@/app/(app)/app/properties/format';
+import { aed, priceText } from '@/app/(app)/app/properties/format';
 import {
   listingProblems,
   nextPropertyCode,
@@ -81,12 +81,12 @@ describe('parseAmenities and codes', () => {
   });
 });
 
-describe('rupee display', () => {
-  it('uses Indian grouping and the price basis', () => {
-    expect(rupees('8500000')).toBe('₹85,00,000');
-    expect(rupees('8500000.00')).toBe('₹85,00,000');
-    expect(rupees('1250.5')).toBe('₹1,250.50');
-    expect(priceText({ price: '6500', priceType: 'PER_SQFT' })).toBe('₹6,500 per sq ft');
-    expect(priceText({ price: '35000', priceType: 'MONTHLY_RENT' })).toBe('₹35,000 per month');
+describe('AED display (owner decision 2026-11-16)', () => {
+  it('uses international grouping and the price basis', () => {
+    expect(aed('8500000')).toBe('AED 8,500,000');
+    expect(aed('8500000.00')).toBe('AED 8,500,000');
+    expect(aed('1250.5')).toBe('AED 1,250.50');
+    expect(priceText({ price: '6500', priceType: 'PER_SQFT' })).toBe('AED 6,500 per sq ft');
+    expect(priceText({ price: '35000', priceType: 'MONTHLY_RENT' })).toBe('AED 35,000 per month');
   });
 });

@@ -344,7 +344,7 @@ describe('validation and dry run', () => {
       A,
       csv([
         ['Name', 'Phone', 'Budget'],
-        ['Good One', phone(), '50 L'],
+        ['Good One', phone(), '5M'],
         ['Bad Phone', badPhone, ''],
         ['First', dup, ''],
         ['Second', dup, ''],

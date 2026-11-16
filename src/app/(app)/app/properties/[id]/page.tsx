@@ -6,7 +6,7 @@ import { updatePropertyAction } from '@/modules/properties/actions';
 import { can } from '@/platform/authz';
 import { pageContext, pageRequire } from '@/platform/auth/session';
 import { LABELS } from '../../leads/labels';
-import { priceText, rupees } from '../format';
+import { priceText, aed } from '../format';
 import { PropertyFields } from '../property-fields';
 import { ContactsPanel } from './contacts-panel';
 
@@ -29,8 +29,8 @@ export default async function PropertyPage({ params }: { params: Promise<{ id: s
     ['Type', lab(p.propertyType)],
     ['Bedrooms', p.bhk === null ? '—' : `${p.bhk} BHK`],
     ['Price', priceText(p)],
-    ['Maintenance', p.maintenance ? rupees(p.maintenance) : '—'],
-    ['Deposit', p.deposit ? rupees(p.deposit) : '—'],
+    ['Maintenance', p.maintenance ? aed(p.maintenance) : '—'],
+    ['Deposit', p.deposit ? aed(p.deposit) : '—'],
     ['City', p.city],
     ['Locality', p.locality ?? '—'],
     ['Address', p.addressLine ?? '—'],

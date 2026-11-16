@@ -15,9 +15,13 @@ import { ruleViolation } from '@/platform/errors';
 import { findInScope, parseId } from './access';
 import type { ContactStatus } from './contactability';
 
-/** "+919803704066" → "+91 ••••••4066"; other numbers keep only their last four digits. */
+/**
+ * "+971501234567" → "+971 •••••4567"; "+919803704066" → "+91 ••••••4066"; other numbers keep
+ * only their last four digits.
+ */
 export function maskPhone(e164: string): string {
   const last4 = e164.slice(-4);
+  if (/^\+971\d{8,9}$/.test(e164)) return `+971 ${'•'.repeat(e164.length - 8)}${last4}`;
   if (/^\+91\d{10}$/.test(e164)) return `+91 ••••••${last4}`;
   return `${'•'.repeat(Math.max(e164.replace(/\D/g, '').length - 4, 2))}${last4}`;
 }
