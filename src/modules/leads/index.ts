@@ -49,7 +49,7 @@ import {
   type RequirementField,
   type Requirements,
 } from './input';
-import { normaliseIndianPhone } from './normalise';
+import { normalisePhone } from './normalise';
 import { filterWhere } from './list-where';
 import { insertNewLead, insertNote } from './write';
 import {
@@ -429,8 +429,8 @@ export async function reportDuplicateToOwner(
   authorize(ctx, 'lead.create');
   if (ctx.kind !== 'member') throw ruleViolation('Only organisation members can report enquiries');
   const input = reportInput.parse(raw);
-  const primary = normaliseIndianPhone(input.primaryPhone);
-  const alternate = normaliseIndianPhone(input.alternatePhone);
+  const primary = normalisePhone(input.primaryPhone);
+  const alternate = normalisePhone(input.alternatePhone);
   if (!primary.ok || !primary.value)
     throw invalid({ primaryPhone: ['Enter a valid mobile number'] });
   const phones = [

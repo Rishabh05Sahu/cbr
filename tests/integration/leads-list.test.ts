@@ -76,8 +76,8 @@ beforeAll(async () => {
     preferredCity: 'Pune',
     intent: 'HOT',
     propertyType: 'APARTMENT',
-    budgetMin: '80 L',
-    budgetMax: '1 Cr',
+    budgetMin: '8M',
+    budgetMax: '10M',
     sourceId,
   });
   await make(a.exec1, 'rohanMumbai', {
@@ -85,14 +85,14 @@ beforeAll(async () => {
     preferredCity: 'Mumbai',
     intent: 'HOT',
     propertyType: 'APARTMENT',
-    budgetMax: '90 L',
+    budgetMax: '9M',
   });
   await make(a.exec1, 'rohanCold', {
     fullName: 'rohan searchable',
     preferredCity: 'pune',
     intent: 'COLD',
     propertyType: 'VILLA',
-    budgetMin: '3 Cr',
+    budgetMin: '30M',
   });
   await make(a.exec1, 'phoneLead', { fullName: 'Phone Person', primaryPhone: '98123 45678' });
   await make(a.exec2, 'exec2Rohan', { fullName: 'Rohan Searchable', preferredCity: 'Pune' });
@@ -167,8 +167,8 @@ describe('search and filters', () => {
         city: 'PUNE',
         intent: 'HOT',
         propertyType: 'APARTMENT',
-        budgetFrom: '90 L',
-        budgetTo: '95 L',
+        budgetFrom: '9M',
+        budgetTo: '9.5M',
         stage: ['CONTACTED', 'QUALIFIED'],
         source: sourceId,
       }),
@@ -185,10 +185,10 @@ describe('search and filters', () => {
     expect(await idsOf(e, { stage: 'CONTACTED' })).toEqual([ids.rohanPune]);
     expect(await idsOf(e, { source: sourceId })).toEqual([ids.rohanPune]);
     // Budget overlap: [80 L, 1 Cr] and [–, 90 L] overlap 85–95 L; [3 Cr, –] does not.
-    expect(new Set(await idsOf(e, { q: 'rohan', budgetFrom: '85 L', budgetTo: '95 L' }))).toEqual(
+    expect(new Set(await idsOf(e, { q: 'rohan', budgetFrom: '8.5M', budgetTo: '9.5M' }))).toEqual(
       new Set([ids.rohanPune, ids.rohanMumbai]),
     );
-    expect(await idsOf(e, { q: 'rohan', budgetFrom: '2.5 Cr' })).toEqual([ids.rohanCold]);
+    expect(await idsOf(e, { q: 'rohan', budgetFrom: '25M' })).toEqual([ids.rohanCold]);
     const today = new Date(Date.now() + 5.5 * 36e5).toISOString().slice(0, 10);
     expect((await idsOf(e, { createdFrom: today, createdTo: today, q: 'rohan' })).length).toBe(3);
     expect(await idsOf(e, { createdTo: '2020-01-01' })).toEqual([]);

@@ -98,10 +98,10 @@ export default async function PropertiesPage({
           <Field label="City" htmlFor="pc">
             <Input id="pc" name="city" defaultValue={query.city} />
           </Field>
-          <Field label="Min price (₹)" htmlFor="pmin">
+          <Field label="Min price (AED)" htmlFor="pmin">
             <Input id="pmin" name="minPrice" inputMode="decimal" defaultValue={query.minPrice} />
           </Field>
-          <Field label="Max price (₹)" htmlFor="pmax">
+          <Field label="Max price (AED)" htmlFor="pmax">
             <Input id="pmax" name="maxPrice" inputMode="decimal" defaultValue={query.maxPrice} />
           </Field>
           <Field label="BHK" htmlFor="pb">

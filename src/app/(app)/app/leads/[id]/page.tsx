@@ -76,7 +76,7 @@ import { InteractionSheet, type SheetFollowUp } from './interaction-sheet';
 import { PhoneReveal } from './phone-reveal';
 import { ScriptPanel, type PanelScript } from './script-panel';
 import { ShownScriptProvider } from './shown-script';
-import { fmtDateTime, fmtInr, label, LABELS } from '../labels';
+import { fmtAed, fmtDateTime, label, LABELS } from '../labels';
 
 const textareaClass = 'block w-full rounded-md border border-slate-300 px-3 py-2 text-sm';
 /** FR-057 script panel: the best matches shown in the drawer (FR-096 order). */
@@ -330,7 +330,9 @@ export default async function LeadPage({ params }: PageProps<'/app/leads/[id]'>)
                 >
                   <InteractionSheet
                     key={pendingTap?.id ?? 'no-tap'}
-                    initialChannel={pendingTap ? sheetChannelFor(pendingTap.channel) : 'PHONE_NATIVE'}
+                    initialChannel={
+                      pendingTap ? sheetChannelFor(pendingTap.channel) : 'PHONE_NATIVE'
+                    }
                     leadId={lead.id}
                     version={lead.version}
                     stage={lead.stage}
@@ -632,7 +634,7 @@ export default async function LeadPage({ params }: PageProps<'/app/leads/[id]'>)
                   <Item term="City" value={lead.preferredCity ?? '—'} />
                   <Item
                     term="Budget"
-                    value={`${fmtInr(lead.budgetMin)} – ${fmtInr(lead.budgetMax)}`}
+                    value={`${fmtAed(lead.budgetMin)} – ${fmtAed(lead.budgetMax)}`}
                   />
                   <Item term="Localities" value={lead.preferredLocalities.join(', ') || '—'} />
                   <Item term="BHK" value={`${lead.bhkMin ?? '—'} – ${lead.bhkMax ?? '—'}`} />

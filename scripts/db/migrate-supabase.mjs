@@ -131,6 +131,8 @@ export const MANIFEST = [
   ['0027_site_visit_dnc_guard', 'b9b39ee4a09486db46cbe18be100ac3c5af559cae11d2b14bd1aea3ff9f94048'],
   // FR-080/081/082 call intents (ADR-0025); owner approved 2026-11-12 ("approve 0028 and deploy").
   ['0028_call_intents', '54cde3d67f69fabba90d41678745907b7bb0b8a21a49650caa443dcd5df42f0e'],
+  // UAE phone numbers for property contacts (owner decision 2026-11-16: UAE + India).
+  ['0029_uae_phones', 'a0d472bdf719599c57278e84233b87fc424a8d9d5e9e4b519e81e675f4194d91'],
 ];
 
 const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');

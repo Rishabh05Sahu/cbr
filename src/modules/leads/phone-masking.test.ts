@@ -3,6 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { maskPhone, phoneDisplay } from './phone-masking';
 
 describe('maskPhone', () => {
+  it('keeps the UAE country code and the last four digits (mobile and fixed line)', () => {
+    expect(maskPhone('+971501234567')).toBe('+971 •••••4567');
+    expect(maskPhone('+97141234567')).toBe('+971 ••••4567');
+  });
   it('keeps the Indian country code and the last four digits', () => {
     expect(maskPhone('+919803704066')).toBe('+91 ••••••4066');
   });

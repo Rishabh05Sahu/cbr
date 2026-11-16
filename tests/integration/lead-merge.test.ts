@@ -154,7 +154,7 @@ describe('merge', () => {
 
   it('applies fills and choices, tombstones the merged lead, records both timelines and the audit', async () => {
     const mp = phone();
-    const s = await newLead({ email: 'synthetic.e@example.test', budgetMin: '80 L' });
+    const s = await newLead({ email: 'synthetic.e@example.test', budgetMin: '8M' });
     const m = await newLead({
       primaryPhone: mp,
       email: 'synthetic.f@example.test',

@@ -71,7 +71,7 @@ describe('importLeadBatch', () => {
     const importId = randomUUID();
     const r = row(2, phone(), {
       email: 'imp@example.test',
-      budgetMin: '85 L',
+      budgetMin: '8.5M',
       note: 'From portal',
     });
     const [out] = await leads.importLeadBatch(a.admin.ctx, [r], opts(importId));

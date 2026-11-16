@@ -2,17 +2,21 @@
 // (they need re-verification flows); 2FA enrolment uses the auth client directly.
 import { z } from 'zod';
 import { writeAudit } from '@/modules/audit';
+import { normalisePhone as normaliseLeadPhone } from '@/modules/leads/normalise';
 import { authorize, type RequestContext } from '@/platform/authz';
 import { tenantRunner } from '@/platform/db';
 import { notFound } from '@/platform/errors';
 
-/** Accepts +E.164, or a 10-digit Indian mobile (6–9 leading digit) normalised to +91. */
+/**
+ * A staff member's own number: any +E.164, or a UAE (050…) or Indian mobile written locally
+ * (same rules as lead phones, owner decision 2026-11-16).
+ */
 export function normalisePhone(raw: string): string | null {
   const s = raw.replace(/[\s()-]/g, '');
   if (s === '') return null;
-  if (/^[6-9]\d{9}$/.test(s)) return `+91${s}`;
-  if (/^0[6-9]\d{9}$/.test(s)) return `+91${s.slice(1)}`;
   if (/^\+[1-9]\d{7,14}$/.test(s)) return s;
+  const local = normaliseLeadPhone(s);
+  if (local.ok && local.value) return local.value.e164;
   throw new z.ZodError([
     { code: 'custom', path: ['phone'], message: 'Enter a valid mobile number', input: raw },
   ]);

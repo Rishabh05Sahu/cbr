@@ -85,7 +85,7 @@ export function listingProblems(p: {
 }
 
 /**
- * An amount in rupees as a decimal string with at most 2 decimals and 13 integer digits
+ * An amount in AED as a decimal string with at most 2 decimals and 13 integer digits
  * (numeric(15,2)); commas and spaces are ignored ("85,00,000"). Null for blank, undefined for bad.
  */
 export function parseAmount(raw: string | undefined, max = 13): string | null | undefined {

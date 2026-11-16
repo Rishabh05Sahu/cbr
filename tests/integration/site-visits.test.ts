@@ -68,7 +68,7 @@ const QUALIFIABLE = {
   transactionType: 'BUY',
   propertyType: 'APARTMENT',
   preferredCity: 'Pune',
-  budgetMax: '1.2 Cr',
+  budgetMax: '12M',
 };
 async function created(by: Actor, qualifiable = true): Promise<string> {
   const r = await leads.createLead(by.ctx, {

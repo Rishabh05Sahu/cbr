@@ -108,29 +108,29 @@ export function syntheticMobile(block: 6 | 7 | 8 | 9, i: number, sub = 0): strin
 
 export const syntheticEmail = (n: number, tag = 'lead') => `synthetic.${tag}.${n}@example.test`;
 
-/** INR budget pair in rupees (min ≤ max), in realistic ranges for the property type. */
+/** AED budget pair (min ≤ max), in realistic ranges for the property type. */
 export function syntheticBudget(r: () => number): { min: number; max: number } {
-  const lakhs = pick(r, [25, 35, 45, 60, 75, 85, 95, 120, 150, 200, 300, 500]);
-  const min = lakhs * 100_000;
+  const hundredK = pick(r, [5, 8, 12, 15, 20, 25, 35, 50, 75, 100, 150, 250]);
+  const min = hundredK * 100_000;
   return { min, max: Math.round(min * (1.1 + r() * 0.5)) };
 }
 
-/** Budget spellings the importer accepts (taken from the M4 fixture's valid rows). */
-export function budgetText(rupees: number, style: number): string {
-  const lakh = rupees / 100_000;
+/** AED budget spellings the importer accepts (owner decision 2026-11-16), each exact. */
+export function budgetText(aed: number, style: number): string {
+  const millions = Number((aed / 1_000_000).toFixed(6));
   switch (style % 6) {
     case 0:
-      return `${Number(lakh.toFixed(2))} L`;
+      return `${millions}M`;
     case 1:
-      return `${Number((lakh / 100).toFixed(2))} Cr`;
+      return `AED ${aed.toLocaleString('en-US')}`;
     case 2:
-      return `₹ ${Number(lakh.toFixed(2))} Lakh`;
+      return `Dhs ${Number((aed / 1000).toFixed(3))}K`;
     case 3:
-      return `${rupees.toLocaleString('en-IN')}/-`;
+      return `${aed.toLocaleString('en-US')} AED`;
     case 4:
-      return `Rs. ${Number((lakh / 100).toFixed(2))} crore`;
+      return `${millions} million`;
     default:
-      return String(rupees);
+      return String(aed);
   }
 }
 

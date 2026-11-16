@@ -143,7 +143,7 @@ export function fixtureRows(v: Variant): FixtureRow[] {
   return [
     {
       n: 1,
-      case: 'full valid row; +91 with spaces; 85 L / 1.2 Cr; vocab spellings',
+      case: 'full valid row; +91 with spaces; 8.5M / 12M AED; vocab spellings',
       values: {
         name: lead(1),
         phone: `+91 ${sp(m(1))}`,
@@ -152,8 +152,8 @@ export function fixtureRows(v: Variant): FixtureRow[] {
         txn: 'Purchase',
         ptype: 'Flat',
         bhk: '2 BHK',
-        budgetMin: '85 L',
-        budgetMax: '1.2 Cr',
+        budgetMin: '8.5M',
+        budgetMax: '12M',
         city: 'Pune',
         locality: 'Baner, Wakad',
         purpose: 'Investment',
@@ -171,17 +171,17 @@ export function fixtureRows(v: Variant): FixtureRow[] {
     },
     {
       n: 2,
-      case: 'trunk 0; 85,00,000/-; blank source uses the default',
-      values: { name: lead(2), phone: `0${sp(m(2))}`, budgetMin: '85,00,000/-' },
+      case: 'trunk 0; AED 8,500,000; blank source uses the default',
+      values: { name: lead(2), phone: `0${sp(m(2))}`, budgetMin: 'AED 8,500,000' },
       expect: { kind: 'VALID' },
     },
     {
       n: 3,
-      case: 'plain 10 digits; ₹ 75 Lakh; Rent, Bungalow, lower-case intent',
+      case: 'plain 10 digits; Dhs 7.5M; Rent, Bungalow, lower-case intent',
       values: {
         name: lead(3),
         phone: m(3),
-        budgetMin: '₹ 75 Lakh',
+        budgetMin: 'Dhs 7.5M',
         txn: 'Rent',
         ptype: 'Bungalow',
         intent: 'warm',
@@ -191,11 +191,11 @@ export function fixtureRows(v: Variant): FixtureRow[] {
     },
     {
       n: 4,
-      case: '91- country code with hyphens; Rs. 1.5 crore; commercial lease',
+      case: '91- country code with hyphens; 15 million; commercial lease',
       values: {
         name: lead(4),
         phone: `91-${m(4).slice(0, 5)}-${m(4).slice(5)}`,
-        budgetMin: 'Rs. 1.5 crore',
+        budgetMin: '15 million',
         txn: 'Lease commercial',
         ptype: 'Office space',
       },
@@ -226,11 +226,11 @@ export function fixtureRows(v: Variant): FixtureRow[] {
     },
     {
       n: 7,
-      case: 'XLSX: phone and budget stored as numbers; CSV: dotted phone, 95 Lac',
+      case: 'XLSX: phone and budget stored as numbers; CSV: dotted phone, 9.5 Mn',
       values:
         v === 'xlsx'
           ? { name: lead(7), phone: Number(m(7)), budgetMin: 9_500_000 }
-          : { name: lead(7), phone: `${m(7).slice(0, 5)}.${m(7).slice(5)}`, budgetMin: '95 Lac' },
+          : { name: lead(7), phone: `${m(7).slice(0, 5)}.${m(7).slice(5)}`, budgetMin: '9.5 Mn' },
       expect: { kind: 'VALID' },
     },
     {
@@ -242,7 +242,7 @@ export function fixtureRows(v: Variant): FixtureRow[] {
     {
       n: 9,
       case: 'missing name',
-      values: { phone: m(9), budgetMin: '60 L' },
+      values: { phone: m(9), budgetMin: '6M' },
       expect: { kind: 'INVALID', issues: [['fullName', 'VALUE_REQUIRED']] },
     },
     {
@@ -261,7 +261,7 @@ export function fixtureRows(v: Variant): FixtureRow[] {
       n: 12,
       case: 'foreign number',
       values: { name: lead(12), phone: '+44 20 7946 0958' },
-      expect: { kind: 'INVALID', issues: [['primaryPhone', 'PHONE_NOT_INDIAN']] },
+      expect: { kind: 'INVALID', issues: [['primaryPhone', 'PHONE_COUNTRY_NOT_SUPPORTED']] },
     },
     {
       n: 13,
@@ -272,31 +272,31 @@ export function fixtureRows(v: Variant): FixtureRow[] {
     {
       n: 14,
       case: 'not a mobile series',
-      values: { name: lead(14), phone: '5000000014' },
+      values: { name: lead(14), phone: '+91 5000000014' },
       expect: { kind: 'INVALID', issues: [['primaryPhone', 'PHONE_NOT_MOBILE']] },
     },
     {
       n: 15,
       case: 'budget range in one cell',
-      values: { name: lead(15), phone: m(15), budgetMin: '50-75 L' },
+      values: { name: lead(15), phone: m(15), budgetMin: '5-7.5M' },
       expect: { kind: 'INVALID', issues: [['budgetMin', 'BUDGET_RANGE_NOT_SUPPORTED']] },
     },
     {
       n: 16,
       case: 'budget with words',
-      values: { name: lead(16), phone: m(16), budgetMin: 'about 1 Cr' },
+      values: { name: lead(16), phone: m(16), budgetMin: 'about 1M' },
       expect: { kind: 'INVALID', issues: [['budgetMin', 'BUDGET_MALFORMED']] },
     },
     {
       n: 17,
       case: 'unsupported budget unit',
-      values: { name: lead(17), phone: m(17), budgetMin: '2 million' },
+      values: { name: lead(17), phone: m(17), budgetMin: '20 L' },
       expect: { kind: 'INVALID', issues: [['budgetMin', 'BUDGET_UNKNOWN_UNIT']] },
     },
     {
       n: 18,
       case: 'minimum budget above maximum',
-      values: { name: lead(18), phone: m(18), budgetMin: '90 L', budgetMax: '60 L' },
+      values: { name: lead(18), phone: m(18), budgetMin: '9M', budgetMax: '6M' },
       expect: { kind: 'INVALID', issues: [['budgetMax', 'BUDGET_MIN_ABOVE_MAX']] },
     },
     {
@@ -344,7 +344,7 @@ export function fixtureRows(v: Variant): FixtureRow[] {
     {
       n: 25,
       case: 'exact copy of case 2: duplicate in file',
-      values: { name: lead(2), phone: `0${sp(m(2))}`, budgetMin: '85,00,000/-' },
+      values: { name: lead(2), phone: `0${sp(m(2))}`, budgetMin: 'AED 8,500,000' },
       expect: { kind: 'DUPLICATE_IN_FILE', of: 2 },
     },
     {

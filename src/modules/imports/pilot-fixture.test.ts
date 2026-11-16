@@ -120,13 +120,13 @@ describe.each(['csv', 'xlsx'] as const)('synthetic pilot fixture: %s', (v) => {
       [1, 2, 3, 4, 5, 6, 7].map((n) => [n, lead(n).lead.requirements.budgetMin]),
     );
     expect(budgets).toEqual({
-      1: '8500000.00', // 85 L
-      2: '8500000.00', // 85,00,000/-
-      3: '7500000.00', // ₹ 75 Lakh
-      4: '15000000.00', // Rs. 1.5 crore
+      1: '8500000.00', // 8.5M
+      2: '8500000.00', // AED 8,500,000
+      3: '7500000.00', // Dhs 7.5M
+      4: '15000000.00', // 15 million
       5: '8500000.00', // 8,500,000
       6: '50000.00', // 50k
-      7: '9500000.00', // 95 Lac (CSV) / 9500000 as a number (XLSX)
+      7: '9500000.00', // 9.5 Mn (CSV) / 9500000 as a number (XLSX)
     });
     expect(lead(1).lead.requirements).toMatchObject({
       budgetMax: '12000000.00',

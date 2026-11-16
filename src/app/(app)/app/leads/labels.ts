@@ -1,4 +1,5 @@
 // Display labels for lead vocabularies (lead-lifecycle §4). Codes stay in the database.
+import { DISPLAY_TIME_ZONE } from '@/lib/display';
 export const LABELS: Record<string, string> = {
   BUY: 'Buy',
   RENT: 'Rent',
@@ -39,9 +40,8 @@ export const fmtDateTime = (d: Date) =>
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
-    timeZone: 'Asia/Kolkata',
+    timeZone: DISPLAY_TIME_ZONE,
   });
 
-/** "8500000.00" → "₹85,00,000". */
-export const fmtInr = (v: string | null) =>
-  v === null ? '—' : `₹${Number(v).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+/** Budgets in AED (owner decision 2026-11-16). */
+export { fmtAed } from '@/lib/display';

@@ -37,7 +37,7 @@ export const IMPORT_FIELDS: readonly ImportFieldSpec[] = [
       'contactnumber',
       'primaryphone',
     ],
-    hint: 'Indian mobile numbers; +91, 0 and spaces are fine',
+    hint: 'UAE numbers (050 123 4567, +971…) or Indian mobiles (+91…); spaces and dashes are fine',
   },
   {
     field: 'alternatePhone',
@@ -81,20 +81,30 @@ export const IMPORT_FIELDS: readonly ImportFieldSpec[] = [
     headers: ['propertytype', 'property', 'unittype'],
     hint: 'Apartment/Flat, Villa, Plot, Row house, Office, Shop, Warehouse, Other',
   },
-  { field: 'bhkMin', label: 'BHK (min)', required: false, headers: ['bhk', 'bhkmin', 'minbhk'] },
-  { field: 'bhkMax', label: 'BHK (max)', required: false, headers: ['bhkmax', 'maxbhk'] },
+  {
+    field: 'bhkMin',
+    label: 'Bedrooms (min)',
+    required: false,
+    headers: ['bhk', 'bhkmin', 'minbhk', 'bedrooms', 'bedroomsmin', 'minbedrooms', 'beds', 'br'],
+  },
+  {
+    field: 'bhkMax',
+    label: 'Bedrooms (max)',
+    required: false,
+    headers: ['bhkmax', 'maxbhk', 'bedroomsmax', 'maxbedrooms'],
+  },
   {
     field: 'budgetMin',
     label: 'Budget (min)',
     required: false,
-    headers: ['budget', 'budgetmin', 'minbudget', 'budgetfrom'],
-    hint: '"85 L", "1.2 Cr", "85,00,000"',
+    headers: ['budget', 'budgetmin', 'minbudget', 'budgetfrom', 'budgetminaed', 'budgetaed'],
+    hint: 'AED: "1.5M", "850K", "1,500,000"',
   },
   {
     field: 'budgetMax',
     label: 'Budget (max)',
     required: false,
-    headers: ['budgetmax', 'maxbudget', 'budgetto'],
+    headers: ['budgetmax', 'maxbudget', 'budgetto', 'budgetmaxaed'],
   },
   { field: 'preferredCity', label: 'City', required: false, headers: ['city', 'preferredcity'] },
   {
@@ -266,4 +276,37 @@ export function validateMapping(
 export function unmappedColumns(columnCount: number, mapping: ColumnMapping): number[] {
   const used = new Set(Object.values(mapping));
   return Array.from({ length: columnCount }, (_, i) => i).filter((i) => !used.has(i));
+}
+
+/**
+ * The import template's heading for each field: every one normalises to one of the field's
+ * suggestion spellings, so a file made from the template maps itself (tested). Custom fields use
+ * their label, which suggestMapping matches too.
+ */
+export const TEMPLATE_HEADINGS: Readonly<Record<ImportField, string>> = {
+  fullName: 'Name',
+  primaryPhone: 'Phone',
+  alternatePhone: 'Alternate phone',
+  email: 'Email',
+  source: 'Source',
+  campaign: 'Campaign',
+  transactionType: 'Transaction type',
+  propertyType: 'Property type',
+  bhkMin: 'Bedrooms min',
+  bhkMax: 'Bedrooms max',
+  budgetMin: 'Budget min (AED)',
+  budgetMax: 'Budget max (AED)',
+  preferredCity: 'City',
+  preferredLocalities: 'Locality',
+  purpose: 'Purpose',
+  timeline: 'Timeline',
+  intent: 'Intent',
+  preferredLanguage: 'Language',
+  preferredContactMethod: 'Contact method',
+  note: 'Notes',
+};
+
+/** The template's header row: every standard field in catalogue order, then active custom fields. */
+export function templateHeaders(custom: readonly CustomMappingField[] = []): string[] {
+  return [...IMPORT_FIELDS.map((f) => TEMPLATE_HEADINGS[f.field]), ...custom.map((c) => c.label)];
 }

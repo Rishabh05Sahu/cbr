@@ -1,3 +1,4 @@
+import { DISPLAY_TIME_ZONE } from '@/lib/display';
 import Link from 'next/link';
 import { Card, EmptyState, PageHeader } from '@/components/ui';
 import { listAudit } from '@/modules/audit';
@@ -10,7 +11,7 @@ const fmt = (d: Date) =>
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
-    timeZone: 'Asia/Kolkata',
+    timeZone: DISPLAY_TIME_ZONE,
   });
 
 export default async function AuditPage({ searchParams }: PageProps<'/app/settings/audit'>) {

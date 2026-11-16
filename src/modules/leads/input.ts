@@ -1,7 +1,7 @@
 // Leads module: input vocabularies, schemas and normalisation of a new lead's fields. Pure (no
 // database), shared by manual create, requirement edits and import row validation (Phase 2 M4).
 import { z } from 'zod';
-import { normaliseIndianPhone, parseBudgetInr, type NormalisedPhone } from './normalise';
+import { normalisePhone, parseBudget, type NormalisedPhone } from './normalise';
 
 // ---------------------------------------------------------------------------------------------
 // Field vocabularies (lead-lifecycle §4)
@@ -110,7 +110,7 @@ export function fieldErrors(issues: FieldIssue[]): Record<string, string[]> {
 /** Budgets go through the M0 parser; ranges are cross-checked (DB CHECKs mirror these). */
 export function toRequirements(r: RequirementsRaw, issues: FieldIssue[]): Requirements {
   const budget = (key: 'budgetMin' | 'budgetMax') => {
-    const res = parseBudgetInr(r[key]);
+    const res = parseBudget(r[key]);
     if (!res.ok) {
       issues.push({ field: key, code: res.code, message: res.message });
       return null;
@@ -181,7 +181,7 @@ export function prepareLead(
   input: CreateInput,
 ): { ok: true; lead: PreparedLead } | { ok: false; issues: FieldIssue[] } {
   const issues: FieldIssue[] = [];
-  const primary = normaliseIndianPhone(input.primaryPhone);
+  const primary = normalisePhone(input.primaryPhone);
   if (!primary.ok)
     issues.push({ field: 'primaryPhone', code: primary.code, message: primary.message });
   else if (!primary.value)
@@ -190,7 +190,7 @@ export function prepareLead(
       code: 'PHONE_REQUIRED',
       message: 'Enter the customer phone number',
     });
-  const alternate = normaliseIndianPhone(input.alternatePhone);
+  const alternate = normalisePhone(input.alternatePhone);
   if (!alternate.ok)
     issues.push({ field: 'alternatePhone', code: alternate.code, message: alternate.message });
   const requirements = toRequirements(input, issues);

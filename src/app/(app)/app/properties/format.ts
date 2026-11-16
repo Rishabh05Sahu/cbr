@@ -1,16 +1,13 @@
-// Display helpers for properties (FR-140): rupee amounts in Indian grouping, price with its basis.
+// Display helpers for properties (FR-140): AED amounts (owner decision 2026-11-16), price with its
+// basis.
 import type { PropertyView } from '@/modules/properties';
+import { fmtAed } from '@/lib/display';
 
-/** "8500000.00" → "₹85,00,000"; paise shown only when not zero. */
-export function rupees(amount: string): string {
-  const [whole, paise] = amount.split('.');
-  const n = Number(whole);
-  const text = n.toLocaleString('en-IN');
-  return paise && Number(paise) !== 0 ? `₹${text}.${paise.padEnd(2, '0')}` : `₹${text}`;
-}
+/** "1500000.00" → "AED 1,500,000"; fils shown only when not zero. */
+export const aed = (amount: string): string => fmtAed(amount);
 
 export function priceText(p: Pick<PropertyView, 'price' | 'priceType'>): string {
-  const base = rupees(p.price);
+  const base = aed(p.price);
   return p.priceType === 'PER_SQFT'
     ? `${base} per sq ft`
     : p.priceType === 'MONTHLY_RENT'

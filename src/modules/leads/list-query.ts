@@ -1,7 +1,7 @@
 // Leads module: lead-list query parsing and cursors (FR-056, Phase 2 M2). Pure functions: URL
 // search params in, a validated query out. Nothing here touches the database; ./index.ts turns
 // the query into a scope-filtered Prisma `where` (values are bound parameters, never SQL text).
-import { parseBudgetInr } from './normalise';
+import { parseBudget } from './normalise';
 import { LEAD_STAGES, parseOrgLocal, type LeadStage } from './stages';
 
 export const LEAD_SORTS = {
@@ -153,7 +153,7 @@ export function parseLeadQuery(sp: SearchParams): ParsedLeadQuery {
     errors.assignedTo = 'The end date is before the start date';
 
   const budget = (key: string): string | null => {
-    const r = parseBudgetInr(first(sp[key]).slice(0, 41));
+    const r = parseBudget(first(sp[key]).slice(0, 41));
     if (!r.ok) {
       errors[key] = r.message;
       return null;

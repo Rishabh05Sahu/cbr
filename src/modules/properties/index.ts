@@ -10,7 +10,7 @@
 // are never deleted (WITHDRAWN takes one off the market); contacts are removed, never edited.
 import { z } from 'zod';
 import { writeAudit } from '@/modules/audit';
-import { normaliseIndianPhone } from '@/modules/leads/normalise';
+import { normalisePhone } from '@/modules/leads/normalise';
 import { authorize, type RequestContext } from '@/platform/authz';
 import { tenantRunner, type Prisma, type Tx } from '@/platform/db';
 import { conflict, DomainError, notFound } from '@/platform/errors';
@@ -89,7 +89,7 @@ async function columns(tx: Tx, ctx: RequestContext & { kind: 'member' }, input: 
   const errors: Record<string, string[]> = {};
   const amount = (key: string, raw: string | undefined, required = false, intDigits = 13) => {
     const v = parseAmount(raw, intDigits);
-    if (v === undefined) errors[key] = ['Enter an amount in rupees (up to 2 decimals)'];
+    if (v === undefined) errors[key] = ['Enter an amount in AED (up to 2 decimals)'];
     else if (v === null && required) errors[key] = ['Enter the price'];
     else if (v !== null && required && Number(v) <= 0) errors[key] = ['The price must be above 0'];
     return v ?? null;
@@ -533,7 +533,7 @@ export async function revealContacts(
   });
 }
 
-/** FR-142: adds a contact (Owner/Admin). Phone (Indian mobile) or email required. */
+/** FR-142: adds a contact (Owner/Admin). Phone (UAE or Indian mobile) or email required. */
 export async function addContact(
   ctx: RequestContext,
   propertyId: string,
@@ -544,7 +544,7 @@ export async function addContact(
   const input = contactInput.parse(raw);
   const id = parseId(propertyId);
   const errors: Record<string, string[]> = {};
-  const phone = normaliseIndianPhone(input.phone);
+  const phone = normalisePhone(input.phone);
   if (!phone.ok) errors.phone = [phone.message];
   const email = input.email?.trim().toLowerCase() || null;
   if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) errors.email = ['Enter a valid email'];

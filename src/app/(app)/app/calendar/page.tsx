@@ -1,3 +1,4 @@
+import { DISPLAY_TIME_ZONE } from '@/lib/display';
 import Link from 'next/link';
 import { Alert, Badge, Card, PageHeader } from '@/components/ui';
 import {
@@ -20,7 +21,11 @@ const MONTH_CELL_ITEMS = 3;
 
 // The app shows times in India time (labels.ts fmtDateTime); day keys are org-local days.
 const time = (d: Date) =>
-  d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata' });
+  d.toLocaleTimeString('en-IN', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: DISPLAY_TIME_ZONE,
+  });
 const dayTitle = (key: string, opts: Intl.DateTimeFormatOptions) =>
   new Date(`${key}T00:00:00Z`).toLocaleDateString('en-IN', { ...opts, timeZone: 'UTC' });
 const href = (view: CalendarView, date: string) =>

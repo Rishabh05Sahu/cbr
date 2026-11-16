@@ -48,7 +48,7 @@ export default async function ProfilePage() {
             <Field
               label="Mobile number"
               htmlFor="phone"
-              hint="10-digit Indian mobile or +country code."
+              hint="UAE number (050…), Indian mobile, or +country code."
             >
               <Input
                 id="phone"

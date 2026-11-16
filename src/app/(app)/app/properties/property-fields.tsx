@@ -93,7 +93,7 @@ export function PropertyFields({
       </fieldset>
 
       <fieldset className="grid gap-4 sm:grid-cols-2">
-        <legend className="mb-2 text-sm font-semibold text-slate-900">Price (₹)</legend>
+        <legend className="mb-2 text-sm font-semibold text-slate-900">Price (AED)</legend>
         <Field label="Price" htmlFor={id('price')} hint="Rupees; commas are fine (85,00,000).">
           <Input
             id={id('price')}

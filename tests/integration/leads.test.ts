@@ -64,7 +64,7 @@ const QUALIFIABLE = {
   transactionType: 'BUY',
   propertyType: 'APARTMENT',
   preferredCity: 'Pune',
-  budgetMax: '1.2 Cr',
+  budgetMax: '12M',
 };
 const inAWeek = () => {
   const d = new Date(Date.now() + 7 * 864e5 + 5.5 * 36e5); // IST wall clock
@@ -93,8 +93,8 @@ describe('create (FR-055) with M0 normalisation', () => {
       fullName: '  Asha Synthetic ',
       primaryPhone: '098765 43210',
       email: 'asha@example.test',
-      budgetMin: '85 L',
-      budgetMax: '1.2 Cr',
+      budgetMin: '8.5M',
+      budgetMax: '12M',
       transactionType: 'BUY',
       preferredLocalities: 'Baner, Aundh, Baner',
       note: 'Walk-in, wants 2 BHK',
@@ -138,6 +138,26 @@ describe('create (FR-055) with M0 normalisation', () => {
     expect(JSON.stringify(audit.metadata)).not.toMatch(/Asha|9876543210|example\.test/);
   });
 
+  it('accepts UAE numbers and AED budgets; one UAE number written two ways is one lead', async () => {
+    const local = `050 ${String(1_000_000 + (++phoneSeq % 9_000_000)).slice(0, 3)} ${String(phoneSeq).padStart(4, '0').slice(-4)}`;
+    const r = await leads.createLead(a.exec1.ctx, {
+      fullName: 'Synthetic Dubai Lead',
+      primaryPhone: local,
+      budgetMin: '1.5M',
+      budgetMax: 'AED 2,000,000',
+    });
+    if (r.status !== 'created') throw new Error('expected a new lead');
+    const row = await migrator().lead.findUniqueOrThrow({ where: { id: r.leadId } });
+    expect(row.primaryPhoneE164).toMatch(/^\+97150\d{7}$/);
+    expect(row.budgetMin?.toFixed(2)).toBe('1500000.00');
+    expect(row.budgetMax?.toFixed(2)).toBe('2000000.00');
+    const again = await leads.createLead(a.exec1.ctx, {
+      fullName: 'Synthetic Dubai Lead again',
+      primaryPhone: `+971 ${row.primaryPhoneE164.slice(4)}`,
+    });
+    expect(again.status).toBe('duplicate');
+  });
+
   it('rejects invalid input with field errors and writes nothing', async () => {
     const before = await migrator().lead.count({ where: { orgId: A.orgId } });
     expect(
@@ -146,13 +166,13 @@ describe('create (FR-055) with M0 normalisation', () => {
           fullName: 'X',
           primaryPhone: '12345',
           alternatePhone: '+44 20 7946 0958',
-          budgetMin: '2 Cr',
-          budgetMax: '50-75 L',
+          budgetMin: '20M',
+          budgetMax: '5-7.5M',
         }),
       ),
     ).toMatchObject({
-      primaryPhone: [expect.stringMatching(/10 digits/)],
-      alternatePhone: [expect.stringMatching(/Indian/)],
+      primaryPhone: [expect.stringMatching(/UAE number .* Indian mobile/)],
+      alternatePhone: [expect.stringMatching(/UAE \(\+971\) and Indian \(\+91\)/)],
       budgetMax: [expect.stringMatching(/range/)],
     });
     expect(
@@ -160,8 +180,8 @@ describe('create (FR-055) with M0 normalisation', () => {
         leads.createLead(a.exec1.ctx, {
           fullName: 'X',
           primaryPhone: nextPhone(),
-          budgetMin: '2 Cr',
-          budgetMax: '1 Cr',
+          budgetMin: '20M',
+          budgetMax: '10M',
           bhkMin: '3',
           bhkMax: '2',
         }),
@@ -516,7 +536,7 @@ describe('requirements, notes and timeline (FR-058, FR-059, FR-032)', () => {
     const id = await created(a.exec1);
     await leads.updateRequirements(a.exec1.ctx, id, {
       version: '1',
-      budgetMax: '95 L',
+      budgetMax: '9.5M',
       preferredCity: 'Pune',
       intent: 'HOT',
     });

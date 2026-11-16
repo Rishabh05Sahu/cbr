@@ -283,7 +283,7 @@ export default async function LeadsPage({ searchParams }: PageProps<'/app/leads'
                   defaultValue={query.assignedTo ?? ''}
                 />
               </Field>
-              <Field label="Budget (overlaps)" htmlFor="f-budgetFrom" hint="e.g. 50 L to 1.2 Cr">
+              <Field label="Budget (overlaps)" htmlFor="f-budgetFrom" hint="AED, e.g. 1M to 2.5M">
                 <div className="flex gap-2">
                   <Input
                     id="f-budgetFrom"

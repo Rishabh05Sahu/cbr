@@ -238,8 +238,8 @@ describe('set-based import commit = row-by-row commit', () => {
       row(t, 10, { primaryPhone: P(14), note: 'Called back, wants 3BHK' }),
       row(t, 11, {
         primaryPhone: P(15),
-        budgetMin: '85 L',
-        budgetMax: '1.2 Cr',
+        budgetMin: '8.5M',
+        budgetMax: '12M',
         bhkMin: 2,
         bhkMax: 3,
         preferredLocalities: 'Baner, Wakad',

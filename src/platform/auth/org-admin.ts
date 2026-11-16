@@ -160,6 +160,9 @@ export async function revokeAllSessions(userId: string): Promise<void> {
   await ctx.internalAdapter.deleteUserSessions(userId);
 }
 
+/** Time zone of organisations created from the platform console (Settings can change it). */
+export const NEW_ORG_TIME_ZONE = 'Asia/Dubai';
+
 /**
  * Platform console: create a customer organisation and its first Owner. If the owner has no
  * account yet, one is created with no usable password and a set-password email is sent.
@@ -188,6 +191,13 @@ export async function provisionOrganization(input: {
     a.api.createOrganization({ body: { name: input.name, slug: input.slug, userId: owner.id } }),
   );
   if (!org) throw new DomainError('RULE_VIOLATION', 'Organisation was not created');
+  // Customers are in Dubai (owner decision 2026-11-16): new organisations start on Dubai time.
+  // The Owner can change it in Settings → Organisation.
+  await ctx.adapter.update({
+    model: 'organization',
+    where: [{ field: 'id', value: org.id }],
+    update: { timeZone: NEW_ORG_TIME_ZONE },
+  });
   if (ownerCreated) {
     // Proves mailbox ownership; the reset link sets the first password.
     await call(() =>

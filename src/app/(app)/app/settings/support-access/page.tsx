@@ -1,3 +1,4 @@
+import { DISPLAY_TIME_ZONE } from '@/lib/display';
 import { ActionFormButton } from '@/components/action-form-button';
 import { Badge, Card, EmptyState, PageHeader } from '@/components/ui';
 import { listGrants } from '@/modules/support-access';
@@ -10,7 +11,7 @@ const fmt = (d: Date) =>
     month: 'short',
     hour: 'numeric',
     minute: '2-digit',
-    timeZone: 'Asia/Kolkata',
+    timeZone: DISPLAY_TIME_ZONE,
   });
 
 export default async function SupportAccessPage() {

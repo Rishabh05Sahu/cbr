@@ -5,7 +5,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'CBR Property CRM',
-  description: 'Sales CRM for Indian real estate brokerages',
+  description: 'Sales CRM for real estate brokerages',
 };
 
 export const viewport: Viewport = {

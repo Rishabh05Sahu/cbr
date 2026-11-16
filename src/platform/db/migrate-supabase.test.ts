@@ -152,21 +152,21 @@ describe('Prisma connection', () => {
 });
 
 describe('static migration checks', () => {
-  it('the 28 reviewed migrations are present, unchanged and transaction-safe', () => {
+  it('the 29 reviewed migrations are present, unchanged and transaction-safe', () => {
     const r = mod.loadMigrations();
-    // A newer local migration (0029+, not yet reviewed for Supabase) would be reported here and
+    // A newer local migration (0030+, not yet reviewed for Supabase) would be reported here and
     // never deployed; today every directory is pinned.
     expect(r.problems).toEqual([]);
-    expect(r.migrations).toHaveLength(28);
+    expect(r.migrations).toHaveLength(29);
     const names = mod.MANIFEST.map(([n]) => n);
     expect(names[0]).toBe('0001_foundation');
-    expect(names[27]).toBe('0028_call_intents');
+    expect(names[28]).toBe('0029_uae_phones');
     expect(names).toEqual([...names].sort());
   });
 
   it('reports a migration directory that is not pinned, and deploys nothing from it', () => {
-    const r = mod.loadMigrations(undefined, mod.MANIFEST.slice(0, 27));
-    expect(r.problems.join()).toMatch(/unreviewed migration directories present \(0028_/);
+    const r = mod.loadMigrations(undefined, mod.MANIFEST.slice(0, 28));
+    expect(r.problems.join()).toMatch(/unreviewed migration directories present \(0029_/);
   });
 
   it.each([
@@ -209,7 +209,7 @@ describe('history analysis', () => {
 
   it('fresh database: all pending, no problems', () => {
     const a = mod.analyse([]);
-    expect(a.pending).toHaveLength(28);
+    expect(a.pending).toHaveLength(29);
     expect(a.problems).toEqual([]);
   });
 

@@ -42,6 +42,20 @@ export default async function ImportPage() {
             </div>
           )}
           <UploadForm maxBytes={r.limits.maxBytes} disabled={!r.storageConfigured} />
+          <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4 text-sm">
+            <a
+              href="/app/leads/import/template.csv"
+              download
+              data-testid="import-template"
+              className="tap inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 font-medium text-slate-900 shadow-sm hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+            >
+              Download template (CSV)
+            </a>
+            <span className="text-slate-600">
+              Fill one lead per row under the headings and save as CSV or .xlsx. Every column is
+              matched automatically; you just confirm. Don&apos;t rename the headings.
+            </span>
+          </div>
         </Card>
 
         <Card title="Recent imports">

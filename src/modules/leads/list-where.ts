@@ -2,7 +2,7 @@
 // export contains exactly what the Owner filtered). Every value is a bound parameter.
 import type { Prisma } from '@/platform/db';
 import { phoneDigits, type FollowUpDue, type LeadQuery } from './list-query';
-import { normaliseIndianPhone } from './normalise';
+import { normalisePhone } from './normalise';
 import { parseOrgLocal } from './stages';
 
 /** Inclusive "YYYY-MM-DD" end date → the next day's date string. */
@@ -55,7 +55,7 @@ export function filterWhere(
   else if (q.archived === 'archived') and.push({ archivedAt: { not: null } });
   if (q.q) {
     const digits = phoneDigits(q.q);
-    const full = digits ? normaliseIndianPhone(q.q) : null;
+    const full = digits ? normalisePhone(q.q) : null;
     if (full?.ok && full.value) {
       // M6 P-C: a complete mobile number in any accepted format (M0 normaliser) matches that
       // number exactly, as either phone, and nothing else. phone_last10 is always the primary's
