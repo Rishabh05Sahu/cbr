@@ -63,14 +63,16 @@ Free-plan credits, if the account has them, cover the first months. **Upgrade to
          "StringEquals": { "token.actions.githubusercontent.com:aud": "sts.amazonaws.com" },
          "StringLike": {
            "token.actions.githubusercontent.com:sub": [
-             "repo:Rishabh05Sahu/cbr:ref:refs/heads/qa",
-             "repo:Rishabh05Sahu/cbr:ref:refs/heads/main"
+             "repo:Rishabh05Sahu@111513659/cbr@1441718674:ref:refs/heads/qa",
+             "repo:Rishabh05Sahu@111513659/cbr@1441718674:ref:refs/heads/main"
            ]
          }
        }
      }]
    }
    ```
+   GitHub's subject claim carries the owner and repository IDs (`<owner>@<owner-id>/<repo>@<repo-id>`; found 2026-11-16 from the claims the release job prints). The plain `repo:Rishabh05Sahu/cbr:…` form is refused. The IDs also stop a later repository that reuses the name from assuming the role.
+
    Inline policy (push to the two repositories only):
    ```json
    {
