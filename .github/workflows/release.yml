@@ -46,9 +46,13 @@ jobs:
       - name: Build and push (linux/amd64, tag = commit SHA)
         env:
           REGISTRY: ${{ vars.ECR_REGISTRY }}
+          # Production's Supabase URL (public): the CSP connect-src for browser uploads is fixed
+          # at build time. Repository variable PROD_SUPABASE_URL (runbook §3).
+          PROD_SUPABASE_URL: ${{ vars.PROD_SUPABASE_URL }}
         run: |
+          [[ $PROD_SUPABASE_URL =~ ^https://[a-z0-9]{20}\.supabase\.co$ ]] || { echo "::error::set repository variable PROD_SUPABASE_URL (https://<ref>.supabase.co)"; exit 1; }
           for target in web worker; do
-            docker build --target "$target" -t "$REGISTRY/cbr-crm-$target:$GITHUB_SHA" .
+            docker build --target "$target" --build-arg "SUPABASE_URL=$PROD_SUPABASE_URL" -t "$REGISTRY/cbr-crm-$target:$GITHUB_SHA" .
             docker push "$REGISTRY/cbr-crm-$target:$GITHUB_SHA"
           done
           echo "Deploy on the host with: ./deploy.sh $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"

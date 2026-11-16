@@ -87,7 +87,7 @@ Free-plan credits, if the account has them, cover the first months. **Upgrade to
      ]
    }
    ```
-4. **GitHub → Settings → Secrets and variables → Actions → Variables** (not secrets): `AWS_RELEASE_ROLE_ARN` (the role's ARN) and `ECR_REGISTRY` (`<account-id>.dkr.ecr.ap-south-1.amazonaws.com`).
+4. **GitHub → Settings → Secrets and variables → Actions → Variables** (not secrets): `AWS_RELEASE_ROLE_ARN` (the role's ARN) and `ECR_REGISTRY` (`<account-id>.dkr.ecr.ap-south-1.amazonaws.com`). Also `PROD_SUPABASE_URL` (`https://<ref>.supabase.co` of `cbr-prod`, public): the browser's upload permission (CSP `connect-src`) is fixed when the image is built, so the release refuses to build without it.
 5. **GitHub → Settings → General:** visibility **Private**.
 6. **Server role:** IAM → Roles → Create role → AWS service → EC2, managed policy `AmazonEC2ContainerRegistryReadOnly`, name `cbr-crm-ec2`. The production server uses it.
 

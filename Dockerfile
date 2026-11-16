@@ -23,7 +23,12 @@ RUN pnpm install --frozen-lockfile
 
 # ---- build ----
 FROM deps AS build
+# The Content-Security-Policy is fixed at build time (next.config.ts): connect-src must name the
+# storage origin browsers upload import files to. A public URL, not a secret; empty = imports off.
+ARG SUPABASE_URL=
 COPY . .
+# tests/ is in the build context only because the type check covers test files; the runtime
+# images below copy the compiled output only.
 RUN pnpm build && pnpm build:worker
 # Next.js copies .env files into the standalone output. .dockerignore keeps them out of the
 # build context; fail the build if one ever appears (secrets review 2026-10-20).
