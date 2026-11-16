@@ -31,6 +31,9 @@ jobs:
         run: |
           token=$(curl -fsS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r .value)
+          # The claims AWS matches in the role's trust policy (never the token itself).
+          claims=$(cut -d. -f2 <<<"$token" | tr '_-' '/+'); while (( ${#claims} % 4 )); do claims+='='; done
+          base64 -d <<<"$claims" | jq -c '{sub, aud, iss, repository, ref}'
           creds=$(aws sts assume-role-with-web-identity --region ap-south-1 \
             --role-arn "$ROLE_ARN" --role-session-name "release-${GITHUB_RUN_ID}" \
             --web-identity-token "$token" --duration-seconds 3600 --query Credentials --output json)
