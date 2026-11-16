@@ -122,6 +122,8 @@ Free-plan credits, if the account has them, cover the first months. **Upgrade to
 
 ### 4.2 Database and storage (gated)
 
+> **Region check:** the project's session pooler host must contain **`ap-south-1`** (Mumbai). "Southeast Asia (Singapore)" (`ap-southeast-1`) sits next to it in the list; on 2026-11-16 a project created there measured **~63 ms** per round trip from `cbr-prod`, against **~2 ms** for Mumbai, which adds 1–2 s to a page making 20–40 queries. It was deleted and recreated. After recreating a project, update `PROD_SUPABASE_URL` and run a new release: the upload CSP is built into the images.
+
 1. **Supabase → New project** `cbr-prod`, region **Mumbai**, free plan. Store its database password in your password manager.
 2. On your PC, create **`.env.supabase-prod`** in the repository folder (git-ignored). It holds **only** the `ACCEPTANCE_*` block from `.env.example`, filled for this project as in [supabase-free-setup.md](supabase-free-setup.md) §4 (five new role passwords, pooler URLs, admin login, CA file path). Generate new passwords for production (never reuse the test project's).
 3. Run the same steps as supabase-free-setup.md §4–§6, adding `--target prod`. Each **APPROVAL** step there still needs the owner's go-ahead:
