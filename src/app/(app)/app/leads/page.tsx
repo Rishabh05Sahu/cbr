@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Suspense, type ReactNode } from 'react';
+import { SelectAll } from '@/components/select-all';
 import { Alert, Badge, Card, EmptyState, Field, Input, PageHeader, Select } from '@/components/ui';
 import { listMembers } from '@/modules/members';
 import {
@@ -13,6 +14,8 @@ import {
   leadQueryString,
   listLeadSources,
   parseLeadQuery,
+  PHONE_COUNTRIES,
+  PHONE_COUNTRY_CODES,
   PROPERTY_TYPES,
   assignmentTargets,
   listLeadTags,
@@ -24,6 +27,7 @@ import { listTeams } from '@/modules/teams';
 import { pageContext, pageRequire } from '@/platform/auth/session';
 import { can, scopeOf, type RequestContext } from '@/platform/authz';
 import { BulkActionsForm } from './bulk-actions-form';
+import { CountryTag } from './country-tag';
 import { fmtDateTime, label } from './labels';
 
 const ERROR_LABELS: Record<string, string> = {
@@ -35,6 +39,7 @@ const ERROR_LABELS: Record<string, string> = {
   team: 'Team',
   source: 'Source',
   city: 'City',
+  country: 'Country',
   createdFrom: 'Created from',
   createdTo: 'Created to',
   assignedFrom: 'Assigned from',
@@ -192,6 +197,16 @@ export default async function LeadsPage({ searchParams }: PageProps<'/app/leads'
               sources.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
+                </option>
+              )),
+            )}
+            {single(
+              'country',
+              'Country',
+              query.country,
+              PHONE_COUNTRY_CODES.map((c) => (
+                <option key={c} value={c}>
+                  {PHONE_COUNTRIES[c].name} ({PHONE_COUNTRIES[c].prefix})
                 </option>
               )),
             )}
@@ -398,7 +413,7 @@ async function LeadResults({ ctx, sp }: { ctx: RequestContext; sp: SearchParams 
                     <tr>
                       {bulk && (
                         <th className="py-2 pr-2">
-                          <span className="sr-only">Select</span>
+                          <SelectAll name="item" />
                         </th>
                       )}
                       <th className="py-2 pr-4">Lead</th>
@@ -420,6 +435,7 @@ async function LeadResults({ ctx, sp }: { ctx: RequestContext; sp: SearchParams 
                                 name="item"
                                 value={`${l.id}:${l.version}`}
                                 aria-label={`Select ${l.fullName}`}
+                                className="h-5 w-5 cursor-pointer accent-blue-900"
                               />
                             )}
                           </td>
@@ -437,7 +453,10 @@ async function LeadResults({ ctx, sp }: { ctx: RequestContext; sp: SearchParams 
                               <Badge tone="warn">Archived</Badge>
                             </>
                           )}
-                          <div className="text-xs text-slate-500">{l.primaryPhoneE164}</div>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                            <CountryTag phone={l.primaryPhoneE164} />
+                            {l.primaryPhoneE164}
+                          </div>
                         </td>
                         <td className="py-2 pr-4">
                           <Badge>{STAGE_LABELS[l.stage]}</Badge>

@@ -50,6 +50,7 @@ import {
   type Requirements,
 } from './input';
 import { normalisePhone } from './normalise';
+export { PHONE_COUNTRIES, PHONE_COUNTRY_CODES, phoneCountry, type PhoneCountry } from './normalise';
 import { filterWhere } from './list-where';
 import { insertNewLead, insertNote } from './write';
 import {

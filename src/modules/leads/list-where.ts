@@ -2,7 +2,7 @@
 // export contains exactly what the Owner filtered). Every value is a bound parameter.
 import type { Prisma } from '@/platform/db';
 import { phoneDigits, type FollowUpDue, type LeadQuery } from './list-query';
-import { normalisePhone } from './normalise';
+import { normalisePhone, PHONE_COUNTRIES } from './normalise';
 import { parseOrgLocal } from './stages';
 
 /** Inclusive "YYYY-MM-DD" end date → the next day's date string. */
@@ -94,6 +94,8 @@ export function filterWhere(
   if (q.teamId) and.push({ teamId: q.teamId });
   if (q.sourceId) and.push({ sourceId: q.sourceId });
   if (q.city) and.push({ preferredCity: { equals: q.city, mode: 'insensitive' } });
+  // Country: the primary phone's prefix ("+971" and "+91" never overlap).
+  if (q.country) and.push({ primaryPhoneE164: { startsWith: PHONE_COUNTRIES[q.country].prefix } });
   if (q.createdFrom) and.push({ createdAt: { gte: parseOrgLocal(q.createdFrom, timeZone)! } });
   if (q.createdTo) and.push({ createdAt: { lt: parseOrgLocal(nextDay(q.createdTo), timeZone)! } });
   if (q.assignedFrom || q.assignedTo)

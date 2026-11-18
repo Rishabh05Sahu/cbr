@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SelectAll } from '@/components/select-all';
 import { Alert, Badge, Card, EmptyState, Field, PageHeader, Select } from '@/components/ui';
 import {
   assignmentTargets,
@@ -82,7 +83,7 @@ export default async function QueuePage({ searchParams }: PageProps<'/app/leads/
                 <thead className="border-b text-xs uppercase text-slate-500">
                   <tr>
                     <th className="py-2 pr-2">
-                      <span className="sr-only">Select</span>
+                      <SelectAll name="leadId" />
                     </th>
                     <th className="py-2 pr-4">Lead</th>
                     <th className="py-2 pr-4">Stage</th>
@@ -100,6 +101,7 @@ export default async function QueuePage({ searchParams }: PageProps<'/app/leads/
                           name="leadId"
                           value={l.id}
                           aria-label={`Select ${l.fullName}`}
+                          className="h-5 w-5 cursor-pointer accent-blue-900"
                         />
                       </td>
                       <td className="py-2 pr-4">

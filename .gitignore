@@ -21,6 +21,8 @@ next-env.d.ts
 *.pem
 *.key
 *.crt
+# Public, self-signed test CA (no key) that the unit tests read; CI needs it.
+!src/platform/db/__fixtures__/test-only-ca.crt
 *.p12
 *.pfx
 secrets/

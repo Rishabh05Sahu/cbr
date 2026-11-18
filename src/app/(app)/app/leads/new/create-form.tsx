@@ -14,6 +14,11 @@ import {
 } from '@/modules/leads/actions';
 import { CustomFieldInputs, type CustomFieldInputDef } from '../custom-field-inputs';
 
+/** Leads can be in the UAE or India (owner decision 2026-11-16). */
+const PHONE_HINT = 'UAE: 050 123 4567 or +971… · India: +91 98765 43210';
+/** Every budget is in AED, also for Indian leads (owner decision 2026-11-19). */
+const BUDGET_HINT = 'In AED, e.g. 850K or 1.5M';
+
 type Option = { value: string; label: string };
 
 export function CreateLeadForm({
@@ -55,8 +60,18 @@ export function CreateLeadForm({
       </Select>
     </Field>
   );
-  const input = (name: string, labelText: string, props: Record<string, unknown> = {}) => (
-    <Field label={labelText} htmlFor={`lead-${name}`} error={errors[name]}>
+  const input = (
+    name: string,
+    labelText: string,
+    props: Record<string, unknown> = {},
+    hint?: string,
+  ) => (
+    <Field
+      label={labelText}
+      htmlFor={`lead-${name}`}
+      error={errors[name]}
+      {...(hint ? { hint } : {})}
+    >
       <Input id={`lead-${name}`} name={name} {...props} />
     </Field>
   );
@@ -120,13 +135,23 @@ export function CreateLeadForm({
         <Card title="Customer">
           <div className="grid gap-4 sm:grid-cols-2">
             {input('fullName', 'Name', { required: true, maxLength: 200 })}
-            {input('primaryPhone', 'Mobile number', {
-              required: true,
-              inputMode: 'tel',
-              autoComplete: 'off',
-              placeholder: '050 123 4567',
-            })}
-            {input('alternatePhone', 'Alternate mobile (optional)', { inputMode: 'tel' })}
+            {input(
+              'primaryPhone',
+              'Mobile number',
+              {
+                required: true,
+                inputMode: 'tel',
+                autoComplete: 'off',
+                placeholder: '050 123 4567',
+              },
+              PHONE_HINT,
+            )}
+            {input(
+              'alternatePhone',
+              'Alternate mobile (optional)',
+              { inputMode: 'tel' },
+              PHONE_HINT,
+            )}
             {input('email', 'Email (optional)', { type: 'email', maxLength: 254 })}
             {choice('preferredContactMethod', 'Preferred contact')}
             {input('preferredLanguage', 'Language code (optional)', {
@@ -157,8 +182,8 @@ export function CreateLeadForm({
             {choice('transactionType', 'Looking to')}
             {choice('propertyType', 'Property type')}
             {input('preferredCity', 'City', { maxLength: 100 })}
-            {input('budgetMin', 'Budget from', { placeholder: '1M' })}
-            {input('budgetMax', 'Budget up to', { placeholder: '2M' })}
+            {input('budgetMin', 'Budget from (AED)', { placeholder: '1M' }, BUDGET_HINT)}
+            {input('budgetMax', 'Budget up to (AED)', { placeholder: '2M' }, BUDGET_HINT)}
             {input('preferredLocalities', 'Localities (comma-separated)')}
             {input('bhkMin', 'BHK from', { type: 'number', min: 0, max: 20 })}
             {input('bhkMax', 'BHK up to', { type: 'number', min: 0, max: 20 })}

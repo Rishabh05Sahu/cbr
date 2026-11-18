@@ -1,7 +1,7 @@
 // M6 P-C: search text that is a complete phone number takes the exact path; anything else keeps
 // the substring search over name, e-mail and both phones.
 import { describe, expect, it } from 'vitest';
-import { parseLeadQuery } from './list-query';
+import { leadQueryString, parseLeadQuery } from './list-query';
 import { filterWhere } from './list-where';
 
 /** The search condition only (the default archive view adds `archivedAt: null` first). */
@@ -49,5 +49,24 @@ describe('filterWhere search (FR-056, M6 P-C)', () => {
         ],
       },
     ]);
+  });
+});
+
+describe('filterWhere country (UAE / India, owner decision 2026-11-19)', () => {
+  const country = (c: string) =>
+    filterWhere(parseLeadQuery({ country: c, archived: 'all' }).query, 'Asia/Dubai');
+  it('filters on the primary phone prefix', () => {
+    expect(country('AE')).toEqual([{ primaryPhoneE164: { startsWith: '+971' } }]);
+    expect(country('IN')).toEqual([{ primaryPhoneE164: { startsWith: '+91' } }]);
+  });
+  it('an unknown country is reported, never applied as "any"', () => {
+    const { query, errors } = parseLeadQuery({ country: 'US' });
+    expect(errors.country).toBe('Unknown country');
+    expect(query.country).toBeNull();
+  });
+  it('round-trips through the URL', () => {
+    const { query } = parseLeadQuery({ country: 'IN' });
+    expect(query.country).toBe('IN');
+    expect(leadQueryString(query)).toBe('?country=IN');
   });
 });

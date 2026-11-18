@@ -65,7 +65,9 @@ jobs:
         env:
           INSTANCE: ${{ vars.PROD_INSTANCE_ID }}
         run: |
-          [[ $INSTANCE =~ ^i-[0-9a-f]{8,17}$ ]] || { echo "::error::set repository variable PROD_INSTANCE_ID"; exit 1; }
+          INSTANCE=$(tr -d '[:space:]' <<<"$INSTANCE")   # pasted values often carry a stray space
+          [[ $INSTANCE =~ ^i-[0-9a-f]{8,17}$ ]] || {
+            echo "::error::repository variable PROD_INSTANCE_ID must be i- plus 8-17 lowercase hex characters (got ${#INSTANCE} characters)"; exit 1; }
           cat > "$RUNNER_TEMP/on-server" <<'SH'
           #!/usr/bin/env bash
           # Usage: on-server "<shell command>"  → prints its output; fails if the command failed.
@@ -115,6 +117,7 @@ jobs:
         env:
           SITE: ${{ vars.PROD_SITE_URL }}
         run: |
+          SITE=$(tr -d '[:space:]' <<<"$SITE"); SITE=${SITE%/}
           for _ in $(seq 1 20); do
             body=$(curl -fsS --max-time 10 "$SITE/api/health" || true)
             [[ $body == *'"ok"'* ]] && { echo "healthy: $body"; echo "Deployed $GITHUB_SHA to $SITE" >> "$GITHUB_STEP_SUMMARY"; exit 0; }

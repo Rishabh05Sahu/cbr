@@ -1,7 +1,7 @@
 // Leads module: lead-list query parsing and cursors (FR-056, Phase 2 M2). Pure functions: URL
 // search params in, a validated query out. Nothing here touches the database; ./index.ts turns
 // the query into a scope-filtered Prisma `where` (values are bound parameters, never SQL text).
-import { parseBudget } from './normalise';
+import { parseBudget, PHONE_COUNTRY_CODES, type PhoneCountry } from './normalise';
 import { LEAD_STAGES, parseOrgLocal, type LeadStage } from './stages';
 
 export const LEAD_SORTS = {
@@ -50,6 +50,8 @@ export interface LeadQuery {
   teamId: string | null;
   sourceId: string | null;
   city: string | null;
+  /** The primary phone's country (UAE or India, from its +971 / +91 prefix). */
+  country: PhoneCountry | null;
   /** "YYYY-MM-DD", inclusive, read in the org's time zone. */
   createdFrom: string | null;
   createdTo: string | null;
@@ -59,7 +61,7 @@ export interface LeadQuery {
    */
   assignedFrom: string | null;
   assignedTo: string | null;
-  /** Decimal rupee strings from the M0 budget parser. */
+  /** Decimal AED strings from the budget parser. */
   budgetFrom: string | null;
   budgetTo: string | null;
   /** Phase 3 (FR-056): the next open follow-up's due bucket; see FOLLOW_UP_DUE. */
@@ -134,6 +136,12 @@ export function parseLeadQuery(sp: SearchParams): ParsedLeadQuery {
   const city = first(sp.city);
   if (city.length > 100) errors.city = 'City is too long';
 
+  const countryRaw = first(sp.country);
+  const country = (PHONE_COUNTRY_CODES as readonly string[]).includes(countryRaw)
+    ? (countryRaw as PhoneCountry)
+    : null;
+  if (countryRaw && !country) errors.country = 'Unknown country';
+
   const date = (key: string): string | null => {
     const v = first(sp[key]);
     if (!v) return null;
@@ -193,6 +201,7 @@ export function parseLeadQuery(sp: SearchParams): ParsedLeadQuery {
       teamId: id('team', 'team'),
       sourceId: id('source', 'source'),
       city: city && city.length <= 100 ? city : null,
+      country,
       createdFrom,
       createdTo,
       assignedFrom,
@@ -262,6 +271,7 @@ export function leadQueryString(query: LeadQuery, cursor: string | null = null):
   if (query.teamId) p.set('team', query.teamId);
   if (query.sourceId) p.set('source', query.sourceId);
   if (query.city) p.set('city', query.city);
+  if (query.country) p.set('country', query.country);
   if (query.createdFrom) p.set('createdFrom', query.createdFrom);
   if (query.createdTo) p.set('createdTo', query.createdTo);
   if (query.assignedFrom) p.set('assignedFrom', query.assignedFrom);
