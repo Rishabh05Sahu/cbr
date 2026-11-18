@@ -67,6 +67,7 @@ import { ScriptContentView, TargetingBadges } from '../../scripts/script-content
 import { CustomFieldInputs } from '../custom-field-inputs';
 import { ArchiveControl } from './archive-control';
 import { ContactStatusBanner, ContactStatusCard } from './contact-status';
+import { CountryTag } from '../country-tag';
 import { FollowUpRow } from './follow-up-row';
 import { VisitRow } from './visit-row';
 import { MeetingFields } from './meeting-fields';
@@ -213,8 +214,8 @@ export default async function LeadPage({ params }: PageProps<'/app/leads/[id]'>)
       {select('transactionType', 'Looking to', TRANSACTION_TYPES, lead.transactionType, 'ix-req')}
       {select('propertyType', 'Property type', PROPERTY_TYPES, lead.propertyType, 'ix-req')}
       {input('preferredCity', 'City', lead.preferredCity, { maxLength: 100 }, 'ix-req')}
-      {input('budgetMin', 'Budget from', lead.budgetMin, {}, 'ix-req')}
-      {input('budgetMax', 'Budget up to', lead.budgetMax, {}, 'ix-req')}
+      {input('budgetMin', 'Budget from (AED)', lead.budgetMin, {}, 'ix-req')}
+      {input('budgetMax', 'Budget up to (AED)', lead.budgetMax, {}, 'ix-req')}
       {input(
         'preferredLocalities',
         'Localities',
@@ -240,6 +241,7 @@ export default async function LeadPage({ params }: PageProps<'/app/leads/[id]'>)
         <Badge tone={lead.stage === 'WON' ? 'good' : lead.stage === 'LOST' ? 'warn' : 'neutral'}>
           {STAGE_LABELS[lead.stage]}
         </Badge>
+        <CountryTag phone={lead.primaryPhoneE164} />
         {lead.contactStatus !== 'OK' && (
           <Badge tone="warn">{CONTACT_STATUS_LABELS[lead.contactStatus]}</Badge>
         )}
@@ -618,8 +620,8 @@ export default async function LeadPage({ params }: PageProps<'/app/leads/[id]'>)
                   {select('transactionType', 'Looking to', TRANSACTION_TYPES, lead.transactionType)}
                   {select('propertyType', 'Property type', PROPERTY_TYPES, lead.propertyType)}
                   {input('preferredCity', 'City', lead.preferredCity, { maxLength: 100 })}
-                  {input('budgetMin', 'Budget from', lead.budgetMin)}
-                  {input('budgetMax', 'Budget up to', lead.budgetMax)}
+                  {input('budgetMin', 'Budget from (AED)', lead.budgetMin)}
+                  {input('budgetMax', 'Budget up to (AED)', lead.budgetMax)}
                   {input('preferredLocalities', 'Localities', lead.preferredLocalities.join(', '))}
                   {input('bhkMin', 'BHK from', lead.bhkMin, { type: 'number', min: 0, max: 20 })}
                   {input('bhkMax', 'BHK up to', lead.bhkMax, { type: 'number', min: 0, max: 20 })}

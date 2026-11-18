@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalisePhone, parseBudget } from './normalise';
+import { normalisePhone, parseBudget, phoneCountry } from './normalise';
 
 describe('normalisePhone (FR-043): UAE and India', () => {
   it.each([
@@ -134,5 +134,29 @@ describe('parseBudget (FR-042): AED', () => {
     const r = parseBudget(raw);
     expect(r).toMatchObject({ ok: false, code });
     expect(r.ok === false && r.message.length > 0).toBe(true);
+  });
+});
+
+describe('phoneCountry: UAE or India from the number', () => {
+  it.each([
+    ['+971501234567', 'AE'],
+    ['+97142345678', 'AE'],
+    ['+919812345678', 'IN'],
+    ['+971 •••••4567', 'AE'], // masked
+    ['+91 ••••••5678', 'IN'],
+    ['+447700900123', null],
+    ['', null],
+    [null, null],
+  ])('%j -> %j', (phone, c) => {
+    expect(phoneCountry(phone)).toBe(c);
+  });
+  it('agrees with the normaliser for both countries', () => {
+    for (const [raw, c] of [
+      ['050 123 4567', 'AE'],
+      ['98123 45678', 'IN'],
+    ] as const) {
+      const r = normalisePhone(raw);
+      expect(r.ok && r.value && phoneCountry(r.value.e164)).toBe(c);
+    }
   });
 });

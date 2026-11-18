@@ -203,6 +203,24 @@ describe('search and filters', () => {
     expect(await idsOf(e, { q: 'rohan.pune@EXAMPLE' })).toEqual([ids.rohanPune]);
   });
 
+  it('country filter: UAE (+971) and India (+91) leads by the primary phone', async () => {
+    const uae = await make(a.owner, 'countryUae', {
+      fullName: 'Synthetic Country Lead',
+      primaryPhone: '050 765 4321',
+    });
+    const india = await make(a.owner, 'countryIndia', {
+      fullName: 'Synthetic Country Lead',
+      primaryPhone: '+91 98111 22334',
+    });
+    const q = 'Synthetic Country Lead';
+    expect(await idsOf(a.owner, { q, country: 'AE' })).toEqual([uae]);
+    expect(await idsOf(a.owner, { q, country: 'IN' })).toEqual([india]);
+    expect(new Set(await idsOf(a.owner, { q }))).toEqual(new Set([uae, india]));
+    const bad = await leads.searchLeads(a.owner.ctx, { q, country: 'US' });
+    expect(bad.errors.country).toBe('Unknown country');
+    expect(bad.rows).toEqual([]);
+  });
+
   it('search text is data: wildcards and SQL fragments match literally', async () => {
     for (const q of ['%%', '__', "' OR 1=1 --", 'Tie%', '\\'])
       expect(await idsOf(a.exec1, { q }), q).toEqual([]);

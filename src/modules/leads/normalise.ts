@@ -98,6 +98,23 @@ export function normalisePhone(
   );
 }
 
+/** The countries a lead phone can be in (above): code → name and E.164 prefix. */
+export const PHONE_COUNTRIES = {
+  AE: { name: 'UAE', prefix: '+971' },
+  IN: { name: 'India', prefix: '+91' },
+} as const;
+export type PhoneCountry = keyof typeof PHONE_COUNTRIES;
+export const PHONE_COUNTRY_CODES = Object.keys(PHONE_COUNTRIES) as PhoneCountry[];
+
+/**
+ * The country of a normalised (or masked: "+971 •••…") number, or null for anything else. "+971"
+ * and "+91" never overlap, so the prefix alone decides.
+ */
+export function phoneCountry(phone: string | null | undefined): PhoneCountry | null {
+  if (!phone) return null;
+  return PHONE_COUNTRY_CODES.find((c) => phone.startsWith(PHONE_COUNTRIES[c].prefix)) ?? null;
+}
+
 // ---------------------------------------------------------------------------------------------
 // Budget (FR-042; AED, owner decision 2026-11-16): "1.5M", "850K", "AED 1,500,000" → AED as a
 // numeric(15,2) string. Lakh and crore are no longer accepted.
