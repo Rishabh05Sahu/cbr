@@ -1,5 +1,5 @@
 # Release: build the web and worker images and push them to Amazon ECR (ap-south-1), tagged
-# with the commit SHA. Manual only; deploying is a separate step on the host (deploy/aws/deploy.sh).
+# with the commit SHA. Run by hand, or called by deploy-prod.yml when main changes.
 # Run it on `qa` once QA (Vercel) has tested that commit; production deploys these images for
 # the same SHA (runbook §5). Running it on `main` is also allowed.
 # AWS access is short-lived via GitHub OIDC (no stored keys). Repository variables:
@@ -9,6 +9,8 @@ name: release
 
 on:
   workflow_dispatch:
+  # Also called by deploy-prod.yml on every push to main (the build half of the deploy).
+  workflow_call:
 
 permissions:
   contents: read
