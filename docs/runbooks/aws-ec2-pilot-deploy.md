@@ -163,25 +163,40 @@ On the server, in `/opt/crm`, create these with `nano` from the `.example` files
 
 Every database URL ends with `?sslmode=verify-full&sslrootcert=/run/crm/supabase-ca.crt`. The app refuses to start if a URL logs in as `postgres` or `crm_migrator`.
 
-## 5. Everyday flow
+## 5. Everyday flow (automatic production deploy)
 
 ```
 1. PC          work on qa → pnpm test (local Docker DB) → git push
-2. GitHub      ci runs on every push to qa (tests, lint, build)
-3. QA          (migrations first: node scripts/db/migrate-supabase.mjs --deploy)
-               Vercel deploys qa → test on its preview or https://cbr-liart.vercel.app
-4. Build       Actions → release → Run workflow on qa → note the SHA in the summary
-5. Production  only when QA is OK:
-               a. git checkout main && git merge --ff-only qa && git push   (main = tested commit)
-               b. (migrations?) node scripts/db/migrate-supabase.mjs --target prod --deploy
-               c. on cbr-prod: bash /opt/crm/deploy.sh <SHA from step 4>
-               d. check https://crm.crystalbricksroofs.com/api/health and sign in
+2. GitHub      ci runs on every push to qa (tests, lint, build); Vercel deploys qa (QA)
+3. QA          (migrations first: node scripts/db/migrate-supabase.mjs --deploy) → test on Vercel
+4. Production  merge qa into main (pull request). That push runs Actions → deploy-prod:
+               a. builds the images for the merge commit (release.yml)
+               b. stops if the commits since the running version add a migration (see below)
+               c. runs deploy.sh <sha> on cbr-prod through AWS Systems Manager (no SSH)
+               d. checks https://crm.crystalbricksroofs.com/api/health
 ```
 
-- **Same commit everywhere:** the images in step 5c are built from the commit tested in step 3.
-- **`--ff-only`** keeps `main` exactly at the tested commit. If it fails, `main` has a commit that `qa` lacks: merge `main` into `qa`, test again, then repeat.
-- **Migrations must be backward-compatible** with the version currently running, because the database is updated a few minutes before the new app starts.
-- **Rollback:** `bash /opt/crm/deploy.sh <previous SHA>` (in `/opt/crm/current-tag` before each deploy). It does not undo a migration.
+- **A merge with a new migration:** deploy-prod stops at "Refuse unapplied migrations" and nothing on the server changes. Apply it: `node scripts/db/migrate-supabase.mjs --target prod --deploy` (backup question, then `gbcm`). Then **Actions → deploy-prod → Run workflow** on `main` with **migrations_applied** ticked.
+- **Migrations must be backward-compatible** with the version currently running, because the database is updated before the new app starts.
+- **Rollback:** Actions → deploy-prod → Run workflow on an older commit, or on the server `bash /opt/crm/deploy.sh <previous SHA>` (in `/opt/crm/current-tag` before each deploy). It does not undo a migration.
+- **Who can deploy:** anyone who can push to `main`. GitHub Free cannot protect `main` on a private repository, so keep the collaborator list to the owner.
+
+### 5.1 One-time setup for the automatic deploy
+
+1. **IAM → Roles → `cbr-crm-ec2` → Add permissions → Attach policies →** `AmazonSSMManagedInstanceCore`. The Ubuntu image already runs the Systems Manager agent; within about 5 minutes **Systems Manager → Fleet Manager** lists `cbr-prod` as online.
+2. **IAM → Roles → `cbr-crm-github-release` → Add permissions → Create inline policy (JSON)**, named `deploy-cbr-prod`:
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       { "Effect": "Allow", "Action": "ssm:SendCommand",
+         "Resource": ["arn:aws:ec2:ap-south-1:698387659234:instance/<PROD_INSTANCE_ID>",
+                      "arn:aws:ssm:ap-south-1::document/AWS-RunShellScript"] },
+       { "Effect": "Allow", "Action": "ssm:GetCommandInvocation", "Resource": "*" }
+     ]
+   }
+   ```
+3. **GitHub → Settings → Secrets and variables → Actions → Variables:** `PROD_INSTANCE_ID` (`i-…` of `cbr-prod`) and `PROD_SITE_URL` (`https://crm.crystalbricksroofs.com`).
 
 ## 6. Checks after a deploy
 
