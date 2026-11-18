@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Suspense, type ReactNode } from 'react';
+import { SelectAll } from '@/components/select-all';
 import { Alert, Badge, Card, EmptyState, Field, Input, PageHeader, Select } from '@/components/ui';
 import { listMembers } from '@/modules/members';
 import {
@@ -398,7 +399,7 @@ async function LeadResults({ ctx, sp }: { ctx: RequestContext; sp: SearchParams 
                     <tr>
                       {bulk && (
                         <th className="py-2 pr-2">
-                          <span className="sr-only">Select</span>
+                          <SelectAll name="item" />
                         </th>
                       )}
                       <th className="py-2 pr-4">Lead</th>
@@ -420,6 +421,7 @@ async function LeadResults({ ctx, sp }: { ctx: RequestContext; sp: SearchParams 
                                 name="item"
                                 value={`${l.id}:${l.version}`}
                                 aria-label={`Select ${l.fullName}`}
+                                className="h-5 w-5 cursor-pointer accent-blue-900"
                               />
                             )}
                           </td>
