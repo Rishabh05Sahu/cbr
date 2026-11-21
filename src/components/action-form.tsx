@@ -68,6 +68,7 @@ export function ActionForm({
   fieldLabels,
   resetOnSuccess = true,
   showSuccess = true,
+  onSuccess,
 }: {
   action: FormAction;
   children: ReactNode;
@@ -80,6 +81,8 @@ export function ActionForm({
   resetOnSuccess?: boolean;
   /** Show the success message for the last result. False once the page no longer reflects it. */
   showSuccess?: boolean;
+  /** Runs once per successful result, with its data (e.g. to upload files to a new record). */
+  onSuccess?: (data: unknown) => void;
 }) {
   const [state, formAction, pending] = useActionState(action, null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -92,6 +95,7 @@ export function ActionForm({
     if (!form || !state) return;
     if (state.ok) {
       if (resetOnSuccess) form.reset();
+      onSuccess?.(state.data);
     } else if (state.error.code === 'CONFLICT') {
       router.refresh();
     }
@@ -107,6 +111,8 @@ export function ActionForm({
             el.setAttribute('aria-invalid', 'true');
             el.setAttribute('data-server-invalid', '');
           }
+    // onSuccess is read for the new state only; a new callback identity alone must not re-run it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, resetOnSuccess, router]);
 
   return (

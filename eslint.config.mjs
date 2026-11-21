@@ -72,6 +72,7 @@ const config = [
       'docs/**',
       'coverage/**',
       'dist/**',
+      'mobile/**', // Flutter app: dart analyze
     ],
   },
   ...nextCoreWebVitals,

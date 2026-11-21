@@ -10,6 +10,7 @@ export {
   keyBelongsTo,
   objectKeyFor,
   parseObjectKey,
+  type ObjectExt,
   type ObjectKey,
   type ObjectKind,
 } from './keys';
@@ -50,6 +51,13 @@ export function importStorage(): ObjectStorage {
  * downloads are streamed by the server after a single-use claim.
  */
 export const exportStorage = importStorage;
+
+/**
+ * FR-141 property photos: the same private bucket, under orgs/<org>/property-photos/<property>/.
+ * Never handed to browsers: the app streams each photo after a permission check. The bucket must
+ * accept image/jpeg and image/webp (docs/runbooks/supabase-storage-setup.md).
+ */
+export const photoStorage = importStorage;
 
 /** Origin the browser uploads to (for the CSP connect-src), or null when not configured. */
 export function storageUploadOrigin(url: string | undefined): string | null {

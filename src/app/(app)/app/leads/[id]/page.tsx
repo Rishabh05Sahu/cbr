@@ -285,6 +285,43 @@ export default async function LeadPage({ params }: PageProps<'/app/leads/[id]'>)
           </Alert>
         </div>
       )}
+      {/* Contact first: the numbers, call buttons and details people need most. */}
+      <div className="mb-6">
+        <Card title="Contact">
+          {canLaunch && (
+            <div className="mb-4">
+              <CallLaunchers
+                leadId={lead.id}
+                contactStatus={lead.contactStatus}
+                hasAlternate={lead.alternatePhoneE164 !== null}
+                masked={lead.phoneMasked}
+              />
+            </div>
+          )}
+          {lead.phoneMasked && (
+            // FR-060: the server sent masked numbers only; revealing is audited and capped.
+            <div className="mb-3">
+              <PhoneReveal
+                leadId={lead.id}
+                masked={{ primary: lead.primaryPhoneE164, alternate: lead.alternatePhoneE164 }}
+                canReveal={lead.canRevealPhone}
+              />
+            </div>
+          )}
+          <dl className="grid gap-2 text-sm sm:grid-cols-2">
+            {!lead.phoneMasked && (
+              <>
+                <Item term="Mobile" value={lead.primaryPhoneE164} />
+                <Item term="Alternate" value={lead.alternatePhoneE164 ?? '—'} />
+              </>
+            )}
+            <Item term="Email" value={lead.email ?? '—'} />
+            <Item term="Preferred contact" value={label(lead.preferredContactMethod)} />
+            <Item term="Language" value={lead.preferredLanguage ?? '—'} />
+            <Item term="Created" value={fmtDateTime(lead.createdAt)} />
+          </dl>
+        </Card>
+      </div>
       {(canArchive || canMerge) && (
         // Lead actions near the top at every width (M5 §K): on a phone the sidebar stacks
         // below the timeline, which hid Archive, Restore and Merge far down the page.
@@ -562,41 +599,6 @@ export default async function LeadPage({ params }: PageProps<'/app/leads/[id]'>)
                 </div>
               </Card>
             )}
-            <Card title="Contact">
-              {canLaunch && (
-                <div className="mb-4">
-                  <CallLaunchers
-                    leadId={lead.id}
-                    contactStatus={lead.contactStatus}
-                    hasAlternate={lead.alternatePhoneE164 !== null}
-                    masked={lead.phoneMasked}
-                  />
-                </div>
-              )}
-              {lead.phoneMasked && (
-                // FR-060: the server sent masked numbers only; revealing is audited and capped.
-                <div className="mb-3">
-                  <PhoneReveal
-                    leadId={lead.id}
-                    masked={{ primary: lead.primaryPhoneE164, alternate: lead.alternatePhoneE164 }}
-                    canReveal={lead.canRevealPhone}
-                  />
-                </div>
-              )}
-              <dl className="grid gap-2 text-sm sm:grid-cols-2">
-                {!lead.phoneMasked && (
-                  <>
-                    <Item term="Mobile" value={lead.primaryPhoneE164} />
-                    <Item term="Alternate" value={lead.alternatePhoneE164 ?? '—'} />
-                  </>
-                )}
-                <Item term="Email" value={lead.email ?? '—'} />
-                <Item term="Preferred contact" value={label(lead.preferredContactMethod)} />
-                <Item term="Language" value={lead.preferredLanguage ?? '—'} />
-                <Item term="Created" value={fmtDateTime(lead.createdAt)} />
-              </dl>
-            </Card>
-
             <ContactStatusCard
               leadId={lead.id}
               version={lead.version}

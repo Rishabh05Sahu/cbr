@@ -22,7 +22,7 @@ In **Storage → New bucket**:
 | Name | `crm-imports` (or set `SUPABASE_IMPORT_BUCKET`) |
 | Public bucket | **Off** |
 | Restrict file upload size | **On, 20 MB**. Keep it equal to `IMPORT_MAX_BYTES` |
-| Allowed MIME types | `text/csv`, `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` |
+| Allowed MIME types | `text/csv`, `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`, `image/jpeg`, `image/webp` (property photos, FR-141 / ADR-0026, added 2026-11-19: without them photo uploads fail) |
 
 Do **not** add any `storage.objects` policies for the `anon` or `authenticated` roles:
 - the server uses the secret key;
@@ -50,7 +50,7 @@ If the project was created with example policies, delete any that mention this b
 Run this once after §1–§3, before the M4 sign-off and again for each new environment. It uses only synthetic files, writes nothing to production, and needs no real customer data.
 
 **Prerequisites:**
-- **Bucket:** the private `crm-imports` bucket from §2. It allows only the two MIME types, has a 20 MB limit, and has no `storage.objects` policies for `anon` or `authenticated`.
+- **Bucket:** the private `crm-imports` bucket from §2. It allows only the listed MIME types (two for imports, two for property photos), has a 20 MB limit, and has no `storage.objects` policies for `anon` or `authenticated`.
 - **`.env` (local) or the secret store:**
   - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (the secret key), from §3;
   - `CLEANUP_DATABASE_URL` for the **worker** only;

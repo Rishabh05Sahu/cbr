@@ -18,7 +18,8 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${production ? '' : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
+  // blob: previews of photos chosen for upload (FR-141), made by the page itself.
+  "img-src 'self' data: blob:",
   "font-src 'self'",
   `connect-src 'self'${storageOrigin ? ` ${storageOrigin}` : ''}`,
   "frame-ancestors 'none'",

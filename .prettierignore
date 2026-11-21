@@ -5,3 +5,4 @@ pnpm-lock.yaml
 docs/
 dist/
 scripts/recovery/results/
+mobile/
