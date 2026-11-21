@@ -63,7 +63,7 @@ Dashboards, leave, escalation, notifications and **basic site visits** follow in
 
 ### 5.3 Explicitly out of scope (for now)
 
-- Native iOS/Android apps. We ship a responsive web app first; a PWA is evaluated in Phase 7.
+- Native iOS apps. (An Android app on the same backend was added on 2026-11-21, ADR-0027.)
 - Accounting/GST invoicing. Brokerage is tracked, but invoices are produced in the brokerage's accounting system.
 - A public property listing website or portal syndication.
 - Scraping property portals. Portal leads come in only through supported interfaces or exports, subject to their terms.

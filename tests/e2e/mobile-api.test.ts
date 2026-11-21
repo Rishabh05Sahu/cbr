@@ -1,0 +1,277 @@
+// ADR-0027 Android app API against the built server: the bearer sign-in exactly as the app does it
+// (Origin cbrcrm://app, the 2FA step with its short-lived cookie, then the token only), the token
+// header withheld from the website, cookies refused on /api/v1, and role scope and cross-org
+// isolation on every app endpoint.
+import { randomInt } from 'node:crypto';
+import { beforeAll, describe, expect, it } from 'vitest';
+import * as leads from '@/modules/leads';
+import { actorIn, PASSWORD, seedOrg } from '../support/factory';
+import { authenticators, totp } from '../support/totp';
+import { Browser, BASE } from './http';
+
+const APP_ORIGIN = 'cbrcrm://app';
+
+/** The app's HTTP client: no cookie jar beyond the 2FA step, a bearer token afterwards. */
+class App {
+  token: string | null = null;
+  private twoFactorCookie: string | null = null;
+  /** One phone, one address: sign-in rate limits are per IP. */
+  readonly ip = `10.${randomInt(0, 255)}.${randomInt(0, 255)}.${randomInt(1, 254)}`;
+
+  async auth(path: string, body: unknown): Promise<Response> {
+    const headers: Record<string, string> = {
+      'content-type': 'application/json',
+      origin: APP_ORIGIN,
+      'x-forwarded-for': this.ip,
+    };
+    if (this.token) headers.authorization = `Bearer ${this.token}`;
+    if (this.twoFactorCookie) headers.cookie = this.twoFactorCookie;
+    const res = await fetch(`${BASE}/api/auth${path}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+    for (const c of res.headers.getSetCookie()) {
+      const pair = c.split(';')[0]!;
+      if (pair.includes('two_factor=')) this.twoFactorCookie = pair;
+    }
+    const t = res.headers.get('set-auth-token');
+    if (t) {
+      this.token = t;
+      this.twoFactorCookie = null;
+    }
+    return res;
+  }
+
+  async signIn(email: string): Promise<Response> {
+    const res = await this.auth('/sign-in/email', { email, password: PASSWORD });
+    const body = (await res.clone().json()) as { twoFactorRedirect?: boolean };
+    if (!body.twoFactorRedirect) return res;
+    return this.auth('/two-factor/verify-totp', {
+      code: totp(authenticators.get(email.toLowerCase())!),
+    });
+  }
+
+  api(
+    path: string,
+    init: { method?: string; body?: unknown; headers?: Record<string, string> } = {},
+  ) {
+    return fetch(`${BASE}/api/v1${path}`, {
+      method: init.method ?? 'GET',
+      headers: {
+        'x-forwarded-for': this.ip,
+        ...(this.token ? { authorization: `Bearer ${this.token}` } : {}),
+        ...(init.body !== undefined ? { 'content-type': 'application/json' } : {}),
+        ...init.headers,
+      },
+      ...(init.body !== undefined ? { body: JSON.stringify(init.body) } : {}),
+    });
+  }
+}
+
+async function appFor(user: { email: string }, orgId: string): Promise<App> {
+  const app = new App();
+  expect((await app.signIn(user.email)).status).toBe(200);
+  expect(app.token).toBeTruthy();
+  expect((await app.auth('/organization/set-active', { organizationId: orgId })).status).toBe(200);
+  return app;
+}
+
+const json = async (res: Response) =>
+  (await res.json()) as { ok: boolean; data?: any; error?: { code: string } }; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+let A: Awaited<ReturnType<typeof seedOrg>>;
+let B: Awaited<ReturnType<typeof seedOrg>>;
+let exec1Lead: string;
+let exec2Lead: string;
+let bLead: string;
+
+const created = async (r: Promise<leads.CreateLeadResult>) => {
+  const v = await r;
+  if (v.status !== 'created') throw new Error('expected a new lead');
+  return v.leadId;
+};
+
+beforeAll(async () => {
+  A = await seedOrg('AppA');
+  B = await seedOrg('AppB');
+  const e1 = await actorIn(A.users.exec1, A.orgId);
+  const e2 = await actorIn(A.users.exec2, A.orgId);
+  const ownerB = await actorIn(B.users.owner, B.orgId);
+  exec1Lead = await created(
+    leads.createLead(e1.ctx, { fullName: 'Alpha Mobile', primaryPhone: '9811100001' }),
+  );
+  exec2Lead = await created(
+    leads.createLead(e2.ctx, { fullName: 'Second Mobile', primaryPhone: '9811100002' }),
+  );
+  bLead = await created(
+    leads.createLead(ownerB.ctx, { fullName: 'Bravo Mobile', primaryPhone: '9811100003' }),
+  );
+});
+
+describe('sign-in', () => {
+  it('the app receives a token; the website never sees it', async () => {
+    const app = new App();
+    expect((await app.signIn(A.users.exec1.email)).status).toBe(200);
+    expect(app.token).toMatch(/\./); // signed
+
+    const web = new Browser();
+    const res = await web.signIn(A.users.exec1.email, PASSWORD);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('set-auth-token')).toBeNull();
+    expect(res.headers.get('access-control-expose-headers') ?? '').not.toMatch(/set-auth-token/i);
+  });
+
+  it('owners complete the authenticator step and get a token', async () => {
+    const app = await appFor(A.users.owner, A.orgId);
+    const me = await json(await app.api('/me'));
+    expect(me.data.active).toMatchObject({ orgId: A.orgId, role: 'OWNER' });
+  });
+
+  it('me works before an organisation is chosen and lists memberships', async () => {
+    const app = new App();
+    await app.signIn(A.users.exec1.email);
+    const me = await json(await app.api('/me'));
+    expect(me.ok).toBe(true);
+    expect(me.data.memberships.map((m: { orgId: string }) => m.orgId)).toEqual([A.orgId]);
+    expect(me.data.active).toBeNull();
+    expect(me.data.blocked).toBe('NO_ACTIVE_ORG');
+    expect((await app.api('/my-day')).status).toBe(403);
+  });
+
+  it('sign-out ends the token', async () => {
+    const app = await appFor(A.users.exec1, A.orgId);
+    expect((await app.api('/me')).status).toBe(200);
+    expect((await app.auth('/sign-out', {})).status).toBe(200);
+    expect((await app.api('/me')).status).toBe(401);
+  });
+});
+
+describe('/api/v1 accepts the bearer token only', () => {
+  it('no token, a forged token, an unsigned token and a website cookie are all 401', async () => {
+    const anon = new App();
+    expect((await anon.api('/me')).status).toBe(401);
+    for (const bad of ['garbage', 'abc.def', 'raw-session-token-without-signature']) {
+      anon.token = bad;
+      const res = await anon.api('/me');
+      expect(res.status, bad).toBe(401);
+      expect((await json(res)).error?.code).toBe('UNAUTHENTICATED');
+    }
+    const web = new Browser();
+    await web.signIn(A.users.exec1.email, PASSWORD);
+    await web.authPost('/organization/set-active', { organizationId: A.orgId });
+    const res = await fetch(`${BASE}/api/v1/my-day`, { headers: { cookie: web.cookieHeader() } });
+    expect(res.status).toBe(401);
+  });
+
+  it('responses are private and never cached', async () => {
+    const app = await appFor(A.users.exec1, A.orgId);
+    const res = await app.api('/my-day');
+    expect(res.headers.get('cache-control')).toBe('private, no-store');
+  });
+});
+
+describe('scope and isolation', () => {
+  it('an executive sees only their own leads', async () => {
+    const app = await appFor(A.users.exec1, A.orgId);
+    const list = await json(await app.api('/leads'));
+    const ids = list.data.rows.map((r: { id: string }) => r.id);
+    expect(ids).toContain(exec1Lead);
+    expect(ids).not.toContain(exec2Lead);
+    expect(ids).not.toContain(bLead);
+    expect((await app.api(`/leads/${exec1Lead}`)).status).toBe(200);
+    expect((await app.api(`/leads/${exec2Lead}`)).status).toBe(404);
+    expect((await app.api(`/leads/${bLead}`)).status).toBe(404);
+    expect((await app.api(`/leads/${bLead}/reveal-phone`, { method: 'POST' })).status).toBe(404);
+  });
+
+  it('an owner sees the whole organisation, never another one', async () => {
+    const app = await appFor(A.users.owner, A.orgId);
+    const ids = (await json(await app.api('/leads'))).data.rows.map((r: { id: string }) => r.id);
+    expect(ids).toEqual(expect.arrayContaining([exec1Lead, exec2Lead]));
+    expect(ids).not.toContain(bLead);
+    expect((await app.api(`/leads/${bLead}`)).status).toBe(404);
+  });
+
+  it('HR / Ops has My Day but no lead data', async () => {
+    const app = await appFor(A.users.hr, A.orgId);
+    expect((await app.api('/my-day')).status).toBe(200);
+    expect((await app.api('/leads')).status).toBe(403);
+    expect((await app.api(`/leads/${exec1Lead}`)).status).toBe(403);
+    const me = await json(await app.api('/me'));
+    expect(me.data.active.permissions['lead.read']).toBeUndefined();
+  });
+
+  it('cannot switch into an organisation the user does not belong to', async () => {
+    const app = await appFor(A.users.exec1, A.orgId);
+    const res = await app.auth('/organization/set-active', { organizationId: B.orgId });
+    expect(res.status).toBe(403);
+    // Better Auth clears the active organisation on a refused switch: the app shows the picker.
+    const me = await json(await app.api('/me'));
+    expect(me.data.active?.orgId ?? null).not.toBe(B.orgId);
+    expect((await app.api(`/leads/${bLead}`)).status).not.toBe(200);
+  });
+
+  it('a 2FA sign-in hands out no token before the second factor', async () => {
+    const res = await fetch(`${BASE}/api/auth/sign-in/email`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        origin: APP_ORIGIN,
+        'x-forwarded-for': `10.1.${randomInt(0, 255)}.${randomInt(1, 254)}`,
+      },
+      body: JSON.stringify({ email: A.users.admin.email, password: PASSWORD }),
+    });
+    expect(((await res.json()) as { twoFactorRedirect?: boolean }).twoFactorRedirect).toBe(true);
+    expect(res.headers.get('set-auth-token')).toBeNull();
+  });
+});
+
+describe('the call loop', () => {
+  it('tap Call, then log the outcome; the pending tap clears', async () => {
+    const app = await appFor(A.users.exec1, A.orgId);
+    const tap = await json(
+      await app.api(`/leads/${exec1Lead}/call-intents`, {
+        method: 'POST',
+        body: { channel: 'PHONE_NATIVE' },
+      }),
+    );
+    expect(tap.ok, JSON.stringify(tap)).toBe(true);
+    expect(tap.data.href).toMatch(/^tel:\+91/);
+
+    const lead = await json(await app.api(`/leads/${exec1Lead}`));
+    expect(lead.data.pendingTap).toMatchObject({ id: tap.data.intentId, channel: 'PHONE_NATIVE' });
+
+    const defaults = await json(await app.api('/interactions/defaults'));
+    expect(defaults.ok).toBe(true);
+    const phone = defaults.data.channels.find((c: { code: string }) => c.code === 'PHONE_NATIVE');
+    const codes = phone.outcomes.map((o: { code: string }) => o.code);
+    expect(codes).toEqual(expect.arrayContaining(['NO_ANSWER', 'CONNECTED_INTERESTED']));
+    expect(codes).not.toContain('MEETING_HELD');
+
+    const logged = await json(
+      await app.api('/interactions', {
+        method: 'POST',
+        body: {
+          leadId: exec1Lead,
+          idempotencyKey: crypto.randomUUID(),
+          version: lead.data.lead.version,
+          channel: 'PHONE_NATIVE',
+          direction: 'OUTBOUND',
+          outcome: 'NO_ANSWER',
+          occurredAt: lead.data.pendingTap.occurredAt,
+          notes: 'from the app',
+        },
+      }),
+    );
+    expect(logged.ok, JSON.stringify(logged)).toBe(true);
+    expect((await json(await app.api(`/leads/${exec1Lead}`))).data.pendingTap).toBeNull();
+  });
+
+  it('invalid input is a 422 with field errors, not a crash', async () => {
+    const app = await appFor(A.users.exec1, A.orgId);
+    const res = await app.api('/interactions', { method: 'POST', body: { leadId: exec1Lead } });
+    expect(res.status).toBe(422);
+    expect((await json(res)).error?.code).toBe('VALIDATION_FAILED');
+  });
+});

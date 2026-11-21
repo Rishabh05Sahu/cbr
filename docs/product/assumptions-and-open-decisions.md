@@ -6,7 +6,7 @@
 
 | ID | Assumption | Source | Impact if wrong |
 |---|---|---|---|
-| A-01 | Next.js is the primary framework; responsive web app first (no native apps) | Brief | Native app would add a mobile API surface (Route Handlers), not a redesign |
+| A-01 | Next.js is the primary framework; responsive web app first. **Amended 2026-11-21 (ADR-0027):** an Android app (Flutter) is added on the same backend | Brief, owner 2026-11-21 | The app uses a bearer-only `/api/v1` surface (Route Handlers) over the same modules, not a redesign |
 | A-02 | Multi-tenant ready from day one; one org's users never see another's data | Brief | — (non-negotiable) |
 | A-03 | Pilot with one brokerage (proposed market: Pune, Maharashtra) before broad onboarding; multi-tenant architecture throughout | OD-14, OD-16 | See OD-14/16 |
 | A-04 | CRM and sales workflows before AI | Brief | — |

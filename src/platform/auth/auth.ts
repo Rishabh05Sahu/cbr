@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { APIError, createAuthMiddleware, getSessionFromCtx } from 'better-auth/api';
+import { bearer } from 'better-auth/plugins/bearer';
 import { organization } from 'better-auth/plugins/organization';
 import { twoFactor } from 'better-auth/plugins/two-factor';
 import { serverEnv } from '@/env';
@@ -26,6 +27,13 @@ import {
   remainingRecoveryCodesFor,
   type SecurityEvent,
 } from './two-factor-policy';
+
+/**
+ * ADR-0027: the Android app's fixed Origin. A browser never sends a custom-scheme Origin, so no
+ * web page can claim it. The app sends it on every /api/auth request; only responses to such
+ * requests carry the session token header (route-handler.ts).
+ */
+export const MOBILE_APP_ORIGIN = 'cbrcrm://app';
 
 export const INVITATION_TTL_SECONDS = 7 * 24 * 60 * 60; // D3
 export const RESET_TOKEN_TTL_SECONDS = 30 * 60;
@@ -101,7 +109,7 @@ function createAuth() {
     appName: 'CBR Property CRM',
     baseURL,
     secret: env.BETTER_AUTH_SECRET,
-    trustedOrigins: [baseURL],
+    trustedOrigins: [baseURL, MOBILE_APP_ORIGIN],
     telemetry: { enabled: false },
     database: prismaAdapter(authPrisma(), { provider: 'postgresql', transaction: true }),
     disabledPaths: DISABLED_PATHS,
@@ -348,6 +356,10 @@ function createAuth() {
       }),
     },
     plugins: [
+      // ADR-0027: the app sends `Authorization: Bearer <token>`. Only signed tokens (the value of
+      // the signed session cookie) are accepted, never a raw database token. /api/v1 accepts
+      // nothing else, so cookies cannot be used there (no CSRF surface).
+      bearer({ requireSignature: true }),
       organization({
         ac,
         roles,

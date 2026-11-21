@@ -35,5 +35,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "**/generated/**", "spikes"]
+  "exclude": ["node_modules", "**/generated/**", "spikes", "mobile"]
 }
