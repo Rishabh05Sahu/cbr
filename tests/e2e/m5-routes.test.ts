@@ -65,11 +65,13 @@ describe('archive, restore and the archive view', () => {
   it('Owner archives with the shown version; stale and unauthorised attempts are refused', async () => {
     const id = await created(A.users.exec1, A, { fullName: 'Synthetic Archive Me' });
     const page = `/app/leads/${id}`;
-    // Lead actions sit near the top, before the contact card (M5 §K), for those allowed.
+    // Contact comes first (FR-141 change, 2026-11-21), then the lead actions, still near the top
+    // and above the requirements and the timeline (M5 §K), for those allowed.
     const active = await html(await br.owner.get(page));
     const bar = active.indexOf('aria-label="Lead actions"');
     expect(bar).toBeGreaterThan(-1);
-    expect(bar).toBeLessThan(active.indexOf('>Contact<'));
+    expect(bar).toBeGreaterThan(active.indexOf('>Contact<'));
+    expect(bar).toBeLessThan(active.indexOf('>Requirements<'));
     const barHtml = active.slice(bar, active.indexOf('</section>', bar));
     expect(barHtml).toContain('Archive lead');
     expect(barHtml).toContain('href="#merge"');
