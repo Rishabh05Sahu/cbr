@@ -33,6 +33,8 @@ import {
 } from './rules';
 
 export * from './rules';
+export * from './photo-format';
+export * from './photos';
 
 const invalid = (fieldErrors: Record<string, string[]>) =>
   new DomainError('VALIDATION_FAILED', 'Please check the highlighted fields', fieldErrors);

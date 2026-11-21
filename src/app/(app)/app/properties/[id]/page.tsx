@@ -1,7 +1,13 @@
 import Link from 'next/link';
 import { ActionForm } from '@/components/action-form';
-import { Badge, Card, PageHeader } from '@/components/ui';
-import { getProperty, PROPERTY_LABELS, responsibleOptions } from '@/modules/properties';
+import { Alert, Badge, Card, PageHeader } from '@/components/ui';
+import {
+  getProperty,
+  listPhotos,
+  PHOTO_LIMITS,
+  PROPERTY_LABELS,
+  responsibleOptions,
+} from '@/modules/properties';
 import { updatePropertyAction } from '@/modules/properties/actions';
 import { can } from '@/platform/authz';
 import { pageContext, pageRequire } from '@/platform/auth/session';
@@ -9,6 +15,7 @@ import { LABELS } from '../../leads/labels';
 import { priceText, aed } from '../format';
 import { PropertyFields } from '../property-fields';
 import { ContactsPanel } from './contacts-panel';
+import { PhotosPanel } from './photos-panel';
 
 const lab = (c: string | null) => (c ? (PROPERTY_LABELS[c] ?? LABELS[c] ?? c) : '—');
 
@@ -16,11 +23,20 @@ const lab = (c: string | null) => (c ? (PROPERTY_LABELS[c] ?? LABELS[c] ?? c) : 
  * FR-140 property page: its details; Owners and Admins edit them. FR-142: owner contacts in their
  * own panel, for Owner, Admin and Sales Manager, shown only on request (audited).
  */
-export default async function PropertyPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PropertyPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { ctx } = await pageContext();
   pageRequire(ctx, 'property.read');
   const { id } = await params;
   const p = await getProperty(ctx, id);
+  const photos = await listPhotos(ctx, p.id);
+  // Set by the Add property form when some of its photos could not be uploaded.
+  const failed = Number((await searchParams).photosFailed) || 0;
   const canManage = can(ctx, 'property.manage');
   const people = canManage ? await responsibleOptions(ctx) : [];
   const rows: [string, string][] = [
@@ -57,8 +73,22 @@ export default async function PropertyPage({ params }: { params: Promise<{ id: s
         </Badge>
         <Badge>{p.code}</Badge>
       </div>
+      {failed > 0 && canManage && (
+        <div className="mb-4">
+          <Alert tone="warn">
+            The property was saved, but {failed} photo{failed === 1 ? ' was' : 's were'} not
+            uploaded. Add {failed === 1 ? 'it' : 'them'} again below.
+          </Alert>
+        </div>
+      )}
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
+          <Card
+            title="Photos"
+            description={`${photos.length} of ${PHOTO_LIMITS.maxPhotos}. The first photo is the cover.`}
+          >
+            <PhotosPanel propertyId={p.id} photos={photos} canManage={canManage} />
+          </Card>
           <Card title="Details">
             <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
               {rows.map(([k, v]) => (

@@ -92,6 +92,21 @@ describe('object keys', () => {
     expect(keyBelongsTo(key(), ORG, 'imports', other)).toBe(false);
   });
 
+  it('property photo keys are JPEG or WebP only, under their own prefix', () => {
+    const p = objectKeyFor(ORG, 'property-photos', JOB, 'webp');
+    expect(p).toMatch(new RegExp(`^orgs/${ORG}/property-photos/${JOB}/[0-9a-f]{32}\\.webp$`));
+    expect(keyBelongsTo(p, ORG, 'property-photos', JOB)).toBe(true);
+    expect(keyBelongsTo(p, ORG, 'imports', JOB)).toBe(false);
+    expect(parseObjectKey(objectKeyFor(ORG, 'property-photos', JOB, 'jpg'))).toMatchObject({
+      kind: 'property-photos',
+      ext: 'jpg',
+    });
+    expect(() => objectKeyFor(ORG, 'property-photos', JOB, 'csv')).toThrow();
+    expect(() => objectKeyFor(ORG, 'imports', JOB, 'webp')).toThrow();
+    expect(parseObjectKey(`orgs/${ORG}/imports/${JOB}/${'a'.repeat(32)}.jpg`)).toBeNull();
+    expect(parseObjectKey(`orgs/${ORG}/property-photos/${JOB}/${'a'.repeat(32)}.png`)).toBeNull();
+  });
+
   it('export keys are CSV only and never match an import record', () => {
     const e = objectKeyFor(ORG, 'exports', JOB, 'csv');
     expect(e).toMatch(new RegExp(`^orgs/${ORG}/exports/${JOB}/[0-9a-f]{32}\\.csv$`));

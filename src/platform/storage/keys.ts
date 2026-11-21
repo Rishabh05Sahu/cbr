@@ -4,26 +4,35 @@
 import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
 
-export type ObjectKind = 'imports' | 'exports';
+export type ObjectKind = 'imports' | 'exports' | 'property-photos';
+export type ObjectExt = 'csv' | 'xlsx' | 'jpg' | 'webp';
 
 export interface ObjectKey {
   orgId: string;
   kind: ObjectKind;
   recordId: string;
-  ext: 'csv' | 'xlsx';
+  ext: ObjectExt;
 }
 
 const KEY =
-  /^orgs\/([0-9a-f-]{36})\/(imports|exports)\/([0-9a-f-]{36})\/([0-9a-f]{32})\.(csv|xlsx)$/;
+  /^orgs\/([0-9a-f-]{36})\/(imports|exports|property-photos)\/([0-9a-f-]{36})\/([0-9a-f]{32})\.(csv|xlsx|jpg|webp)$/;
 const uuid = z.uuid();
-/** Exports are CSV only (mirrors export_job_storage_key in 0006). */
-const allowedExt = (kind: ObjectKind, ext: ObjectKey['ext']) => kind === 'imports' || ext === 'csv';
+/**
+ * Each kind has its own file types: imports CSV or XLSX, exports CSV only (mirrors
+ * export_job_storage_key in 0006), property photos JPEG or WebP (mirrors property_photo in 0030).
+ */
+const EXTS: Record<ObjectKind, readonly ObjectExt[]> = {
+  imports: ['csv', 'xlsx'],
+  exports: ['csv'],
+  'property-photos': ['jpg', 'webp'],
+};
+const allowedExt = (kind: ObjectKind, ext: ObjectExt) => EXTS[kind].includes(ext);
 
 export function objectKeyFor(
   orgId: string,
   kind: ObjectKind,
   recordId: string,
-  ext: ObjectKey['ext'],
+  ext: ObjectExt,
 ): string {
   if (!uuid.safeParse(orgId).success || !uuid.safeParse(recordId).success)
     throw new TypeError('object keys need server-issued UUIDs');
@@ -37,12 +46,12 @@ export function parseObjectKey(key: string): ObjectKey | null {
   if (!m) return null;
   const [, orgId, kind, recordId, , ext] = m;
   if (!uuid.safeParse(orgId).success || !uuid.safeParse(recordId).success) return null;
-  if (!allowedExt(kind as ObjectKind, ext as ObjectKey['ext'])) return null;
+  if (!allowedExt(kind as ObjectKind, ext as ObjectExt)) return null;
   return {
     orgId: orgId!,
     kind: kind as ObjectKind,
     recordId: recordId!,
-    ext: ext as 'csv' | 'xlsx',
+    ext: ext as ObjectExt,
   };
 }
 

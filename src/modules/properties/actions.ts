@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { requireContext } from '@/platform/auth/session';
 import { runAction } from '@/platform/actions';
 import type { ActionResult } from '@/platform/errors';
+import { photoStorage } from '@/platform/storage';
 import * as properties from './index';
 
 type R = ActionResult<unknown>;
@@ -46,14 +47,30 @@ const fields = (fd: FormData) => {
 };
 const isId = (s: string) => /^[0-9a-f-]{36}$/i.test(s);
 
-/** FR-140: a new property; on success, its page. */
+/**
+ * FR-140: a new property; on success, its page. With photos waiting in the browser (FR-141), the
+ * new id is returned instead, so the form can upload them before opening the page.
+ */
 export async function createPropertyAction(_: R | null, fd: FormData) {
   const r = await runAction(async () =>
     properties.createProperty(await requireContext(), fields(fd)),
   );
   if (!r.ok) return r;
   revalidatePath('/app/properties');
+  if (str(fd, 'photosPending') === '1') return r;
   redirect(`/app/properties/${r.data.id}`);
+}
+
+/** FR-141: remove a photo (recorded; its files are deleted from storage). */
+export async function removePhotoAction(_: R | null, fd: FormData) {
+  const propertyId = str(fd, 'propertyId');
+  const r = await runAction(async () =>
+    properties.removePhoto(await requireContext(), str(fd, 'photoId'), {
+      storage: photoStorage(),
+    }),
+  );
+  if (r.ok && isId(propertyId)) revalidatePath(`/app/properties/${propertyId}`);
+  return r;
 }
 
 /** FR-140: edit a property. */

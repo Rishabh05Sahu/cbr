@@ -133,6 +133,8 @@ export const MANIFEST = [
   ['0028_call_intents', '54cde3d67f69fabba90d41678745907b7bb0b8a21a49650caa443dcd5df42f0e'],
   // UAE phone numbers for property contacts (owner decision 2026-11-16: UAE + India).
   ['0029_uae_phones', 'a0d472bdf719599c57278e84233b87fc424a8d9d5e9e4b519e81e675f4194d91'],
+  // FR-141 property photos (ADR-0026); owner approved pinning 2026-11-19 ("Pin 0030 now").
+  ['0030_property_photos', 'e3accf022966af35baf3b1be7ce95f09d1d21043a49d0bc134d432b8adfc1ffe'],
 ];
 
 const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');

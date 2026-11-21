@@ -221,6 +221,8 @@ model Member {
   propertiesCreated       Property[]               @relation("PropertyCreator")
   propertyContactsAdded   PropertyContact[]        @relation("PropertyContactCreator")
   propertyContactsRemoved PropertyContact[]        @relation("PropertyContactRemover")
+  propertyPhotosAdded     PropertyPhoto[]          @relation("PropertyPhotoUploader")
+  propertyPhotosRemoved   PropertyPhoto[]          @relation("PropertyPhotoRemover")
   siteVisitsAssigned      SiteVisit[]              @relation("SiteVisitAssignee")
   siteVisitsScheduled     SiteVisit[]              @relation("SiteVisitScheduler")
   siteVisitEvents         SiteVisitEvent[]
@@ -1243,6 +1245,7 @@ model Property {
   responsible  Member            @relation("PropertyResponsible", fields: [orgId, responsibleUserId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
   creator      Member            @relation("PropertyCreator", fields: [orgId, createdBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
   contacts     PropertyContact[]
+  photos       PropertyPhoto[]
 
   @@unique([orgId, id])
   @@unique([orgId, code])
@@ -1274,6 +1277,35 @@ model PropertyContact {
   @@unique([orgId, id])
   @@index([orgId, propertyId])
   @@map("property_contact")
+}
+
+/// FR-141 property photos (migration 0030, ADR-0026). Prepared in the browser (re-drawn, so no
+/// EXIF/GPS), checked structurally by the server, stored privately, served by the app after a
+/// permission check. At most 20 per property; removed (recorded), never deleted.
+model PropertyPhoto {
+  id          String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId       String    @map("org_id") @db.Uuid
+  propertyId  String    @map("property_id") @db.Uuid
+  storageKey  String    @unique @map("storage_key")
+  thumbKey    String    @unique @map("thumb_key")
+  /// image/jpeg | image/webp (the thumbnail has the same type)
+  contentType String    @map("content_type")
+  width       Int
+  height      Int
+  bytes       Int
+  thumbBytes  Int       @map("thumb_bytes")
+  uploadedBy  String    @map("uploaded_by") @db.Uuid
+  uploadedAt  DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("uploaded_at") @db.Timestamptz(6)
+  removedAt   DateTime? @map("removed_at") @db.Timestamptz(6)
+  removedBy   String?   @map("removed_by") @db.Uuid
+
+  property Property @relation(fields: [orgId, propertyId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  uploader Member   @relation("PropertyPhotoUploader", fields: [orgId, uploadedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  remover  Member?  @relation("PropertyPhotoRemover", fields: [orgId, removedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@index([orgId, propertyId, uploadedAt])
+  @@map("property_photo")
 }
 
 /// FR-150–152 basic site visits (migration 0026, ADR-0022). Its own entity, not a task.
