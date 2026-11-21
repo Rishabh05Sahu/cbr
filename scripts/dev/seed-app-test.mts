@@ -34,7 +34,12 @@ function password(): string {
 }
 
 function cookies(h: Headers, prev = ''): Headers {
-  const jar = new Map(prev.split('; ').filter(Boolean).map((p) => [p.split('=')[0]!, p]));
+  const jar = new Map(
+    prev
+      .split('; ')
+      .filter(Boolean)
+      .map((p) => [p.split('=')[0]!, p]),
+  );
   for (const c of h.getSetCookie()) {
     const pair = c.split(';')[0]!;
     const name = pair.split('=')[0]!;
@@ -48,7 +53,11 @@ async function signIn(email: string, pw: string, secret?: string): Promise<Heade
   const r = await auth().api.signInEmail({ body: { email, password: pw }, returnHeaders: true });
   let jar = cookies(r.headers);
   if ('twoFactorRedirect' in r.response && r.response.twoFactorRedirect && secret) {
-    const v = await auth().api.verifyTOTP({ headers: jar, body: { code: totp(secret) }, returnHeaders: true });
+    const v = await auth().api.verifyTOTP({
+      headers: jar,
+      body: { code: totp(secret) },
+      returnHeaders: true,
+    });
     jar = cookies(v.headers, jar.get('cookie') ?? '');
   }
   return jar;
@@ -57,7 +66,9 @@ async function signIn(email: string, pw: string, secret?: string): Promise<Heade
 const ctx = await auth().$context;
 for (const u of [OWNER, EXEC]) {
   if (await ctx.internalAdapter.findUserByEmail(u.email)) {
-    console.error(`${u.email} already exists. Delete the test organisation first, or reuse its logins.`);
+    console.error(
+      `${u.email} already exists. Delete the test organisation first, or reuse its logins.`,
+    );
     process.exit(1);
   }
 }
@@ -76,11 +87,16 @@ await ctx.adapter.update({
   where: [{ field: 'id', value: org.id }],
   update: { timeZone: 'Asia/Dubai', locale: 'en-AE' },
 });
-await auth().api.addMember({ body: { userId: exec.id, organizationId: org.id, role: 'sales_executive' } });
+await auth().api.addMember({
+  body: { userId: exec.id, organizationId: org.id, role: 'sales_executive' },
+});
 
 // Owners must have an authenticator (item D).
 const ownerJar = await signIn(OWNER.email, ownerPw);
-const enabled = await auth().api.enableTwoFactor({ headers: ownerJar, body: { password: ownerPw } });
+const enabled = await auth().api.enableTwoFactor({
+  headers: ownerJar,
+  body: { password: ownerPw },
+});
 if (enabled.method !== 'totp') throw new Error('expected TOTP');
 const secret = secretFromUri(enabled.totpURI);
 await auth().api.verifyTOTP({ headers: ownerJar, body: { code: totp(secret) } });
@@ -106,7 +122,10 @@ for (const s of samples) {
     preferredCity: s.preferredCity,
   });
   if (c.status === 'created' && s.due !== null)
-    await tasks.scheduleFollowUp(r.ctx, c.leadId, { dueAt: dubai(s.due), title: `Call ${s.fullName}` });
+    await tasks.scheduleFollowUp(r.ctx, c.leadId, {
+      dueAt: dubai(s.due),
+      title: `Call ${s.fullName}`,
+    });
 }
 
 console.log(`

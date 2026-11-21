@@ -181,6 +181,10 @@ class _LoginScreenState extends State<LoginScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.muted, fontSize: 13),
             ),
+            TextButton(
+              onPressed: () => openWebsite('/privacy'),
+              child: const Text('Privacy policy'),
+            ),
           ],
         ),
       ),

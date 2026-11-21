@@ -132,6 +132,26 @@ class MoreScreen extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                item(
+                  Icons.privacy_tip_outlined,
+                  'Privacy policy',
+                  () => openWebsite('/privacy'),
+                  trailing: const Icon(Icons.open_in_new, size: 18),
+                ),
+                item(
+                  Icons.person_remove_outlined,
+                  'Delete my account',
+                  () => openWebsite('/account-deletion'),
+                  trailing: const Icon(Icons.open_in_new, size: 18),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 16),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
