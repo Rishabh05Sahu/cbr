@@ -46,6 +46,21 @@ class Session extends ChangeNotifier {
   Me? me;
   String? notice;
 
+  /// Unread notifications for the badges. Kept apart from [notifyListeners] so a count change
+  /// redraws only the badges, not the whole app.
+  final ValueNotifier<int> unread = ValueNotifier(0);
+
+  /// Re-reads the unread count (on resume and every minute while the app is open).
+  Future<void> refreshUnread() async {
+    if (status != SessionStatus.ready) return;
+    try {
+      final data = await api.get('/me') as Map<String, dynamic>;
+      unread.value = Me(data).unread;
+    } on ApiException {
+      // Offline or signed out: keep the last count; [_expired] handles a dead session.
+    }
+  }
+
   Future<void> start() async {
     api.token = await _storage.read(key: _tokenKey);
     if (api.token == null) return _set(SessionStatus.signedOut);
@@ -97,6 +112,7 @@ class Session extends ChangeNotifier {
   Future<void> refresh() async {
     final data = await api.get('/me') as Map<String, dynamic>;
     me = Me(data);
+    unread.value = me!.unread;
     final blocked = me!.blocked;
     if (blocked == null) return _set(SessionStatus.ready);
     if (blocked == 'NO_ACTIVE_ORG' || blocked == 'NOT_A_MEMBER') {

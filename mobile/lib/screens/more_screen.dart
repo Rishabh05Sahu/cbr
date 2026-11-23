@@ -4,6 +4,7 @@ import '../format.dart';
 import '../session.dart';
 import '../theme.dart';
 import 'auth_screens.dart';
+import 'notifications_screen.dart';
 
 /// More: who is signed in, switch organisation, website links, sign out.
 class MoreScreen extends StatelessWidget {
@@ -113,9 +114,29 @@ class MoreScreen extends StatelessWidget {
                   ),
                 item(
                   Icons.notifications_none,
-                  'Notifications (${me.unread})',
-                  () => openWebsite('/app/notifications'),
-                  trailing: const Icon(Icons.open_in_new, size: 18),
+                  'Notifications',
+                  () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => NotificationsScreen(session: session),
+                    ),
+                  ),
+                  trailing: ValueListenableBuilder<int>(
+                    valueListenable: session.unread,
+                    builder: (_, n, _) => Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (n > 0)
+                          Badge(
+                            label: Text(n > 99 ? '99+' : '$n'),
+                            backgroundColor: AppColors.red,
+                          ),
+                        const Icon(
+                          Icons.chevron_right,
+                          color: Color(0xFF98A2B3),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 item(
                   Icons.shield_outlined,

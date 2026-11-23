@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../session.dart';
@@ -6,11 +8,19 @@ import 'auth_screens.dart';
 import 'leads_screen.dart';
 import 'more_screen.dart';
 import 'my_day_screen.dart';
+import 'notifications_screen.dart';
 import 'queue_screen.dart';
 
 class _Tab {
-  const _Tab(this.label, this.icon, this.selectedIcon, this.build);
+  const _Tab(
+    this.label,
+    this.icon,
+    this.selectedIcon,
+    this.build, {
+    this.badge = false,
+  });
   final String label;
+  final bool badge;
   final IconData icon;
   final IconData selectedIcon;
   final Widget Function() build;
@@ -30,8 +40,63 @@ class HomeShell extends StatefulWidget {
   State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   int _index = 0;
+  Timer? _poll;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // While the app is open, check for new notifications every minute.
+    _poll = Timer.periodic(const Duration(minutes: 1), (_) => _checkUnread());
+    widget.session.unread.addListener(_onUnread);
+    _lastUnread = widget.session.unread.value;
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    widget.session.unread.removeListener(_onUnread);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _checkUnread();
+  }
+
+  Future<void> _checkUnread() => widget.session.refreshUnread();
+
+  int _lastUnread = 0;
+
+  /// The count went up: say so, with a shortcut to the list.
+  void _onUnread() {
+    final n = widget.session.unread.value;
+    final grew = n > _lastUnread;
+    _lastUnread = n;
+    if (!grew || !mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            n == 1
+                ? 'You have a new notification'
+                : 'You have $n unread notifications',
+          ),
+          action: SnackBarAction(
+            label: 'View',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => NotificationsScreen(session: widget.session),
+              ),
+            ),
+          ),
+        ),
+      );
+  }
 
   List<_Tab> _tabs(Me me) {
     final s = widget.session;
@@ -52,6 +117,7 @@ class _HomeShellState extends State<HomeShell> {
       Icons.menu,
       Icons.menu,
       () => MoreScreen(session: s),
+      badge: !_hasInbox(me),
     );
     _Tab soon(String label, IconData icon, String path) => _Tab(
       label,
@@ -71,7 +137,13 @@ class _HomeShellState extends State<HomeShell> {
       Icons.groups,
       () => TeamScreen(session: s, openWebsite: openWebsite),
     );
-    final inbox = soon('Inbox', Icons.notifications_none, '/app/notifications');
+    final inbox = _Tab(
+      'Inbox',
+      Icons.notifications_none,
+      Icons.notifications,
+      () => NotificationsScreen(session: s),
+      badge: true,
+    );
     final people = soon(
       'People',
       Icons.groups_outlined,
@@ -95,6 +167,25 @@ class _HomeShellState extends State<HomeShell> {
     return tabs;
   }
 
+  Widget _withBadge(_Tab t, Widget icon) {
+    if (!t.badge) return icon;
+    return ValueListenableBuilder<int>(
+      valueListenable: widget.session.unread,
+      builder: (_, n, child) => Badge(
+        isLabelVisible: n > 0,
+        label: Text(n > 99 ? '99+' : '$n'),
+        backgroundColor: AppColors.red,
+        child: child,
+      ),
+      child: icon,
+    );
+  }
+
+  /// Owner, Admin and HR have an Inbox tab; everyone else reaches notifications from the bell
+  /// and More, so More carries the badge.
+  static bool _hasInbox(Me me) =>
+      const {'OWNER', 'ADMIN', 'HR_OPS'}.contains(me.role);
+
   @override
   Widget build(BuildContext context) {
     final me = widget.session.me!;
@@ -111,8 +202,11 @@ class _HomeShellState extends State<HomeShell> {
         destinations: [
           for (final t in tabs)
             NavigationDestination(
-              icon: Icon(t.icon),
-              selectedIcon: Icon(t.selectedIcon, color: AppColors.teal),
+              icon: _withBadge(t, Icon(t.icon)),
+              selectedIcon: _withBadge(
+                t,
+                Icon(t.selectedIcon, color: AppColors.teal),
+              ),
               label: t.label,
             ),
         ],

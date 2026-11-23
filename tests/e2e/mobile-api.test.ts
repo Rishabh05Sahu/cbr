@@ -6,6 +6,7 @@ import { randomInt } from 'node:crypto';
 import { beforeAll, describe, expect, it } from 'vitest';
 import * as leads from '@/modules/leads';
 import * as teams from '@/modules/teams';
+import { migrator } from '../support/db';
 import { actorIn, PASSWORD, seedOrg } from '../support/factory';
 import { authenticators, totp } from '../support/totp';
 import { Browser, BASE } from './http';
@@ -440,5 +441,49 @@ describe('assignment from the app (FR-063/070/072/073)', () => {
       },
     });
     expect(out.status).toBe(422);
+  });
+});
+
+describe('notifications in the app (FR-118)', () => {
+  const notify = (orgId: string, userId: string, title: string) =>
+    migrator().notification.create({
+      data: {
+        orgId,
+        recipientUserId: userId,
+        type: 'LEAD_ASSIGNED',
+        title,
+        body: 'b',
+        link: `/app/leads/${exec1Lead}`,
+      },
+    });
+
+  it('lists only my notifications, with the unread count, and marks them read', async () => {
+    const mine = await notify(A.orgId, A.users.exec1.id, 'App notice for exec1');
+    const theirs = await notify(A.orgId, A.users.exec2.id, 'App notice for exec2');
+    const other = await notify(B.orgId, B.users.exec1.id, 'App notice in B');
+    const app = await appFor(A.users.exec1, A.orgId);
+
+    const list = await json(await app.api('/notifications'));
+    expect(list.ok).toBe(true);
+    const titles = list.data.rows.map((r: { title: string }) => r.title);
+    expect(titles).toContain('App notice for exec1');
+    expect(titles).not.toContain('App notice for exec2');
+    expect(titles).not.toContain('App notice in B');
+    expect(list.data.unread).toBeGreaterThanOrEqual(1);
+    const before = list.data.unread as number;
+
+    // Someone else's notification, or one in another organisation, is "not found".
+    for (const n of [theirs, other])
+      expect((await app.api(`/notifications/${n.id}/read`, { method: 'POST' })).status).toBe(404);
+
+    const read = await json(await app.api(`/notifications/${mine.id}/read`, { method: 'POST' }));
+    expect(read.data.unread).toBe(before - 1);
+    const all = await json(await app.api('/notifications/read-all', { method: 'POST' }));
+    expect(all.data.unread).toBe(0);
+    expect((await json(await app.api('/me'))).data.active.unreadNotifications).toBe(0);
+    // exec2's stays unread.
+    expect(
+      (await migrator().notification.findUniqueOrThrow({ where: { id: theirs.id } })).readAt,
+    ).toBeNull();
   });
 });

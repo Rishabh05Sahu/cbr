@@ -5,6 +5,7 @@ import '../format.dart';
 import '../session.dart';
 import '../theme.dart';
 import 'lead_detail_screen.dart';
+import 'notifications_screen.dart';
 import 'queue_screen.dart';
 
 /// FR-056 lead list in the caller's scope, with search, quick filters and "load more".
@@ -173,6 +174,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
         ),
         actions: [
+          NotificationBell(session: widget.session),
           if (widget.session.me!.can('lead.assign'))
             TextButton.icon(
               onPressed: () async {
