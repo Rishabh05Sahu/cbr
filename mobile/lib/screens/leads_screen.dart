@@ -5,6 +5,7 @@ import '../format.dart';
 import '../session.dart';
 import '../theme.dart';
 import 'lead_detail_screen.dart';
+import 'new_lead_screen.dart';
 import 'notifications_screen.dart';
 import 'queue_screen.dart';
 
@@ -281,6 +282,21 @@ class _LeadsScreenState extends State<LeadsScreen> {
           ],
         ),
       ),
+      floatingActionButton: widget.session.me!.can('lead.create')
+          ? FloatingActionButton.extended(
+              heroTag: 'leads-add',
+              onPressed: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => NewLeadScreen(session: widget.session),
+                  ),
+                );
+                _load(reset: true);
+              },
+              icon: const Icon(Icons.person_add_alt_1),
+              label: const Text('New lead'),
+            )
+          : null,
     );
   }
 }

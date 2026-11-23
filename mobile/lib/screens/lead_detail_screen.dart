@@ -6,7 +6,10 @@ import '../format.dart';
 import '../session.dart';
 import '../theme.dart';
 import 'assign_sheet.dart';
+import 'lead_sheets.dart';
+import 'task_sheet.dart';
 import 'log_outcome_sheet.dart';
+import 'visit_sheet.dart';
 
 /// The lead screen (GET /api/v1/leads/:id): contact, Call / WhatsApp, the follow-up, visits,
 /// requirements and the suggested call script.
@@ -19,9 +22,13 @@ class LeadDetailScreen extends StatefulWidget {
     super.key,
     required this.session,
     required this.leadId,
+    this.openLogOutcome = false,
   });
   final Session session;
   final String leadId;
+
+  /// Open the outcome sheet once the lead has loaded (My Day's "calls with no outcome").
+  final bool openLogOutcome;
 
   @override
   State<LeadDetailScreen> createState() => _LeadDetailScreenState();
@@ -57,10 +64,16 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
       final d =
           await _api.get('/leads/${widget.leadId}') as Map<String, dynamic>;
       if (mounted) {
+        final first = _data == null;
         setState(() {
           _data = d;
           _error = null;
         });
+        if (first &&
+            widget.openLogOutcome &&
+            _lead['canLogInteraction'] == true) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => _openSheet());
+        }
       }
     } on ApiException catch (e) {
       if (mounted) {
@@ -165,6 +178,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
         lead: _lead,
         followUps: _data!['followUps'],
         pendingTap: _data!['pendingTap'],
+        outbox: widget.session.outbox,
       ),
     );
     _sheetOpen = false;
@@ -173,6 +187,58 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
       await _load();
     }
   }
+
+  Future<void> _modal(Widget sheet, String done) async {
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (_) => sheet,
+    );
+    if (saved == true) {
+      _toast(done);
+      await _load();
+    }
+  }
+
+  String get _nowLocal =>
+      _data!['nowLocal'] as String? ?? formatLocal(DateTime.now());
+
+  List<Map<String, dynamic>> _maps(dynamic v) =>
+      ((v as List?) ?? const []).cast<Map<String, dynamic>>();
+
+  void _bookVisit() => _modal(
+    BookVisitSheet(
+      api: _api,
+      lead: _lead,
+      nowLocal: _nowLocal,
+      people: _maps(_data!['visitPeople']),
+    ),
+    'Visit booked',
+  );
+
+  void _addTask() => _modal(
+    AddTaskSheet(api: _api, lead: _lead, nowLocal: _nowLocal),
+    'Task added',
+  );
+
+  void _changeStage() {
+    final stage = _data!['stage'] as Map<String, dynamic>?;
+    _modal(
+      StageSheet(
+        api: _api,
+        lead: _lead,
+        targets: _maps(stage?['targets']),
+        lostReasons: _maps(stage?['lostReasons']),
+        nowLocal: _nowLocal,
+      ),
+      'Stage changed',
+    );
+  }
+
+  void _openVisit(Map<String, dynamic> v) =>
+      _modal(VisitSheet(api: _api, visit: v), 'Visit updated');
 
   // --- sections -------------------------------------------------------------------------------
 
@@ -336,6 +402,11 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
         canLog && (l['phoneMasked'] != true || l['canRevealPhone'] == true);
     final dnc = l['contactStatus'] == 'DO_NOT_CONTACT';
     final pending = _data!['pendingTap'];
+    final canStage = _maps(
+      (_data!['stage'] as Map<String, dynamic>?)?['targets'],
+    ).any((t) => t['code'] != 'SITE_VISIT_SCHEDULED');
+    final canBook =
+        (_data!['visits'] as Map<String, dynamic>?)?['canSchedule'] == true;
     return Column(
       children: [
         if (pending != null)
@@ -398,9 +469,46 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
               label: const Text('Log an outcome without calling'),
             ),
           ),
+        if (canStage || canBook)
+          Row(
+            children: [
+              if (canStage)
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _changeStage,
+                    icon: const Icon(Icons.swap_horiz),
+                    label: const Text('Change stage'),
+                  ),
+                ),
+              if (canStage && canBook) const SizedBox(width: 10),
+              if (canBook)
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _bookVisit,
+                    icon: const Icon(Icons.add_location_alt_outlined),
+                    label: const Text('Book visit'),
+                  ),
+                ),
+            ],
+          ),
+        if (_canAddTask)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _addTask,
+              icon: const Icon(Icons.add_task),
+              label: const Text('Add a task or follow-up'),
+            ),
+          ),
       ],
     );
   }
+
+  bool get _canAddTask =>
+      _lead['canUpdate'] == true &&
+      widget.session.me!.can('task.create') &&
+      _lead['stage'] != 'WON' &&
+      _lead['stage'] != 'LOST';
 
   Widget _followUps() {
     final f = _data!['followUps'] as Map<String, dynamic>?;
@@ -469,17 +577,19 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
 
   Widget _visits() {
     final v = _data!['visits'] as Map<String, dynamic>?;
-    final list = ((v?['visits'] as List?) ?? const [])
-        .cast<Map<String, dynamic>>();
-    if (v == null || list.isEmpty) return const SizedBox.shrink();
+    if (v == null) return const SizedBox.shrink();
+    final list = _maps(v['visits']);
+    final canBook = v['canSchedule'] == true;
+    if (list.isEmpty && !canBook) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SectionLabel('Site visits'),
-        for (final s in list.take(3))
+        for (final s in list)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: AppCard(
+              onTap: () => _openVisit(s),
               child: Row(
                 children: [
                   const Icon(Icons.place_outlined, color: AppColors.muted),
@@ -493,7 +603,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         Text(
-                          '${dueText(s['scheduledFor'] as String?)} · ${label(const {}, s['status'] as String?)}',
+                          '${dueText(s['scheduledFor'] as String?)} · ${visitStatusLabel(s['status'] as String?)}',
                           style: const TextStyle(
                             fontSize: 13,
                             color: AppColors.muted,
@@ -502,10 +612,18 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                       ],
                     ),
                   ),
-                  if (s['outcomeDue'] == true) Pill.warn('Outcome due'),
+                  if (s['outcomeDue'] == true && s['canManage'] == true)
+                    Pill.warn('Outcome due'),
+                  const Icon(Icons.chevron_right, color: Color(0xFF98A2B3)),
                 ],
               ),
             ),
+          ),
+        if (canBook)
+          OutlinedButton.icon(
+            onPressed: _bookVisit,
+            icon: const Icon(Icons.add_location_alt_outlined),
+            label: const Text('Book a visit'),
           ),
       ],
     );

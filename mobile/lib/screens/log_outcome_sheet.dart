@@ -2,12 +2,19 @@ import 'package:material_ui/material_ui.dart';
 import 'package:uuid/uuid.dart';
 
 import '../api/api_client.dart';
+import '../outbox.dart';
 import '../format.dart';
 import '../theme.dart';
+import 'lead_sheets.dart';
+import 'when_picker.dart';
 
-/// FR-083/084 outcome sheet (POST /api/v1/interactions).
+/// FR-083/084 outcome sheet (POST /api/v1/interactions), with the same choices as the website's
+/// Log an interaction form (app 1.0.4, owner request 2026-11-23): channel, who made contact, what
+/// happened, when, duration, notes, the contact-status confirmation, an optional requirements
+/// update, and the follow-up (mark mine done, the next one at a chosen time with a title, or a
+/// reschedule with a reason).
 ///
-/// Outcomes and their labels come from the server (GET /interactions/defaults), so they always
+/// Channels, outcomes and labels come from the server (GET /interactions/defaults), so they always
 /// match the website. One idempotency key per opened sheet: pressing Save twice, or retrying on
 /// a bad connection, never logs the call twice.
 class LogOutcomeSheet extends StatefulWidget {
@@ -17,6 +24,7 @@ class LogOutcomeSheet extends StatefulWidget {
     required this.lead,
     required this.followUps,
     required this.pendingTap,
+    this.outbox,
   });
 
   final ApiClient api;
@@ -24,24 +32,61 @@ class LogOutcomeSheet extends StatefulWidget {
   final dynamic followUps;
   final dynamic pendingTap;
 
+  /// Where the outcome waits when there is no connection (null: show the error instead).
+  final Outbox? outbox;
+
   @override
   State<LogOutcomeSheet> createState() => _LogOutcomeSheetState();
 }
 
+/// Requirement fields the sheet can update, with the lead's current value as text.
+const _selectFields = {
+  'transactionType': 'Looking to',
+  'propertyType': 'Property type',
+  'purpose': 'Purpose',
+  'timeline': 'Timeline',
+  'intent': 'Intent',
+};
+const _textFields = {
+  'preferredCity': 'City',
+  'preferredLocalities': 'Areas (separate with commas)',
+  'budgetMin': 'Budget from (AED)',
+  'budgetMax': 'Budget up to (AED)',
+  'bhkMin': 'Bedrooms from',
+  'bhkMax': 'Bedrooms up to',
+};
+
 class _LogOutcomeSheetState extends State<LogOutcomeSheet> {
   final _idempotencyKey = const Uuid().v4();
   final _notes = TextEditingController();
-  final _reason = TextEditingController();
+  final _duration = TextEditingController();
+  final _statusReason = TextEditingController();
+  final _evidence = TextEditingController();
+  final _nextTitle = TextEditingController();
+  final _rescheduleReason = TextEditingController();
+  final Map<String, TextEditingController> _text = {
+    for (final k in _textFields.keys) k: TextEditingController(),
+  };
+  final Map<String, String> _select = {};
+  final Map<String, String> _initial = {};
+
   Map<String, dynamic>? _defaults;
   String? _loadError;
   late String _channel;
+  late String _direction;
   String? _outcome;
+  late String _when;
+  bool _confirmInvalid = false;
   bool _confirmStatus = false;
+  String? _statusMethod;
   bool _completeOwn = true;
-  bool _scheduleNext = true;
-  int _nextInDays = 1;
+  bool _setNext = true;
+  String? _next;
   bool _saving = false;
   List<String> _errors = const [];
+
+  Map<String, dynamic> get _lead => widget.lead;
+  bool get _dnc => _lead['contactStatus'] == 'DO_NOT_CONTACT';
 
   Map<String, dynamic>? get _ownFollowUp {
     final f = widget.followUps as Map<String, dynamic>?;
@@ -56,6 +101,8 @@ class _LogOutcomeSheetState extends State<LogOutcomeSheet> {
   bool get _canSchedule =>
       (widget.followUps as Map<String, dynamic>?)?['canSchedule'] == true;
 
+  bool get _closed => _lead['stage'] == 'WON' || _lead['stage'] == 'LOST';
+
   @override
   void initState() {
     super.initState();
@@ -63,7 +110,36 @@ class _LogOutcomeSheetState extends State<LogOutcomeSheet> {
     _channel = tap?['channel'] == 'WHATSAPP_APP'
         ? 'WHATSAPP_APP_MESSAGE'
         : 'PHONE_NATIVE';
+    // On a Do-Not-Contact lead only contact the customer started can be logged.
+    _direction = _dnc ? 'INBOUND' : 'OUTBOUND';
+    _when = tap?['occurredAt'] as String? ?? formatLocal(DateTime.now());
+    for (final k in _selectFields.keys) {
+      _initial[k] = '${_lead[k] ?? ''}';
+      _select[k] = _initial[k]!;
+    }
+    for (final k in _textFields.keys) {
+      final v = _lead[k];
+      final s = v is List ? v.join(', ') : '${v ?? ''}';
+      _initial[k] = s;
+      _text[k]!.text = s;
+    }
     _load();
+  }
+
+  @override
+  void dispose() {
+    for (final c in [
+      _notes,
+      _duration,
+      _statusReason,
+      _evidence,
+      _nextTitle,
+      _rescheduleReason,
+      ..._text.values,
+    ]) {
+      c.dispose();
+    }
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -71,28 +147,63 @@ class _LogOutcomeSheetState extends State<LogOutcomeSheet> {
       final d = await widget.api.get(
         '/interactions/defaults',
       ) as Map<String, dynamic>;
-      if (mounted) setState(() => _defaults = d);
+      if (!mounted) return;
+      setState(() {
+        _defaults = d;
+        if (widget.pendingTap == null) _when = d['occurredAt'] as String;
+        final now = parseLocal(d['occurredAt'] as String);
+        _next = formatLocal(DateTime(now.year, now.month, now.day + 1, 10));
+      });
     } on ApiException catch (e) {
       if (mounted) setState(() => _loadError = e.message);
     }
   }
 
-  List<Map<String, dynamic>> get _outcomes {
-    final channels = ((_defaults?['channels'] as List?) ?? const [])
-        .cast<Map<String, dynamic>>();
-    final c = channels.where((c) => c['code'] == _channel).firstOrNull;
-    return ((c?['outcomes'] as List?) ?? const []).cast<Map<String, dynamic>>();
+  // --- what the server sent -------------------------------------------------------------------
+
+  List<Map<String, dynamic>> _maps(dynamic v) =>
+      ((v as List?) ?? const []).cast<Map<String, dynamic>>();
+
+  /// Every channel (app 1.0.4); an older server sends the three outbound ones only.
+  List<Map<String, dynamic>> get _channels {
+    final all = _maps(_defaults?['allChannels']);
+    if (all.isNotEmpty) return all;
+    return [
+      for (final c in _maps(_defaults?['channels']))
+        {...c, 'outbound': c['outcomes'], 'inbound': const []},
+    ];
   }
+
+  Map<String, dynamic>? get _channelData =>
+      _channels.where((c) => c['code'] == _channel).firstOrNull;
+
+  List<Map<String, dynamic>> get _outcomes =>
+      _maps(_channelData?[_direction == 'INBOUND' ? 'inbound' : 'outbound']);
 
   Map<String, dynamic>? get _selected =>
       _outcomes.where((o) => o['code'] == _outcome).firstOrNull;
 
-  /// The next follow-up, at 10:00 org time, [_nextInDays] days after the server's "now".
-  String _nextDueAt() {
-    final now = parseLocal(_defaults!['occurredAt'] as String);
-    final d = DateTime(now.year, now.month, now.day + _nextInDays, 10);
-    return formatLocal(d);
+  /// The contact-status change saving would make (the website's contactStatusEffect).
+  String? get _statusChange {
+    final to = _selected?['requestsStatus'] as String?;
+    final current = _lead['contactStatus'] as String?;
+    if (to == null || current == to || current == 'DO_NOT_CONTACT') return null;
+    return to;
   }
+
+  String? get _statusUnchanged {
+    final to = _selected?['requestsStatus'] as String?;
+    final current = _lead['contactStatus'] as String?;
+    if (to == null || _statusChange != null) return null;
+    if (current == to) {
+      return to == 'DO_NOT_CONTACT'
+          ? 'This lead is already marked do not contact.'
+          : "This lead's number is already marked invalid.";
+    }
+    return 'This lead stays do not contact. Its number is not marked invalid.';
+  }
+
+  // --- save -----------------------------------------------------------------------------------
 
   Future<void> _save() async {
     if (_outcome == null) {
@@ -103,52 +214,238 @@ class _LogOutcomeSheetState extends State<LogOutcomeSheet> {
       _saving = true;
       _errors = const [];
     });
-    final tap = widget.pendingTap as Map<String, dynamic>?;
     final own = _ownFollowUp;
-    final requests = _selected?['requestsStatus'];
-    final closed =
-        widget.lead['stage'] == 'WON' || widget.lead['stage'] == 'LOST';
-    // Same rules as the web sheet: completing one's own follow-up and/or setting the next one;
-    // with the own follow-up kept open, the next date moves it (a reschedule).
-    final nextDue =
-        _scheduleNext &&
-            !closed &&
-            requests == null &&
-            (own != null || _canSchedule)
-        ? _nextDueAt()
+    final change = _statusChange;
+    final followUpOpen = !_closed && change == null;
+    final moving = own != null && !_completeOwn;
+    final nextDue = followUpOpen && _setNext && (own != null || _canSchedule)
+        ? _next
         : null;
-    final rescheduling = own != null && !_completeOwn && nextDue != null;
+    final changed = <String, String>{};
+    if (_lead['canUpdate'] == true) {
+      for (final k in _selectFields.keys) {
+        if (_select[k] != _initial[k]) changed[k] = _select[k]!;
+      }
+      for (final k in _textFields.keys) {
+        final v = _text[k]!.text.trim();
+        if (v != _initial[k]!.trim()) changed[k] = v;
+      }
+    }
     final body = <String, dynamic>{
-      'leadId': widget.lead['id'],
+      'leadId': _lead['id'],
       'idempotencyKey': _idempotencyKey,
-      'version': widget.lead['version'],
+      'version': _lead['version'],
       'channel': _channel,
-      'direction': 'OUTBOUND',
+      'direction': _direction,
       'outcome': _outcome,
-      'occurredAt': tap?['occurredAt'] ?? _defaults!['occurredAt'],
+      'occurredAt': _when,
       'notes': _notes.text,
-      if (requests != null) 'confirmStatusChange': _confirmStatus,
-      if (requests != null && _reason.text.trim().isNotEmpty)
-        'statusReason': _reason.text.trim(),
-      // They told us on this call: a verbal request (DNC_METHODS).
-      if (requests == 'DO_NOT_CONTACT') 'statusMethod': 'VERBAL',
-      if (own != null) ...{
+      if (_channelData?['durationAllowed'] == true &&
+          _duration.text.trim().isNotEmpty)
+        'durationMinutes': _duration.text.trim(),
+      if (_direction == 'OUTBOUND' && _lead['contactStatus'] == 'INVALID')
+        'confirmInvalidNumber': _confirmInvalid,
+      if (change != null) ...{
+        'confirmStatusChange': _confirmStatus,
+        'statusReason': _statusReason.text.trim(),
+        if (change == 'DO_NOT_CONTACT') 'statusMethod': _statusMethod ?? '',
+        if (_evidence.text.trim().isNotEmpty)
+          'statusEvidenceRef': _evidence.text.trim(),
+      },
+      if (changed.isNotEmpty) ...{
+        ...changed,
+        'requirementFields': changed.keys.join(','),
+      },
+      if (own != null && followUpOpen) ...{
         'followUpTaskId': own['id'],
         'followUpVersion': own['version'],
-        'completeFollowUp': _completeOwn && requests == null,
+        'completeFollowUp': _completeOwn,
       },
       'nextDueAt': ?nextDue,
-      if (rescheduling && own['rescheduleNeedsReason'] == true)
-        'rescheduleReason': 'Moved after a call',
+      if (nextDue != null && moving)
+        'rescheduleReason': _rescheduleReason.text.trim(),
+      if (nextDue != null && !moving && _nextTitle.text.trim().isNotEmpty)
+        'nextTitle': _nextTitle.text.trim(),
     };
     try {
       await widget.api.post('/interactions', body);
       if (mounted) Navigator.of(context).pop(true);
     } on ApiException catch (e) {
+      final outbox = widget.outbox;
+      if (e.status == 0 && outbox != null) {
+        // No signal: keep it on the phone; the same idempotency key makes the later send safe.
+        await outbox.add(body, leadName: '${_lead['fullName'] ?? 'this lead'}');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'No signal. The outcome is saved on your phone and will be sent automatically.',
+            ),
+          ),
+        );
+        Navigator.of(context).pop(false);
+        return;
+      }
       if (mounted) setState(() => _errors = e.allMessages);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  // --- view -----------------------------------------------------------------------------------
+
+  /// A tinted panel. A Material (not a coloured box) so the checkbox rows inside it still paint
+  /// their ink.
+  Widget _box(Color bg, List<Widget> children) => Padding(
+    padding: const EdgeInsets.only(top: 12),
+    child: Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: children,
+        ),
+      ),
+    ),
+  );
+
+  Widget _check(bool value, ValueChanged<bool> on, String text) =>
+      CheckboxListTile(
+        contentPadding: EdgeInsets.zero,
+        controlAffinity: ListTileControlAffinity.leading,
+        value: value,
+        onChanged: (v) => setState(() => on(v ?? false)),
+        title: Text(text, style: const TextStyle(fontSize: 14)),
+      );
+
+  Widget _requirements() {
+    final opts = (_defaults?['requirementOptions'] as Map?) ?? const {};
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      title: const Text(
+        'Update requirements (optional)',
+        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+      ),
+      children: [
+        for (final e in _selectFields.entries)
+          if (opts[e.key] is List)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: DropdownButtonFormField<String>(
+                initialValue: _select[e.key],
+                decoration: InputDecoration(labelText: e.value),
+                items: [
+                  const DropdownMenuItem(value: '', child: Text('—')),
+                  for (final o in _maps(opts[e.key]))
+                    DropdownMenuItem(
+                      value: o['code'] as String,
+                      child: Text(o['label'] as String? ?? ''),
+                    ),
+                ],
+                onChanged: (v) => setState(() => _select[e.key] = v ?? ''),
+              ),
+            ),
+        for (final e in _textFields.entries)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: TextField(
+              controller: _text[e.key],
+              keyboardType:
+                  e.key.startsWith('budget') || e.key.startsWith('bhk')
+                  ? TextInputType.number
+                  : TextInputType.text,
+              decoration: InputDecoration(labelText: e.value),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _followUp() {
+    final own = _ownFollowUp;
+    if (_closed) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 12),
+        child: Text(
+          'Won and lost leads take no follow-ups.',
+          style: TextStyle(color: AppColors.muted),
+        ),
+      );
+    }
+    if (own == null && !_canSchedule) return const SizedBox.shrink();
+    final moving = own != null && !_completeOwn;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionLabel('Follow-up'),
+        if (own != null)
+          _check(
+            _completeOwn,
+            (v) => _completeOwn = v,
+            'Mark my follow-up for ${dueText(own['dueAt'] as String?)} done',
+          ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          value: _setNext,
+          onChanged: (v) => setState(() => _setNext = v),
+          title: Text(moving ? 'Reschedule my follow-up' : 'Next follow-up'),
+        ),
+        if (_setNext && _next != null) ...[
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final (d, t) in const [
+                (1, 'Tomorrow'),
+                (2, 'In 2 days'),
+                (7, 'Next week'),
+              ])
+                ActionChip(
+                  label: Text(t),
+                  onPressed: () => setState(() {
+                    final now = parseLocal(_defaults!['occurredAt'] as String);
+                    final cur = parseLocal(_next!);
+                    _next = formatLocal(
+                      DateTime(
+                        now.year,
+                        now.month,
+                        now.day + d,
+                        cur.hour,
+                        cur.minute,
+                      ),
+                    );
+                  }),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          WhenPicker(
+            label: moving ? 'Reschedule to' : 'Next follow-up on',
+            value: _next!,
+            onChanged: (s) => setState(() => _next = s),
+          ),
+          const SizedBox(height: 10),
+          if (moving)
+            TextField(
+              controller: _rescheduleReason,
+              decoration: InputDecoration(
+                labelText: own['rescheduleNeedsReason'] == true
+                    ? 'Reason for rescheduling (needed)'
+                    : 'Reason for rescheduling (optional)',
+              ),
+            )
+          else
+            TextField(
+              controller: _nextTitle,
+              maxLength: 200,
+              decoration: const InputDecoration(
+                labelText: 'What to follow up on (optional)',
+              ),
+            ),
+        ],
+      ],
+    );
   }
 
   @override
@@ -161,8 +458,6 @@ class _LogOutcomeSheetState extends State<LogOutcomeSheet> {
             : MessageView(message: _loadError!, onRetry: _load),
       );
     }
-    final channels = ((_defaults!['channels'] as List?) ?? const [])
-        .cast<Map<String, dynamic>>();
     final groups = <String, List<Map<String, dynamic>>>{};
     for (final o in _outcomes) {
       groups.putIfAbsent(o['group'] as String, () => []).add(o);
@@ -173,10 +468,11 @@ class _LogOutcomeSheetState extends State<LogOutcomeSheet> {
       'INVALID': 'Number problem',
       'OTHER': 'Other',
     };
-    final requests = _selected?['requestsStatus'];
-    final own = _ownFollowUp;
-    final closed =
-        widget.lead['stage'] == 'WON' || widget.lead['stage'] == 'LOST';
+    final directions = _maps(_defaults!['directions']);
+    final change = _statusChange;
+    final unchanged = _statusUnchanged;
+    final moves =
+        _selected?['group'] == 'CONNECTED' && _lead['stage'] == 'ASSIGNED';
 
     return Padding(
       padding: EdgeInsets.only(
@@ -187,28 +483,57 @@ class _LogOutcomeSheetState extends State<LogOutcomeSheet> {
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         children: [
           Text(
-            'Log outcome · ${widget.lead['fullName']}',
+            'Log outcome · ${_lead['fullName']}',
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
+          if (_dnc)
+            const Padding(
+              padding: EdgeInsets.only(top: 6),
+              child: Text(
+                'This lead asked not to be contacted. You can log only contact they started; '
+                'it does not permit contacting them.',
+                style: TextStyle(color: AppColors.muted, fontSize: 13),
+              ),
+            ),
           const SizedBox(height: 12),
-          SegmentedButton<String>(
-            segments: [
-              for (final c in channels)
-                ButtonSegment(
+          DropdownButtonFormField<String>(
+            initialValue: _channel,
+            decoration: const InputDecoration(labelText: 'Channel'),
+            items: [
+              for (final c in _channels)
+                DropdownMenuItem(
                   value: c['code'] as String,
-                  label: Text(
-                    c['label'] as String,
-                    style: const TextStyle(fontSize: 12),
-                  ),
+                  child: Text(c['label'] as String? ?? ''),
                 ),
             ],
-            selected: {_channel},
-            showSelectedIcon: false,
-            onSelectionChanged: (s) => setState(() {
-              _channel = s.first;
+            onChanged: (v) => setState(() {
+              _channel = v ?? _channel;
               if (!_outcomes.any((o) => o['code'] == _outcome)) _outcome = null;
             }),
           ),
+          if (directions.isNotEmpty && !_dnc) ...[
+            const SizedBox(height: 12),
+            SegmentedButton<String>(
+              segments: [
+                for (final d in directions)
+                  ButtonSegment(
+                    value: d['code'] as String,
+                    label: Text(
+                      d['label'] as String? ?? '',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+              ],
+              selected: {_direction},
+              showSelectedIcon: false,
+              onSelectionChanged: (s) => setState(() {
+                _direction = s.first;
+                if (!_outcomes.any((o) => o['code'] == _outcome)) {
+                  _outcome = null;
+                }
+              }),
+            ),
+          ],
           for (final g in ['CONNECTED', 'NOT_CONNECTED', 'INVALID', 'OTHER'])
             if (groups[g] != null) ...[
               SectionLabel(groupTitles[g]!),
@@ -228,88 +553,97 @@ class _LogOutcomeSheetState extends State<LogOutcomeSheet> {
                 ],
               ),
             ],
-          if (requests != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.warnSoft,
-                borderRadius: BorderRadius.circular(12),
+          if (moves)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text(
+                'Saving moves the lead from Assigned to Contacted.',
+                style: TextStyle(fontSize: 13),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: _confirmStatus,
-                    onChanged: (v) =>
-                        setState(() => _confirmStatus = v ?? false),
-                    title: Text(
-                      requests == 'DO_NOT_CONTACT'
-                          ? 'This lead asked not to be contacted. Mark the lead Do not contact.'
-                          : "The number is invalid. Mark the lead's number invalid.",
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ),
-                  TextField(
-                    controller: _reason,
-                    decoration: const InputDecoration(labelText: 'Reason'),
-                  ),
-                ],
+            ),
+          const SizedBox(height: 16),
+          WhenPicker(
+            label: 'When',
+            value: _when,
+            onChanged: (s) => setState(() => _when = s),
+          ),
+          if (_channelData?['durationAllowed'] == true) ...[
+            const SizedBox(height: 12),
+            TextField(
+              controller: _duration,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Duration in minutes (optional)',
               ),
             ),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           TextField(
             controller: _notes,
             minLines: 2,
             maxLines: 5,
+            maxLength: 2000,
             decoration: const InputDecoration(labelText: 'Notes (optional)'),
           ),
-          if (!closed && requests == null) ...[
-            const SizedBox(height: 8),
-            if (own != null)
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: _completeOwn,
-                onChanged: (v) => setState(() => _completeOwn = v),
-                title: const Text('Mark my follow-up done'),
-                subtitle: Text(dueText(own['dueAt'] as String?)),
+          if (_direction == 'OUTBOUND' && _lead['contactStatus'] == 'INVALID')
+            _check(
+              _confirmInvalid,
+              (v) => _confirmInvalid = v,
+              "This lead's number is marked invalid. I contacted them anyway.",
+            ),
+          if (change != null)
+            _box(AppColors.warnSoft, [
+              Text(
+                change == 'DO_NOT_CONTACT'
+                    ? 'Saving marks this lead do not contact. Every channel is then blocked, '
+                          'and only an Owner or Admin can lift it.'
+                    : "Saving marks this lead's number invalid. Contacting it then needs a "
+                          'confirmation.',
+                style: const TextStyle(fontSize: 13),
               ),
-            if (own != null || _canSchedule)
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: _scheduleNext,
-                onChanged: (v) => setState(() => _scheduleNext = v),
-                title: Text(
-                  own != null && !_completeOwn
-                      ? 'Move my follow-up'
-                      : 'Next follow-up',
+              _check(
+                _confirmStatus,
+                (v) => _confirmStatus = v,
+                change == 'DO_NOT_CONTACT'
+                    ? 'They asked not to be contacted. Mark the lead do not contact.'
+                    : 'The number is wrong or invalid. Mark it invalid.',
+              ),
+              if (change == 'DO_NOT_CONTACT')
+                DropdownButtonFormField<String>(
+                  initialValue: _statusMethod,
+                  decoration: const InputDecoration(
+                    labelText: 'How they asked',
+                  ),
+                  items: [
+                    for (final m in _maps(_defaults!['dncMethods']))
+                      DropdownMenuItem(
+                        value: m['code'] as String,
+                        child: Text(m['label'] as String? ?? ''),
+                      ),
+                  ],
+                  onChanged: (v) => setState(() => _statusMethod = v),
+                ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _statusReason,
+                decoration: const InputDecoration(labelText: 'Reason'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _evidence,
+                decoration: const InputDecoration(
+                  labelText: 'Evidence reference (optional)',
                 ),
               ),
-            if (_scheduleNext && (own != null || _canSchedule))
-              Wrap(
-                spacing: 8,
-                children: [
-                  for (final (d, t) in const [
-                    (1, 'Tomorrow'),
-                    (2, 'In 2 days'),
-                    (3, 'In 3 days'),
-                    (7, 'Next week'),
-                  ])
-                    ChoiceChip(
-                      label: Text('$t 10 am'),
-                      selected: _nextInDays == d,
-                      onSelected: (_) => setState(() => _nextInDays = d),
-                    ),
-                ],
-              ),
-          ],
-          if (_errors.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            for (final e in _errors)
-              Text(e, style: const TextStyle(color: AppColors.red)),
-          ],
+            ]),
+          if (unchanged != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(unchanged, style: const TextStyle(fontSize: 13)),
+            ),
+          if (_lead['canUpdate'] == true) _requirements(),
+          if (change == null) _followUp(),
+          FormErrors(_errors),
           const SizedBox(height: 16),
           FilledButton(
             onPressed: _saving ? null : _save,
@@ -322,7 +656,7 @@ class _LogOutcomeSheetState extends State<LogOutcomeSheet> {
                       color: Colors.white,
                     ),
                   )
-                : const Text('Save'),
+                : const Text('Save interaction'),
           ),
         ],
       ),

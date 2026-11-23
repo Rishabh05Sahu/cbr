@@ -3,6 +3,8 @@ import 'package:material_ui/material_ui.dart';
 import '../api/api_client.dart';
 import '../format.dart';
 import '../session.dart';
+import 'dashboard_screen.dart';
+import 'people_screen.dart';
 import '../theme.dart';
 import 'assign_sheet.dart';
 import 'lead_detail_screen.dart';
@@ -317,17 +319,23 @@ class TeamScreen extends StatelessWidget {
             tile(
               Icons.bar_chart,
               'Team dashboard',
-              'Calls, conversions and response times (website)',
-              () => openWebsite('/app/dashboard'),
-              web: true,
+              'Calls, conversions and response times',
+              () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => DashboardScreen(session: session),
+                ),
+              ),
             ),
           if (me.can('user.read'))
             tile(
               Icons.groups_outlined,
               'People',
-              'Members, roles and invitations (website)',
-              () => openWebsite('/app/settings/members'),
-              web: true,
+              'Members, roles and invitations',
+              () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => PeopleScreen(session: session),
+                ),
+              ),
             ),
         ],
       ),

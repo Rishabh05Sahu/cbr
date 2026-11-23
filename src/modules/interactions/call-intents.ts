@@ -9,6 +9,7 @@
 // reveal (ADR-0013). The number leaves the server only in the link returned to this person.
 import { z } from 'zod';
 import * as leads from '@/modules/leads';
+import { scopeFilter } from '@/modules/leads/access';
 import { authorize, type RequestContext } from '@/platform/authz';
 import { tenantRunner } from '@/platform/db';
 import { forbidden, ruleViolation } from '@/platform/errors';
@@ -115,5 +116,77 @@ export async function pendingCallIntent(
       createdAt: tap.createdAt,
       occurredAt: orgLocalInputValue(tap.createdAt, timeZone),
     };
+  });
+}
+
+/** How far back My Day looks for calls with no outcome logged (one working day). */
+export const UNLOGGED_WINDOW_MS = 24 * 3600 * 1000;
+
+export interface UnloggedCall {
+  intentId: string;
+  leadId: string;
+  leadName: string;
+  channel: IntentChannel;
+  createdAt: Date;
+  /** Org-local "YYYY-MM-DDTHH:mm" of the tap, for the outcome sheet's "when". */
+  occurredAt: string;
+}
+
+/**
+ * My Day "unlogged calls" (FR-082, app): for each lead the caller tapped Call or WhatsApp on in
+ * the last day, the latest tap with no outcome logged by them on that lead since. Newest first,
+ * at most 20. Only leads still visible to the caller are listed.
+ */
+export async function unloggedCalls(
+  ctx: RequestContext,
+  now = new Date(),
+): Promise<UnloggedCall[]> {
+  authorize(ctx, 'interaction.create');
+  if (ctx.kind !== 'member') return [];
+  return tenantRunner().withTenant(ctx.tenant, async (tx) => {
+    const taps = await tx.callIntent.findMany({
+      where: {
+        userId: ctx.userId,
+        createdAt: { gt: new Date(now.getTime() - UNLOGGED_WINDOW_MS) },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+      select: { id: true, leadId: true, channel: true, createdAt: true },
+    });
+    const latest = new Map<string, (typeof taps)[number]>();
+    for (const t of taps) if (!latest.has(t.leadId)) latest.set(t.leadId, t);
+    if (!latest.size) return [];
+    const logged = await tx.interaction.findMany({
+      where: {
+        userId: ctx.userId,
+        leadId: { in: [...latest.keys()] },
+        loggedAt: { gte: new Date(now.getTime() - UNLOGGED_WINDOW_MS) },
+      },
+      select: { leadId: true, loggedAt: true },
+    });
+    const open = [...latest.values()].filter(
+      (t) => !logged.some((i) => i.leadId === t.leadId && i.loggedAt >= t.createdAt),
+    );
+    if (!open.length) return [];
+    const scope = authorize(ctx, 'lead.read');
+    const visible = await tx.lead.findMany({
+      where: {
+        AND: [{ id: { in: open.map((t) => t.leadId) } }, await scopeFilter(tx, ctx, scope)],
+      },
+      select: { id: true, fullName: true },
+    });
+    const names = new Map(visible.map((l) => [l.id, l.fullName]));
+    const { timeZone } = await tx.organization.findFirstOrThrow({ select: { timeZone: true } });
+    return open
+      .filter((t) => names.has(t.leadId))
+      .slice(0, 20)
+      .map((t) => ({
+        intentId: t.id,
+        leadId: t.leadId,
+        leadName: names.get(t.leadId)!,
+        channel: t.channel as IntentChannel,
+        createdAt: t.createdAt,
+        occurredAt: orgLocalInputValue(t.createdAt, timeZone),
+      }));
   });
 }
