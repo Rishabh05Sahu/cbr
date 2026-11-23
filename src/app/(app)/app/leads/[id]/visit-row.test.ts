@@ -13,6 +13,7 @@ const { VisitRow } = await import('./visit-row');
 const visit = (over: Partial<VisitView> = {}): VisitView => ({
   id: 'v1',
   scheduledFor: new Date('2026-11-02T05:00:00Z'),
+  scheduledForLocal: '2026-11-02T10:30',
   location: 'Synthetic site office',
   status: 'SCHEDULED',
   rescheduleCount: 0,

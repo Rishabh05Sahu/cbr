@@ -70,34 +70,19 @@ export default async function MyDayPage() {
           </Alert>
         </div>
       )}
-      {can(ctx, 'task.create') && <NewTask people={people} invitees={invitees} />}
-      {can(ctx, 'task.recur') && <Repeating series={series} invitees={invitees} />}
-      {visits.length > 0 && (
-        <section aria-labelledby="myday-visits" className="mb-6">
-          <h2
-            id="myday-visits"
-            className="mb-2 flex items-center gap-2 text-base font-semibold text-slate-900"
-          >
-            Your site visits <Badge>{visits.length}</Badge>
-          </h2>
-          <Card>
-            <ul className="divide-y divide-slate-100">
-              {visits.map((v) => (
-                <VisitEntry key={v.id} v={v} withDate />
-              ))}
-            </ul>
-          </Card>
-        </section>
-      )}
+      {/* Follow-ups and tasks first (owner request 2026-11-23): on a phone the forms below used
+          to push them far down the page. */}
       {total === 0 ? (
-        <Card>
-          <EmptyState>
-            Nothing due in the next 7 days. Schedule a follow-up from a lead&apos;s page, or add a
-            task above.
-          </EmptyState>
-        </Card>
+        <div className="mb-6">
+          <Card>
+            <EmptyState>
+              Nothing due in the next 7 days. Schedule a follow-up from a lead&apos;s page, or add a
+              task below.
+            </EmptyState>
+          </Card>
+        </div>
       ) : (
-        <div className="space-y-6">
+        <div className="mb-6 space-y-6">
           {SECTIONS.map((s) => (
             <section key={s.key} aria-labelledby={`myday-${s.key}`}>
               <h2
@@ -124,8 +109,25 @@ export default async function MyDayPage() {
           ))}
         </div>
       )}
+      {visits.length > 0 && (
+        <section aria-labelledby="myday-visits" className="mb-6">
+          <h2
+            id="myday-visits"
+            className="mb-2 flex items-center gap-2 text-base font-semibold text-slate-900"
+          >
+            Your site visits <Badge>{visits.length}</Badge>
+          </h2>
+          <Card>
+            <ul className="divide-y divide-slate-100">
+              {visits.map((v) => (
+                <VisitEntry key={v.id} v={v} withDate />
+              ))}
+            </ul>
+          </Card>
+        </section>
+      )}
       {day.later.length > 0 && (
-        <section aria-labelledby="myday-later" className="mt-6">
+        <section aria-labelledby="myday-later" className="mb-6">
           <h2
             id="myday-later"
             className="mb-2 flex items-center gap-2 text-base font-semibold text-slate-900"
@@ -147,6 +149,8 @@ export default async function MyDayPage() {
           </Card>
         </section>
       )}
+      {can(ctx, 'task.create') && <NewTask people={people} invitees={invitees} />}
+      {can(ctx, 'task.recur') && <Repeating series={series} invitees={invitees} />}
     </>
   );
 }
@@ -304,7 +308,7 @@ const asView = (t: MyDayItem, overdue: boolean): FollowUpView => ({
   cancelReason: null,
   version: t.version,
   overdue,
-  canUpdate: t.canUpdate,
+  canUpdate: t.canUpdate || t.canUpdateOnLead,
   rescheduleNeedsReason: t.rescheduleNeedsReason,
   endAt: t.endAt,
   location: t.location,
@@ -328,12 +332,43 @@ function Item({
         <p className="text-xs text-slate-600">No lead</p>
       </FollowUpRow>
     );
+  // Owner request 2026-11-23: Mark done and Reschedule on My Day for the caller's own tasks on
+  // leads they may change, through the lead page's actions (the server re-checks the lead).
+  if (t.canUpdateOnLead && t.lead)
+    return (
+      <FollowUpRow task={asView(t, overdue)} leadId={t.lead.id} people={invitees}>
+        <p className="text-sm">
+          {t.type === 'FOLLOW_UP' && <Badge>Follow-up</Badge>}{' '}
+          <Link
+            href={`/app/leads/${t.lead.id}` as '/app/leads'}
+            className="tap font-medium text-blue-900 underline-offset-2 hover:underline"
+          >
+            {t.lead.fullName}
+          </Link>
+          <span className="text-slate-600">
+            {' '}
+            · {STAGE_LABELS[t.lead.stage as LeadStage] ?? t.lead.stage}
+          </span>
+          {t.lead.intent && (
+            <>
+              {' '}
+              <Badge>{label(t.lead.intent)}</Badge>
+            </>
+          )}
+        </p>
+        {t.rescheduleCount > 0 && (
+          <p className="text-xs text-slate-600">
+            Rescheduled {t.rescheduleCount} time{t.rescheduleCount === 1 ? '' : 's'}
+          </p>
+        )}
+      </FollowUpRow>
+    );
   return (
     <li className="space-y-1 py-3 text-sm">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className="font-medium text-slate-900">{fmtDateTime(t.dueAt)}</span>
         {overdue && !t.attending && <Badge tone="warn">Overdue</Badge>}
-        {t.type !== 'FOLLOW_UP' && <Badge>{TASK_TYPE_LABELS[t.type]}</Badge>}
+        <Badge>{TASK_TYPE_LABELS[t.type]}</Badge>
         {t.attending && <Badge>Invited</Badge>}
         {t.seriesId && <Badge>Repeats</Badge>}
         {PRIORITY[t.priority] && <Badge>{PRIORITY[t.priority]} priority</Badge>}

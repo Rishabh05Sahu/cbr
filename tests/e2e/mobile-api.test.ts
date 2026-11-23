@@ -5,7 +5,9 @@
 import { randomInt } from 'node:crypto';
 import { beforeAll, describe, expect, it } from 'vitest';
 import * as leads from '@/modules/leads';
+import * as tasks from '@/modules/tasks';
 import * as teams from '@/modules/teams';
+import * as visits from '@/modules/visits';
 import { migrator } from '../support/db';
 import { actorIn, PASSWORD, seedOrg } from '../support/factory';
 import { authenticators, totp } from '../support/totp';
@@ -519,5 +521,122 @@ describe('phone push registration (ADR-0027 slice 5)', () => {
     expect(
       (await anon.api('/push-devices', { method: 'POST', body: { token: fcmToken() } })).status,
     ).toBe(401);
+  });
+});
+
+describe('visits and My Day actions in the app (1.0.3)', () => {
+  /** An org-local datetime-local value `minutes` from now (the seeded org is Asia/Kolkata). */
+  const local = (minutes: number) =>
+    new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'Asia/Kolkata',
+      dateStyle: 'short',
+      timeStyle: 'short',
+    })
+      .format(new Date(Date.now() + minutes * 60_000))
+      .replace(' ', 'T');
+
+  it('an executive lists and confirms their visit; another executive and another org cannot', async () => {
+    const e1 = await actorIn(A.users.exec1, A.orgId);
+    const lead = await created(
+      leads.createLead(e1.ctx, {
+        fullName: 'Visit Mobile',
+        primaryPhone: '9811100021',
+        // Requirements make the lead qualifiable, which scheduling a visit needs.
+        transactionType: 'BUY',
+        propertyType: 'APARTMENT',
+        preferredCity: 'Dubai',
+        budgetMax: '2M',
+      }),
+    );
+    const { id } = await visits.scheduleVisit(e1.ctx, lead, {
+      scheduledFor: local(3 * 24 * 60),
+      location: 'Synthetic tower lobby',
+    });
+    const app = await appFor(A.users.exec1, A.orgId);
+    const list = await json(await app.api('/visits'));
+    expect(list.ok, JSON.stringify(list)).toBe(true);
+    const mine = list.data.open.find((v: { id: string }) => v.id === id);
+    expect(mine).toMatchObject({ canManage: true, lead: { id: lead }, outcomeDue: false });
+    expect(mine.scheduledForLocal).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d$/);
+
+    // Missing reason: 422 with the field; then confirm with the version.
+    const noReason = await app.api(`/visits/${id}`, {
+      method: 'POST',
+      body: { action: 'cancel', version: mine.version },
+    });
+    expect(noReason.status).toBe(422);
+    const ok = await json(
+      await app.api(`/visits/${id}`, {
+        method: 'POST',
+        body: { action: 'confirm', version: mine.version, orgId: B.orgId },
+      }),
+    );
+    expect(ok.ok, JSON.stringify(ok)).toBe(true);
+    expect(
+      (await json(await app.api('/visits'))).data.open.find((v: { id: string }) => v.id === id)
+        .status,
+    ).toBe('CONFIRMED');
+
+    const other = await appFor(A.users.exec2, A.orgId);
+    expect(
+      (await json(await other.api('/visits'))).data.open.map((v: { id: string }) => v.id),
+    ).not.toContain(id);
+    expect(
+      (
+        await other.api(`/visits/${id}`, {
+          method: 'POST',
+          body: { action: 'confirm', version: 2 },
+        })
+      ).status,
+    ).toBe(404);
+    const bApp = await appFor(B.users.owner, B.orgId);
+    expect(
+      (
+        await bApp.api(`/visits/${id}`, {
+          method: 'POST',
+          body: { action: 'cancel', version: 2, reason: 'x' },
+        })
+      ).status,
+    ).toBe(404);
+  });
+
+  it('an executive reschedules their follow-up from My Day; others cannot', async () => {
+    const e1 = await actorIn(A.users.exec1, A.orgId);
+    const lead = await created(
+      leads.createLead(e1.ctx, { fullName: 'Follow Mobile', primaryPhone: '9811100022' }),
+    );
+    await tasks.scheduleFollowUp(e1.ctx, lead, { dueAt: local(24 * 60) });
+    const app = await appFor(A.users.exec1, A.orgId);
+    const day = (await json(await app.api('/my-day'))).data;
+    const item = [...day.today, ...day.upcoming].find(
+      (t: { lead: { id: string } | null }) => t.lead?.id === lead,
+    );
+    expect(item).toMatchObject({ canUpdateOnLead: true, onLead: true });
+    expect(item.dueAtLocal).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d$/);
+
+    const other = await appFor(A.users.exec2, A.orgId);
+    expect(
+      (
+        await other.api(`/tasks/${item.id}/reschedule`, {
+          method: 'POST',
+          body: { dueAt: local(2 * 24 * 60), version: item.version },
+        })
+      ).status,
+    ).toBe(404);
+
+    const moved = await json(
+      await app.api(`/tasks/${item.id}/reschedule`, {
+        method: 'POST',
+        body: { dueAt: local(2 * 24 * 60), version: item.version },
+      }),
+    );
+    expect(moved.ok, JSON.stringify(moved)).toBe(true);
+    const done = await json(
+      await app.api(`/tasks/${item.id}/complete`, {
+        method: 'POST',
+        body: { version: item.version + 1 },
+      }),
+    );
+    expect(done.ok, JSON.stringify(done)).toBe(true);
   });
 });

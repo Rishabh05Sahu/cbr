@@ -446,6 +446,21 @@ describe('lead lifecycle', () => {
     // Other orgs never see it.
     expect((await visits.myVisits(B.a.owner.ctx)).open.map((v) => v.id)).not.toContain(id);
   });
+
+  it('the visits page lets people manage visits on leads they may change, and only those', async () => {
+    const { a } = A;
+    const l = await created(a.exec1);
+    const { id } = await schedule(a.exec1, l);
+    const own = (await visits.myVisits(a.exec1.ctx)).open.find((v) => v.id === id)!;
+    expect(own).toMatchObject({ lead: { id: l }, canManage: true });
+    // The page action is the same command: it works for the owner of the lead.
+    expect(await codeOf(act(a.exec1, id, { action: 'confirm', version: '1' }))).toBe('OK');
+    // Another executive never sees it; the admin (org scope) sees and may manage it.
+    expect((await visits.myVisits(a.exec2.ctx)).open.map((v) => v.id)).not.toContain(id);
+    expect((await visits.myVisits(a.admin.ctx)).open.find((v) => v.id === id)!.canManage).toBe(
+      true,
+    );
+  });
 });
 
 describe('reminders (FR-150)', () => {

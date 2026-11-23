@@ -50,13 +50,17 @@ const NAV: { href: string; label: string; permission?: Permission; ownerOnly?: b
   { href: '/app/settings/profile', label: 'My profile' },
 ];
 
-/** The phone bottom bar, in priority order (only those the person may open; at most four). */
+/**
+ * The phone bottom bar, in priority order (only those the person may open; at most four). Visits
+ * come before Dashboard so salespeople in the field reach them in one tap (owner request
+ * 2026-11-23); Dashboard stays in the menu and on Home.
+ */
 const QUICK = [
   { href: '/app', label: 'Home' },
   { href: '/app/my-day', label: 'My Day' },
   { href: '/app/leads', label: 'Leads' },
-  { href: '/app/dashboard', label: 'Dashboard' },
   { href: '/app/visits', label: 'Visits' },
+  { href: '/app/dashboard', label: 'Dashboard' },
 ];
 
 export default async function AppLayout({ children }: { children: ReactNode }) {

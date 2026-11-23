@@ -1,95 +1,119 @@
 import Link from 'next/link';
 import { Badge, Card, EmptyState, PageHeader } from '@/components/ui';
-import { myVisits, VISIT_LABELS, type VisitView } from '@/modules/visits';
+import { myVisits, type VisitView } from '@/modules/visits';
 import { pageContext, pageRequire } from '@/platform/auth/session';
-import { fmtDateTime } from '../leads/labels';
+import { VisitRow } from '../leads/[id]/visit-row';
 
 /**
  * FR-150–152: the site visits the signed-in member can see: on leads in their scope, and visits
- * assigned to them (§4.3 "S + assigned visits"). Open visits by time, then recent closed ones.
- * Visits are changed on the lead's page; an assigned agent without lead access sees the visit and
- * the lead's name only.
+ * assigned to them (§4.3 "S + assigned visits"). Open visits are split into outcome due (the time
+ * has passed), today and upcoming; then recent closed ones. Visits on leads the person may manage
+ * can be confirmed, rescheduled, cancelled and closed here, as on the lead's page (the server
+ * re-checks everything). An assigned agent without lead access sees the visit and the lead's name.
  */
 export default async function VisitsPage() {
   const { ctx } = await pageContext();
   pageRequire(ctx, 'site_visit.read');
   const { open, closed } = await myVisits(ctx);
+  const { due, today, upcoming } = splitOpen(open, new Date());
   return (
     <>
       <PageHeader
         title="Site visits"
-        description="Upcoming and recent visits on your leads and visits assigned to you. Record what happened on the lead's page."
+        description="Your visits and visits on your leads. Times are in your organisation's time zone."
       />
-      <section aria-labelledby="visits-open" className="space-y-2">
-        <h2
-          id="visits-open"
-          className="flex items-center gap-2 text-base font-semibold text-slate-900"
-        >
-          Open <Badge>{open.length}</Badge>
-        </h2>
-        <Card>
-          {open.length === 0 ? (
-            <EmptyState>No open site visits.</EmptyState>
-          ) : (
-            <ul className="divide-y divide-slate-100">
-              {open.map((v) => (
-                <Item key={v.id} v={v} />
-              ))}
-            </ul>
-          )}
-        </Card>
-      </section>
-      {closed.length > 0 && (
-        <section aria-labelledby="visits-closed" className="mt-6 space-y-2">
-          <h2 id="visits-closed" className="text-base font-semibold text-slate-900">
-            Recently closed
-          </h2>
-          <Card>
-            <ul className="divide-y divide-slate-100">
-              {closed.map((v) => (
-                <Item key={v.id} v={v} />
-              ))}
-            </ul>
-          </Card>
-        </section>
-      )}
+      <div className="space-y-6">
+        {due.length > 0 && (
+          <Section
+            id="visits-due"
+            title="Outcome due"
+            tone="warn"
+            hint="The visit time has passed. Record whether it happened."
+            visits={due}
+          />
+        )}
+        <Section id="visits-today" title="Today" visits={today} empty="No more visits today." />
+        <Section
+          id="visits-upcoming"
+          title="Upcoming"
+          visits={upcoming}
+          empty="No upcoming site visits. Schedule one from a lead's page."
+        />
+        {closed.length > 0 && (
+          <Section id="visits-closed" title="Recently closed" visits={closed} />
+        )}
+      </div>
     </>
   );
 }
 
-function Item({ v }: { v: VisitView }) {
-  const due = v.outcomeDue && ['SCHEDULED', 'CONFIRMED', 'RESCHEDULED'].includes(v.status);
+/** Open visits: time passed and outcome due / later today / after today. */
+function splitOpen(open: VisitView[], now: Date) {
+  const due: VisitView[] = [];
+  const today: VisitView[] = [];
+  const upcoming: VisitView[] = [];
+  for (const v of open) {
+    if (!v.outcomeDue) upcoming.push(v);
+    else if (v.scheduledFor <= now) due.push(v);
+    else today.push(v);
+  }
+  return { due, today, upcoming };
+}
+
+function Section({
+  id,
+  title,
+  visits,
+  empty,
+  hint,
+  tone,
+}: {
+  id: string;
+  title: string;
+  visits: VisitView[];
+  empty?: string;
+  hint?: string;
+  tone?: 'warn';
+}) {
   return (
-    <li className="space-y-1 py-3 text-sm" data-testid="visits-item">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-medium text-slate-900">{fmtDateTime(v.scheduledFor)}</span>
-        <Badge
-          tone={
-            v.status === 'ATTENDED'
-              ? 'good'
-              : v.status === 'CANCELLED' || v.status === 'NO_SHOW'
-                ? 'warn'
-                : 'neutral'
-          }
-        >
-          {VISIT_LABELS[v.status]}
-        </Badge>
-        {due && <Badge tone="warn">Outcome due</Badge>}
-      </div>
-      <p>
+    <section aria-labelledby={id} className="space-y-2">
+      <h2 id={id} className="flex items-center gap-2 text-base font-semibold text-slate-900">
+        {title} <Badge {...(tone ? { tone } : {})}>{visits.length}</Badge>
+      </h2>
+      {hint && <p className="text-sm text-slate-600">{hint}</p>}
+      <Card>
+        {visits.length === 0 ? (
+          <EmptyState>{empty}</EmptyState>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {visits.map((v) => (
+              <Item key={v.id} v={v} />
+            ))}
+          </ul>
+        )}
+      </Card>
+    </section>
+  );
+}
+
+function Item({ v }: { v: VisitView }) {
+  return (
+    <li className="py-1" data-testid="visits-item">
+      <p className="pt-2 text-sm">
         {v.lead ? (
           <Link
             href={`/app/leads/${v.lead.id}` as '/app/leads'}
-            className="tap font-medium text-blue-900 underline-offset-2 hover:underline"
+            className="tap font-semibold text-blue-900 underline-offset-2 hover:underline"
           >
             {v.lead.fullName}
           </Link>
         ) : (
-          <span className="font-medium text-slate-900">{v.leadName}</span>
+          <span className="font-semibold text-slate-900">{v.leadName}</span>
         )}
-        <span className="text-slate-600"> · with {v.assigneeName}</span>
       </p>
-      <p className="text-slate-700">Meeting point: {v.location}</p>
+      <ul>
+        <VisitRow visit={v} leadId={v.lead?.id ?? ''} />
+      </ul>
     </li>
   );
 }

@@ -77,3 +77,15 @@ String aed(num? v) {
 /// fields. Built from the server's "now" so the phone's time zone never matters.
 DateTime parseLocal(String s) => DateTime.parse(s.length == 16 ? '$s:00' : s);
 String formatLocal(DateTime d) => DateFormat("yyyy-MM-dd'T'HH:mm").format(d);
+
+/// Site visit statuses in the website's wording (src/modules/visits/rules.ts).
+const Map<String, String> visitStatusLabels = {
+  'SCHEDULED': 'Scheduled',
+  'CONFIRMED': 'Confirmed',
+  'RESCHEDULED': 'Rescheduled',
+  'CANCELLED': 'Cancelled',
+  'ATTENDED': 'Attended',
+  'NO_SHOW': 'No-show',
+};
+
+String visitStatusLabel(String? code) => label(visitStatusLabels, code);

@@ -213,6 +213,42 @@ describe('lifecycle and scope', () => {
     });
     const item = (await tasks.myDay(a.exec1.ctx, now)).upcoming.find((i) => i.id === t);
     expect(item?.lead).toMatchObject({ archived: true });
+    expect(item?.canUpdateOnLead).toBe(false);
+  });
+
+  it('offers Mark done and Reschedule on My Day only for own tasks on leads the caller may change', async () => {
+    const l = await created(a.exec1, 'Day actions');
+    const t = await followUp(A, a.exec1, l, tomorrow);
+    const item = (await tasks.myDay(a.exec1.ctx, now)).upcoming.find((i) => i.id === t)!;
+    expect(item).toMatchObject({ canUpdateOnLead: true, canUpdate: false });
+    // The lead page's commands work from My Day: reschedule, then done.
+    await tasks.rescheduleFollowUp(a.exec1.ctx, t, {
+      // Three days ahead, as the org-local datetime-local value the form sends.
+      dueAt: new Intl.DateTimeFormat('sv-SE', {
+        timeZone: 'Asia/Kolkata',
+        dateStyle: 'short',
+        timeStyle: 'short',
+      })
+        .format(new Date(now.getTime() + 3 * 86_400_000))
+        .replace(' ', 'T'),
+      version: String(item.version),
+    });
+    await tasks.completeFollowUp(a.exec1.ctx, t, { version: String(item.version + 1) });
+    expect((await migrator().task.findUniqueOrThrow({ where: { id: t } })).status).toBe('DONE');
+
+    // Out of scope after reassignment: shown, not changeable, and the command is refused.
+    const l2 = await created(a.exec1, 'Day actions moved');
+    const t2 = await followUp(A, a.exec1, l2, tomorrow);
+    await leads.assignLead(a.admin.ctx, l2, {
+      target: `user:${A.users.exec2.id}`,
+      version: (await migrator().lead.findUniqueOrThrow({ where: { id: l2 } })).version,
+      reason: 'Synthetic: moved',
+    });
+    const moved = (await tasks.myDay(a.exec1.ctx, now)).upcoming.find((i) => i.id === t2);
+    expect(moved?.canUpdateOnLead ?? false).toBe(false);
+    await expect(
+      tasks.completeFollowUp(a.exec1.ctx, t2, { version: String(moved?.version ?? 1) }),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 });
 
