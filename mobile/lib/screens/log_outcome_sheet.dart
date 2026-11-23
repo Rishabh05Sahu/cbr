@@ -83,6 +83,7 @@ class _LogOutcomeSheetState extends State<LogOutcomeSheet> {
   bool _setNext = true;
   String? _next;
   bool _saving = false;
+  bool _reqOpen = false;
   List<String> _errors = const [];
 
   Map<String, dynamic> get _lead => widget.lead;
@@ -320,46 +321,240 @@ class _LogOutcomeSheetState extends State<LogOutcomeSheet> {
         title: Text(text, style: const TextStyle(fontSize: 14)),
       );
 
-  Widget _requirements() {
-    final opts = (_defaults?['requirementOptions'] as Map?) ?? const {};
-    return ExpansionTile(
-      tilePadding: EdgeInsets.zero,
-      title: const Text(
-        'Update requirements (optional)',
-        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+  // --- requirements -------------------------------------------------------------------------
+
+  List<Map<String, dynamic>> _reqOptions(String key) =>
+      _maps(((_defaults?['requirementOptions'] as Map?) ?? const {})[key]);
+
+  String _optLabel(String key, String code) =>
+      _reqOptions(key)
+          .where((o) => o['code'] == code)
+          .map((o) => o['label'] as String? ?? code)
+          .firstOrNull ??
+      code;
+
+  /// The requirement fields whose value differs from the lead's.
+  List<String> get _changedRequirements => [
+    for (final k in _selectFields.keys)
+      if (_select[k] != _initial[k]) k,
+    for (final k in _textFields.keys)
+      if (_text[k]!.text.trim() != _initial[k]!.trim()) k,
+  ];
+
+  /// "Buy · Apartment · Dubai · up to AED 2.5M" from the values now in the form.
+  String get _requirementSummary {
+    String sel(String k) =>
+        _select[k]!.isEmpty ? '' : _optLabel(k, _select[k]!);
+    String txt(String k) => _text[k]!.text.trim();
+    final from = num.tryParse(txt('budgetMin'));
+    final to = num.tryParse(txt('budgetMax'));
+    var budget = '';
+    if (from != null && to != null) {
+      budget = '${aed(from)} – ${aed(to)}';
+    } else if (to != null) {
+      budget = 'up to ${aed(to)}';
+    } else if (from != null) {
+      budget = 'from ${aed(from)}';
+    }
+    final b1 = txt('bhkMin');
+    final b2 = txt('bhkMax');
+    var beds = '';
+    if (b1.isNotEmpty && b2.isNotEmpty && b1 != b2) {
+      beds = '$b1–$b2 BR';
+    } else if (b2.isNotEmpty) {
+      beds = '$b2 BR';
+    } else if (b1.isNotEmpty) {
+      beds = '$b1+ BR';
+    }
+    final parts = [
+      sel('transactionType'),
+      sel('propertyType'),
+      txt('preferredCity'),
+      budget,
+      beds,
+      sel('intent'),
+    ].where((p) => p.isNotEmpty).toList();
+    return parts.isEmpty ? 'Nothing filled in yet' : parts.join(' · ');
+  }
+
+  Widget _reqLabel(String text) => Padding(
+    padding: const EdgeInsets.only(top: 14, bottom: 8),
+    child: Text(
+      text,
+      style: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: AppColors.gray,
       ),
+    ),
+  );
+
+  /// One short list as tap-to-pick chips; tapping the chosen one clears it.
+  Widget _reqChips(String key) {
+    final opts = _reqOptions(key);
+    if (opts.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final e in _selectFields.entries)
-          if (opts[e.key] is List)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: DropdownButtonFormField<String>(
-                initialValue: _select[e.key],
-                decoration: InputDecoration(labelText: e.value),
-                items: [
-                  const DropdownMenuItem(value: '', child: Text('—')),
-                  for (final o in _maps(opts[e.key]))
-                    DropdownMenuItem(
-                      value: o['code'] as String,
-                      child: Text(o['label'] as String? ?? ''),
+        _reqLabel(_selectFields[key]!),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final o in opts)
+              ChoiceChip(
+                label: Text(o['label'] as String? ?? ''),
+                selected: _select[key] == o['code'],
+                showCheckmark: false,
+                // The chosen value must stand out at a glance: solid teal, white text.
+                selectedColor: AppColors.teal,
+                labelStyle: TextStyle(
+                  color: _select[key] == o['code']
+                      ? Colors.white
+                      : AppColors.text,
+                  fontWeight: _select[key] == o['code']
+                      ? FontWeight.w600
+                      : FontWeight.w400,
+                ),
+                onSelected: (on) => setState(
+                  () => _select[key] = on ? o['code'] as String : '',
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _reqField(String key, {String? label, bool number = false}) =>
+      TextField(
+        controller: _text[key],
+        keyboardType: number ? TextInputType.number : TextInputType.text,
+        onChanged: (_) => setState(() {}),
+        decoration: InputDecoration(
+          labelText: label ?? _textFields[key],
+          isDense: true,
+        ),
+      );
+
+  Widget _reqPair(String title, String a, String b) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _reqLabel(title),
+      Row(
+        children: [
+          Expanded(child: _reqField(a, label: 'From', number: true)),
+          const SizedBox(width: 10),
+          Expanded(child: _reqField(b, label: 'Up to', number: true)),
+        ],
+      ),
+    ],
+  );
+
+  /// The lead's requirements as a card: a summary and Edit when closed; grouped fields (chips for
+  /// the short lists, budget and bedrooms side by side) when open. Only changed fields are sent.
+  Widget _requirements() {
+    final changed = _changedRequirements.length;
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: _reqOpen ? AppColors.teal : AppColors.border,
+          width: _reqOpen ? 1.5 : 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => setState(() => _reqOpen = !_reqOpen),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: const BoxDecoration(
+                      color: AppColors.tealSoft,
+                      shape: BoxShape.circle,
                     ),
+                    child: const Icon(
+                      Icons.home_work_outlined,
+                      size: 20,
+                      color: AppColors.teal,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Flexible(
+                              child: Text(
+                                'Requirements',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.text,
+                                ),
+                              ),
+                            ),
+                            if (changed > 0) ...[
+                              const SizedBox(width: 8),
+                              Pill.teal('$changed changed'),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _requirementSummary,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => setState(() => _reqOpen = !_reqOpen),
+                    child: Text(_reqOpen ? 'Hide' : 'Edit'),
+                  ),
                 ],
-                onChanged: (v) => setState(() => _select[e.key] = v ?? ''),
               ),
             ),
-        for (final e in _textFields.entries)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: TextField(
-              controller: _text[e.key],
-              keyboardType:
-                  e.key.startsWith('budget') || e.key.startsWith('bhk')
-                  ? TextInputType.number
-                  : TextInputType.text,
-              decoration: InputDecoration(labelText: e.value),
-            ),
           ),
-      ],
+          if (_reqOpen)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Divider(height: 1, color: AppColors.border),
+                  _reqChips('transactionType'),
+                  _reqChips('propertyType'),
+                  _reqLabel('Location'),
+                  _reqField('preferredCity'),
+                  const SizedBox(height: 10),
+                  _reqField('preferredLocalities'),
+                  _reqPair('Budget (AED)', 'budgetMin', 'budgetMax'),
+                  _reqPair('Bedrooms', 'bhkMin', 'bhkMax'),
+                  _reqChips('intent'),
+                  _reqChips('timeline'),
+                  _reqChips('purpose'),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 

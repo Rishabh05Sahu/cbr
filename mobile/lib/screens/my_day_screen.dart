@@ -253,14 +253,15 @@ class _MyDayScreenState extends State<MyDayScreen> {
     _load();
   }
 
+  /// One task card. The lead's name and what to do get the full width (never squeezed beside
+  /// buttons); time and tags sit under them, and Done / Reschedule get their own row.
   Widget _task(Map<String, dynamic> t, {bool overdue = false}) {
     final lead = t['lead'] as Map<String, dynamic>?;
-    final type = label(taskTypeLabels, t['type'] as String?);
+    final typeCode = t['type'] as String?;
+    final type = label(taskTypeLabels, typeCode);
     final title = (t['title'] as String?)?.trim();
-    final heading = [
-      if (title != null && title.isNotEmpty) title else type,
-      if (lead != null) lead['fullName'] as String,
-    ].join(' · ');
+    final hasTitle = title != null && title.isNotEmpty;
+    final name = lead?['fullName'] as String?;
     // Own tasks with no lead, and (owner request 2026-11-23) own tasks on leads the caller may
     // change; the server re-checks the lead and the version either way.
     final canTick =
@@ -268,77 +269,141 @@ class _MyDayScreenState extends State<MyDayScreen> {
         ((t['canUpdate'] == true && t['onLead'] != true) ||
             t['canUpdateOnLead'] == true);
     final busy = _completing.contains(t['id']);
+    final icon = switch (typeCode) {
+      'MEETING' => Icons.groups_outlined,
+      'DOCUMENT' => Icons.description_outlined,
+      'CALL' => Icons.call_outlined,
+      'OTHER' => Icons.task_alt,
+      _ => Icons.phone_in_talk_outlined,
+    };
+    final tags = <Widget>[
+      if (t['priority'] == 'URGENT') Pill.red('Urgent'),
+      if (t['priority'] == 'HIGH') Pill.red('High'),
+      if (lead?['intent'] == 'HOT') Pill.warn('Hot'),
+      if (t['attending'] == true) Pill('Invited'),
+    ];
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: AppCard(
         onTap: lead != null ? () => _open(t) : null,
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(14, 12, 8, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (canTick)
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: busy
-                    ? const Padding(
-                        padding: EdgeInsets.all(10),
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : IconButton(
-                        tooltip: 'Mark done',
-                        icon: const Icon(
-                          Icons.check_box_outline_blank,
-                          color: Color(0xFF98A2B3),
-                        ),
-                        onPressed: () => _complete(t),
-                      ),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Icon(
-                  t['type'] == 'MEETING'
-                      ? Icons.groups_outlined
-                      : Icons.phone_in_talk_outlined,
-                  color: AppColors.muted,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: overdue ? AppColors.redSoft : AppColors.tealSoft,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 20,
+                    color: overdue ? AppColors.red : AppColors.teal,
+                  ),
                 ),
-              ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name ?? (hasTitle ? title : type),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      if (name != null || hasTitle) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          name != null && hasTitle ? '$type · $title' : type,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (lead != null)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 6),
+                    child: Icon(Icons.chevron_right, color: Color(0xFF98A2B3)),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.only(left: 48),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Text(
-                    heading,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.schedule,
+                        size: 16,
+                        color: overdue ? AppColors.red : AppColors.muted,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        dueText(t['dueAt'] as String?),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: overdue ? FontWeight.w600 : null,
+                          color: overdue ? AppColors.red : AppColors.muted,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${dueText(t['dueAt'] as String?)} · $type',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.muted,
-                    ),
-                  ),
+                  ...tags,
                 ],
               ),
             ),
-            if (t['priority'] == 'URGENT')
-              Pill.red('Urgent')
-            else if (t['priority'] == 'HIGH')
-              Pill.red('High')
-            else if (lead?['intent'] == 'HOT')
-              Pill.warn('Hot'),
-            if (canTick && !busy)
-              IconButton(
-                tooltip: 'Reschedule',
-                icon: const Icon(Icons.update, color: AppColors.muted),
-                onPressed: () => _reschedule(t, overdue: overdue),
+            if (canTick) ...[
+              const SizedBox(height: 6),
+              const Divider(height: 1, color: AppColors.border),
+              Padding(
+                padding: const EdgeInsets.only(left: 36),
+                // Wraps under large text sizes instead of overflowing.
+                child: Wrap(
+                  children: [
+                    TextButton.icon(
+                      onPressed: busy ? null : () => _complete(t),
+                      icon: busy
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.check_circle_outline, size: 20),
+                      label: const Text('Done'),
+                    ),
+                    TextButton.icon(
+                      onPressed: busy
+                          ? null
+                          : () => _reschedule(t, overdue: overdue),
+                      icon: const Icon(Icons.update, size: 20),
+                      label: const Text('Reschedule'),
+                    ),
+                  ],
+                ),
               ),
-            if (lead != null)
-              const Icon(Icons.chevron_right, color: Color(0xFF98A2B3)),
+            ],
           ],
         ),
       ),
