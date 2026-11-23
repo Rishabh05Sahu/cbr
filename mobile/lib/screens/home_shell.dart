@@ -6,6 +6,7 @@ import 'auth_screens.dart';
 import 'leads_screen.dart';
 import 'more_screen.dart';
 import 'my_day_screen.dart';
+import 'queue_screen.dart';
 
 class _Tab {
   const _Tab(this.label, this.icon, this.selectedIcon, this.build);
@@ -64,7 +65,12 @@ class _HomeShellState extends State<HomeShell> {
       Icons.calendar_month_outlined,
       '/app/calendar',
     );
-    final team = soon('Team', Icons.groups_outlined, '/app/dashboard');
+    final team = _Tab(
+      'Team',
+      Icons.groups_outlined,
+      Icons.groups,
+      () => TeamScreen(session: s, openWebsite: openWebsite),
+    );
     final inbox = soon('Inbox', Icons.notifications_none, '/app/notifications');
     final people = soon(
       'People',
