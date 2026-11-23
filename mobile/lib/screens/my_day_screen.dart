@@ -6,6 +6,7 @@ import '../session.dart';
 import '../theme.dart';
 import 'lead_detail_screen.dart';
 import 'notifications_screen.dart';
+import 'when_picker.dart';
 
 /// FR-101 My Day: overdue, today, the next 7 days and later (GET /api/v1/my-day).
 class MyDayScreen extends StatefulWidget {
@@ -63,6 +64,32 @@ class _MyDayScreenState extends State<MyDayScreen> {
     }
   }
 
+  /// FR-102 from My Day (POST /api/v1/tasks/:id/reschedule): a new org-local time, and a reason
+  /// when the server says one is needed (overdue, or moved more than twice).
+  Future<void> _reschedule(
+    Map<String, dynamic> t, {
+    required bool overdue,
+  }) async {
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (_) => _RescheduleSheet(
+        api: widget.session.api,
+        task: t,
+        needsReason: overdue || t['rescheduleNeedsReason'] == true,
+      ),
+    );
+    if (saved == true) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Rescheduled')));
+      }
+      _load();
+    }
+  }
+
   Future<void> _open(Map<String, dynamic> t) async {
     final lead = t['lead'] as Map<String, dynamic>?;
     if (lead == null) return;
@@ -85,8 +112,12 @@ class _MyDayScreenState extends State<MyDayScreen> {
       if (title != null && title.isNotEmpty) title else type,
       if (lead != null) lead['fullName'] as String,
     ].join(' · ');
+    // Own tasks with no lead, and (owner request 2026-11-23) own tasks on leads the caller may
+    // change; the server re-checks the lead and the version either way.
     final canTick =
-        t['canUpdate'] == true && t['onLead'] != true && t['attending'] != true;
+        t['attending'] != true &&
+        ((t['canUpdate'] == true && t['onLead'] != true) ||
+            t['canUpdateOnLead'] == true);
     final busy = _completing.contains(t['id']);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -151,6 +182,12 @@ class _MyDayScreenState extends State<MyDayScreen> {
               Pill.red('High')
             else if (lead?['intent'] == 'HOT')
               Pill.warn('Hot'),
+            if (canTick && !busy)
+              IconButton(
+                tooltip: 'Reschedule',
+                icon: const Icon(Icons.update, color: AppColors.muted),
+                onPressed: () => _reschedule(t, overdue: overdue),
+              ),
             if (lead != null)
               const Icon(Icons.chevron_right, color: Color(0xFF98A2B3)),
           ],
@@ -245,6 +282,112 @@ class _MyDayScreenState extends State<MyDayScreen> {
         actions: [NotificationBell(session: widget.session)],
       ),
       body: body,
+    );
+  }
+}
+
+class _RescheduleSheet extends StatefulWidget {
+  const _RescheduleSheet({
+    required this.api,
+    required this.task,
+    required this.needsReason,
+  });
+
+  final ApiClient api;
+  final Map<String, dynamic> task;
+  final bool needsReason;
+
+  @override
+  State<_RescheduleSheet> createState() => _RescheduleSheetState();
+}
+
+class _RescheduleSheetState extends State<_RescheduleSheet> {
+  late String _when;
+  final _reason = TextEditingController();
+  bool _saving = false;
+  List<String> _errors = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    final local = widget.task['dueAtLocal'] as String?;
+    // Start one day later than the current time, the usual move.
+    final d = local != null ? parseLocal(local) : DateTime.now();
+    _when = formatLocal(DateTime(d.year, d.month, d.day + 1, d.hour, d.minute));
+  }
+
+  @override
+  void dispose() {
+    _reason.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() {
+      _saving = true;
+      _errors = const [];
+    });
+    try {
+      await widget.api.post('/tasks/${widget.task['id']}/reschedule', {
+        'dueAt': _when,
+        'reason': _reason.text.trim(),
+        'version': widget.task['version'],
+      });
+      if (mounted) Navigator.of(context).pop(true);
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _errors = e.allMessages);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = widget.task;
+    final lead = t['lead'] as Map<String, dynamic>?;
+    final type = label(taskTypeLabels, t['type'] as String?);
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: ListView(
+        shrinkWrap: true,
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        children: [
+          Text(
+            'Reschedule $type${lead != null ? ' · ${lead['fullName']}' : ''}',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Now due ${dueText(t['dueAt'] as String?)}',
+            style: const TextStyle(color: AppColors.muted),
+          ),
+          const SizedBox(height: 16),
+          WhenPicker(
+            label: 'New date and time',
+            value: _when,
+            onChanged: (s) => setState(() => _when = s),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _reason,
+            decoration: InputDecoration(
+              labelText: widget.needsReason ? 'Reason' : 'Reason (optional)',
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: _saving ? null : _save,
+            child: Text(_saving ? 'Saving…' : 'Save new time'),
+          ),
+          if (_errors.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            for (final e in _errors)
+              Text(e, style: const TextStyle(color: AppColors.red)),
+          ],
+        ],
+      ),
     );
   }
 }

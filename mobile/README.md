@@ -59,4 +59,7 @@ These screens are built:
 - Lead screen: Reveal, Call and WhatsApp with the outcome sheet, script, follow-ups, visits and requirements.
 - More: switch organisation, website, privacy policy and account deletion.
 
-Visits, Calendar, Team, Inbox and People tabs link to the website for now.
+- Visits (1.0.3): outcome due, today, upcoming and recently closed. Confirm, reschedule, cancel, and record attended or no-show (`GET /api/v1/visits`, `POST /api/v1/visits/:id`).
+- My Day (1.0.3): Done and Reschedule on one's own follow-ups and tasks, including those on leads the person may change (`POST /api/v1/tasks/:id/complete`, `POST /api/v1/tasks/:id/reschedule`).
+
+The Calendar and People tabs link to the website for now.

@@ -28,6 +28,7 @@ import {
   type InterestLevel,
   type VisitStatus,
 } from './rules';
+import { orgLocalInput } from '@/modules/tasks/follow-up-rules';
 
 export * from './rules';
 
@@ -516,6 +517,8 @@ type VisitRow = Prisma.SiteVisitGetPayload<{ select: typeof VISIT_SELECT }>;
 export interface VisitView {
   id: string;
   scheduledFor: Date;
+  /** The time as an org-local datetime-local value (the app's reschedule picker starts here). */
+  scheduledForLocal: string;
   location: string;
   status: VisitStatus;
   rescheduleCount: number;
@@ -547,6 +550,7 @@ function toView(
   return {
     id: v.id,
     scheduledFor: v.scheduledFor,
+    scheduledForLocal: orgLocalInput(v.scheduledFor, opts.timeZone),
     location: v.locationText,
     status,
     rescheduleCount: v.rescheduleCount,
@@ -635,21 +639,34 @@ export async function myVisits(
       }),
     ]);
     const leadIds = [...new Set([...openRows, ...closedRows].map((r) => r.leadId))];
-    const visible = new Set(
-      leadIds.length
-        ? (
-            await tx.lead.findMany({
-              where: { AND: [{ id: { in: leadIds } }, inScope] },
-              select: { id: true },
-            })
-          ).map((l) => l.id)
-        : [],
-    );
+    const visibleLeads = leadIds.length
+      ? await tx.lead.findMany({
+          where: { AND: [{ id: { in: leadIds } }, inScope] },
+          select: { id: true, archivedAt: true, mergedIntoLeadId: true },
+        })
+      : [];
+    const visible = new Set(visibleLeads.map((l) => l.id));
+    // The same rule as the lead page: site_visit.manage over the lead, and the lead writable.
+    // updateVisit re-checks all of it; this only decides which buttons to show.
+    const writable = visibleLeads.filter((l) => !l.archivedAt && !l.mergedIntoLeadId);
+    const manageable = new Set<string>();
+    if (writable.length && can(ctx, 'site_visit.manage')) {
+      const manageScope = await leads.leadScopeFilter(tx, ctx, authorize(ctx, 'site_visit.manage'));
+      for (const l of await tx.lead.findMany({
+        where: { AND: [{ id: { in: writable.map((w) => w.id) } }, manageScope] },
+        select: { id: true },
+      }))
+        manageable.add(l.id);
+    }
     const timeZone = await orgZone(tx);
     const today = dayIn(new Date(), timeZone);
     const view = (r: VisitRow) =>
-      // Changes happen on the lead page, where the lead scope and writability are checked.
-      toView(r, { leadVisible: visible.has(r.leadId), canManage: false, today, timeZone });
+      toView(r, {
+        leadVisible: visible.has(r.leadId),
+        canManage: manageable.has(r.leadId),
+        today,
+        timeZone,
+      });
     return { open: openRows.map(view), closed: closedRows.map(view) };
   });
 }

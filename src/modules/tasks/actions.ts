@@ -23,6 +23,8 @@ async function onLead<T>(fd: FormData, fn: () => Promise<T>): Promise<ActionResu
   const r = await runAction(fn);
   if (r.ok && /^[0-9a-f-]{36}$/i.test(str(fd, 'leadId')))
     revalidatePath(`/app/leads/${str(fd, 'leadId')}`);
+  // These actions also run from My Day (owner request 2026-11-23).
+  if (r.ok) revalidatePath('/app/my-day');
   return r;
 }
 

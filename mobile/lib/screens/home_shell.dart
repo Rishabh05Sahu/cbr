@@ -10,6 +10,7 @@ import 'more_screen.dart';
 import 'my_day_screen.dart';
 import 'notifications_screen.dart';
 import 'queue_screen.dart';
+import 'visits_screen.dart';
 
 class _Tab {
   const _Tab(
@@ -125,7 +126,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       icon,
       () => ComingSoonScreen(title: label, webPath: path),
     );
-    final visits = soon('Visits', Icons.place_outlined, '/app/visits');
+    final visits = _Tab(
+      'Visits',
+      Icons.place_outlined,
+      Icons.place,
+      () => VisitsScreen(session: s),
+    );
     final calendar = soon(
       'Calendar',
       Icons.calendar_month_outlined,

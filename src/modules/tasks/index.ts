@@ -1012,6 +1012,14 @@ export interface MyDayItem {
    * tasks are changed on the lead page, which checks the lead as well.
    */
   canUpdate: boolean;
+  /**
+   * Owner request 2026-11-23: the caller's own open task on a lead they may change (lead.update
+   * over the lead, lead neither archived nor merged, task.update). My Day then offers Mark done and
+   * Reschedule through the lead page's actions, which re-check all of it on the server.
+   */
+  canUpdateOnLead: boolean;
+  /** The due time as an org-local datetime-local value (the app's reschedule picker). */
+  dueAtLocal: string;
   /** FR-104, meetings only: end and location (null otherwise or when not set). */
   endAt: Date | null;
   location: string | null;
@@ -1156,6 +1164,24 @@ async function itemBuilder(
         ).map((l) => l.id)
       : [],
   );
+  // Leads whose tasks the caller may change from My Day: the lead page's rule (lead.update over
+  // the lead, writable). loadForUpdate re-checks it, with the task scope and version.
+  const writableIds = [...visible];
+  const changeable = new Set(
+    mayUpdate && can(ctx, 'lead.update') && writableIds.length
+      ? (
+          await tx.lead.findMany({
+            where: {
+              AND: [
+                { id: { in: writableIds }, archivedAt: null, mergedIntoLeadId: null },
+                await leadScopeFilter(tx, ctx, authorize(ctx, 'lead.update')),
+              ],
+            },
+            select: { id: true },
+          })
+        ).map((l) => l.id)
+      : [],
+  );
   return (t) => {
     const attending = t.assigneeUserId !== ctx.userId;
     return {
@@ -1180,6 +1206,8 @@ async function itemBuilder(
             }
           : null,
       canUpdate: mayUpdate && t.lead === null && !attending,
+      canUpdateOnLead: t.lead !== null && !attending && changeable.has(t.lead.id),
+      dueAtLocal: orgLocalInput(t.dueAt, timeZone),
       endAt: t.endAt,
       location: t.location,
       attendees: t.attendees.map((x) => ({ userId: x.userId, name: x.member.user.name })),
