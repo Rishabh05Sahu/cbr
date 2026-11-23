@@ -640,3 +640,140 @@ describe('visits and My Day actions in the app (1.0.3)', () => {
     expect(done.ok, JSON.stringify(done)).toBe(true);
   });
 });
+
+describe('lead screen parity in the app (1.0.4)', () => {
+  const local = (minutes: number) =>
+    new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'Asia/Kolkata',
+      dateStyle: 'short',
+      timeStyle: 'short',
+    })
+      .format(new Date(Date.now() + minutes * 60_000))
+      .replace(' ', 'T');
+  const qualifiable = {
+    transactionType: 'BUY',
+    propertyType: 'APARTMENT',
+    preferredCity: 'Dubai',
+    budgetMax: '2M',
+  };
+
+  it('the sheet defaults carry every channel, both directions and the requirement choices', async () => {
+    const app = await appFor(A.users.exec1, A.orgId);
+    const d = (await json(await app.api('/interactions/defaults'))).data;
+    expect(d.channels.map((c: { code: string }) => c.code)).toEqual([
+      'PHONE_NATIVE',
+      'WHATSAPP_APP_CALL',
+      'WHATSAPP_APP_MESSAGE',
+    ]);
+    const email = d.allChannels.find((c: { code: string }) => c.code === 'EMAIL');
+    expect(email).toMatchObject({ durationAllowed: false });
+    expect(email.inbound.length).toBeGreaterThan(0);
+    expect(d.directions.map((x: { code: string }) => x.code)).toEqual(['OUTBOUND', 'INBOUND']);
+    expect(d.requirementOptions.intent.map((x: { code: string }) => x.code)).toEqual([
+      'HOT',
+      'WARM',
+      'COLD',
+    ]);
+  });
+
+  it('an executive logs an inbound outcome with requirements and a titled follow-up', async () => {
+    const e1 = await actorIn(A.users.exec1, A.orgId);
+    const lead = await created(
+      leads.createLead(e1.ctx, { fullName: 'Parity Mobile', primaryPhone: '9811100031' }),
+    );
+    const app = await appFor(A.users.exec1, A.orgId);
+    const detail = (await json(await app.api(`/leads/${lead}`))).data;
+    // An outcome the server allows for an inbound email, as the app picks it.
+    const defaults = (await json(await app.api('/interactions/defaults'))).data;
+    const inbound = defaults.allChannels.find((c: { code: string }) => c.code === 'EMAIL')
+      .inbound[0].code as string;
+    expect(detail.nowLocal).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d$/);
+    const r = await json(
+      await app.api('/interactions', {
+        method: 'POST',
+        body: {
+          leadId: lead,
+          idempotencyKey: crypto.randomUUID(),
+          version: detail.lead.version,
+          channel: 'EMAIL',
+          direction: 'INBOUND',
+          outcome: inbound,
+          occurredAt: local(-30),
+          notes: 'Asked for floor plans',
+          preferredCity: 'Abu Dhabi',
+          requirementFields: 'preferredCity',
+          nextDueAt: local(24 * 60),
+          nextTitle: 'Send floor plans',
+        },
+      }),
+    );
+    expect(r.ok, JSON.stringify(r)).toBe(true);
+    const after = (await json(await app.api(`/leads/${lead}`))).data;
+    expect(after.lead.preferredCity).toBe('Abu Dhabi');
+    expect(after.followUps.open[0]).toMatchObject({ title: 'Send floor plans' });
+  });
+
+  it('an executive books a visit and changes stage; others are refused', async () => {
+    const e1 = await actorIn(A.users.exec1, A.orgId);
+    const lead = await created(
+      leads.createLead(e1.ctx, {
+        fullName: 'Stage Mobile',
+        primaryPhone: '9811100032',
+        ...qualifiable,
+      }),
+    );
+    const app = await appFor(A.users.exec1, A.orgId);
+    let d = (await json(await app.api(`/leads/${lead}`))).data;
+    expect(d.stage.targets.map((t: { code: string }) => t.code)).toContain('QUALIFIED');
+    expect(d.stage.lostReasons.length).toBeGreaterThan(0);
+    expect(d.visits.canSchedule).toBe(true);
+    expect(d.visitPeople).toEqual([]); // executives book for themselves
+
+    const q = await json(
+      await app.api(`/leads/${lead}/stage`, {
+        method: 'POST',
+        body: { toStage: 'QUALIFIED', version: d.lead.version },
+      }),
+    );
+    expect(q.ok, JSON.stringify(q)).toBe(true);
+
+    const noPlace = await app.api(`/leads/${lead}/visits`, {
+      method: 'POST',
+      body: { scheduledFor: local(2 * 24 * 60), location: '' },
+    });
+    expect(noPlace.status).toBe(422);
+    const booked = await json(
+      await app.api(`/leads/${lead}/visits`, {
+        method: 'POST',
+        body: { scheduledFor: local(2 * 24 * 60), location: 'Marina tower lobby' },
+      }),
+    );
+    expect(booked.ok, JSON.stringify(booked)).toBe(true);
+    d = (await json(await app.api(`/leads/${lead}`))).data;
+    expect(d.lead.stage).toBe('SITE_VISIT_SCHEDULED');
+    expect(d.visits.visits[0]).toMatchObject({ id: booked.data.id, canManage: true });
+
+    // Lost needs a reason.
+    const lost = await app.api(`/leads/${lead}/stage`, {
+      method: 'POST',
+      body: { toStage: 'LOST', version: d.lead.version },
+    });
+    expect([422]).toContain(lost.status);
+
+    const other = await appFor(A.users.exec2, A.orgId);
+    for (const [path, body] of [
+      [`/leads/${lead}/stage`, { toStage: 'QUALIFIED', version: d.lead.version, reasonText: 'x' }],
+      [`/leads/${lead}/visits`, { scheduledFor: local(3 * 24 * 60), location: 'Elsewhere' }],
+    ] as const)
+      expect((await other.api(path, { method: 'POST', body })).status).toBe(404);
+    const bApp = await appFor(B.users.owner, B.orgId);
+    expect(
+      (
+        await bApp.api(`/leads/${lead}/visits`, {
+          method: 'POST',
+          body: { scheduledFor: local(3 * 24 * 60), location: 'Elsewhere' },
+        })
+      ).status,
+    ).toBe(404);
+  });
+});

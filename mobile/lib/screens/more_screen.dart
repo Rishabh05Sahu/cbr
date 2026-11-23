@@ -4,7 +4,11 @@ import '../format.dart';
 import '../session.dart';
 import '../theme.dart';
 import 'auth_screens.dart';
+import 'dashboard_screen.dart';
 import 'notifications_screen.dart';
+import 'people_screen.dart';
+import 'properties_screen.dart';
+import 'scripts_screen.dart';
 
 /// More: who is signed in, switch organisation, website links, sign out.
 class MoreScreen extends StatelessWidget {
@@ -95,22 +99,43 @@ class MoreScreen extends StatelessWidget {
                   item(
                     Icons.home_work_outlined,
                     'Properties',
-                    () => openWebsite('/app/properties'),
-                    trailing: const Icon(Icons.open_in_new, size: 18),
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => PropertiesScreen(session: session),
+                      ),
+                    ),
                   ),
                 if (me.can('script.read'))
                   item(
                     Icons.description_outlined,
                     'Call scripts',
-                    () => openWebsite('/app/scripts'),
-                    trailing: const Icon(Icons.open_in_new, size: 18),
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => ScriptsScreen(session: session),
+                      ),
+                    ),
                   ),
                 if (me.can('report.read'))
                   item(
                     Icons.bar_chart,
                     'Dashboard',
-                    () => openWebsite('/app/dashboard'),
-                    trailing: const Icon(Icons.open_in_new, size: 18),
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => DashboardScreen(session: session),
+                      ),
+                    ),
+                  ),
+                if (me.can('user.read') &&
+                    me.role != 'HR_OPS' &&
+                    me.role != 'SALES_MANAGER')
+                  item(
+                    Icons.groups_outlined,
+                    'People',
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => PeopleScreen(session: session),
+                      ),
+                    ),
                   ),
                 item(
                   Icons.notifications_none,
@@ -138,6 +163,7 @@ class MoreScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                _LockSwitch(session: session),
                 item(
                   Icons.shield_outlined,
                   'Profile and security',
@@ -202,6 +228,45 @@ class MoreScreen extends StatelessWidget {
             label: const Text('Sign out'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// More → "Fingerprint unlock": asks once to confirm, then locks the app when it starts and
+/// after a minute in the background.
+class _LockSwitch extends StatelessWidget {
+  const _LockSwitch({required this.session});
+  final Session session;
+
+  @override
+  Widget build(BuildContext context) {
+    final lock = session.lock;
+    return ListenableBuilder(
+      listenable: lock,
+      builder: (context, _) => SwitchListTile(
+        secondary: const Icon(Icons.fingerprint, color: AppColors.teal),
+        title: const Text(
+          'Fingerprint unlock',
+          style: TextStyle(fontWeight: FontWeight.w500),
+        ),
+        subtitle: const Text('Ask for fingerprint, face or screen lock'),
+        value: lock.enabled,
+        onChanged: (on) async {
+          if (on && !await lock.available()) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Set up a fingerprint, face or screen lock in your phone settings first.',
+                  ),
+                ),
+              );
+            }
+            return;
+          }
+          await lock.setEnabled(on);
+        },
       ),
     );
   }

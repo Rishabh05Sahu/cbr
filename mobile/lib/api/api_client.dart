@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import '../config.dart';
 
@@ -176,6 +178,62 @@ class ApiClient {
   Future<dynamic> delete(String path, [Map<String, dynamic>? body]) =>
       _v1('DELETE', path, body: body ?? {});
 
+  /// Raw bytes of a private file (property photos). Null when it is gone or not allowed.
+  Future<Uint8List?> getBytes(String path, [Map<String, String>? query]) async {
+    final uri = Uri.parse(
+      '$baseUrl/api/v1$path',
+    ).replace(queryParameters: (query == null || query.isEmpty) ? null : query);
+    try {
+      final res = await _http
+          .get(
+            uri,
+            headers: {if (token != null) 'authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 30));
+      if (res.statusCode == 401) onUnauthenticated?.call();
+      return res.statusCode == 200 ? res.bodyBytes : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Multipart upload (property photos): named files, each with its content type.
+  Future<dynamic> upload(
+    String path,
+    Map<String, (Uint8List, String)> files,
+  ) async {
+    final req = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/api/v1$path'),
+    );
+    if (token != null) req.headers['authorization'] = 'Bearer $token';
+    files.forEach((name, f) {
+      final (bytes, type) = f;
+      final parts = type.split('/');
+      req.files.add(
+        http.MultipartFile.fromBytes(
+          name,
+          bytes,
+          filename: name,
+          contentType: MediaType(parts[0], parts[1]),
+        ),
+      );
+    });
+    final http.Response res;
+    try {
+      res = await http.Response.fromStream(
+        await _http.send(req).timeout(const Duration(seconds: 90)),
+      );
+    } catch (_) {
+      throw ApiException(
+        0,
+        'OFFLINE',
+        'No connection. Check your internet and try again.',
+      );
+    }
+    return _decode(res);
+  }
+
   Future<dynamic> _v1(
     String method,
     String path, {
@@ -191,17 +249,11 @@ class ApiClient {
     };
     final http.Response res;
     try {
-      res =
-          await (switch (method) {
-                'GET' => _http.get(uri, headers: headers),
-                'DELETE' => _http.delete(
-                  uri,
-                  headers: headers,
-                  body: jsonEncode(body),
-                ),
-                _ => _http.post(uri, headers: headers, body: jsonEncode(body)),
-              })
-              .timeout(const Duration(seconds: 30));
+      res = await (switch (method) {
+        'GET' => _http.get(uri, headers: headers),
+        'DELETE' => _http.delete(uri, headers: headers, body: jsonEncode(body)),
+        _ => _http.post(uri, headers: headers, body: jsonEncode(body)),
+      }).timeout(const Duration(seconds: 30));
     } catch (_) {
       throw ApiException(
         0,
@@ -209,6 +261,10 @@ class ApiClient {
         'No connection. Check your internet and try again.',
       );
     }
+    return _decode(res);
+  }
+
+  dynamic _decode(http.Response res) {
     Map<String, dynamic> map;
     try {
       final decoded = jsonDecode(res.body);

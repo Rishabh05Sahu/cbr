@@ -11,6 +11,8 @@ import 'my_day_screen.dart';
 import 'notifications_screen.dart';
 import 'queue_screen.dart';
 import 'visits_screen.dart';
+import 'calendar_screen.dart';
+import 'people_screen.dart';
 
 class _Tab {
   const _Tab(
@@ -50,7 +52,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // While the app is open, check for new notifications every minute.
-    _poll = Timer.periodic(const Duration(minutes: 1), (_) => _checkUnread());
+    _poll = Timer.periodic(const Duration(minutes: 1), (_) {
+      _checkUnread();
+      widget.session.outbox.flush().catchError((_) => 0);
+    });
     widget.session.unread.addListener(_onUnread);
     _lastUnread = widget.session.unread.value;
   }
@@ -65,7 +70,11 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _checkUnread();
+    if (state == AppLifecycleState.resumed) {
+      _checkUnread();
+      // Outcomes saved without signal go out as soon as the app is used again.
+      widget.session.outbox.flush().catchError((_) => 0);
+    }
   }
 
   Future<void> _checkUnread() => widget.session.refreshUnread();
@@ -120,22 +129,17 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       () => MoreScreen(session: s),
       badge: !_hasInbox(me),
     );
-    _Tab soon(String label, IconData icon, String path) => _Tab(
-      label,
-      icon,
-      icon,
-      () => ComingSoonScreen(title: label, webPath: path),
-    );
     final visits = _Tab(
       'Visits',
       Icons.place_outlined,
       Icons.place,
       () => VisitsScreen(session: s),
     );
-    final calendar = soon(
+    final calendar = _Tab(
       'Calendar',
       Icons.calendar_month_outlined,
-      '/app/calendar',
+      Icons.calendar_month,
+      () => CalendarScreen(session: s),
     );
     final team = _Tab(
       'Team',
@@ -150,10 +154,11 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       () => NotificationsScreen(session: s),
       badge: true,
     );
-    final people = soon(
+    final people = _Tab(
       'People',
       Icons.groups_outlined,
-      '/app/settings/members',
+      Icons.groups,
+      () => PeopleScreen(session: s),
     );
 
     final tabs = <_Tab>[];

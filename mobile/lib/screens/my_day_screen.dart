@@ -6,6 +6,7 @@ import '../session.dart';
 import '../theme.dart';
 import 'lead_detail_screen.dart';
 import 'notifications_screen.dart';
+import 'task_sheet.dart';
 import 'when_picker.dart';
 
 /// FR-101 My Day: overdue, today, the next 7 days and later (GET /api/v1/my-day).
@@ -19,6 +20,7 @@ class MyDayScreen extends StatefulWidget {
 
 class _MyDayScreenState extends State<MyDayScreen> {
   Map<String, dynamic>? _data;
+  List<Map<String, dynamic>> _unlogged = const [];
   String? _error;
   bool _showLater = false;
   final Set<String> _completing = {};
@@ -32,6 +34,7 @@ class _MyDayScreenState extends State<MyDayScreen> {
   Future<void> _load() async {
     try {
       final d = await widget.session.api.get('/my-day') as Map<String, dynamic>;
+      await _loadUnlogged();
       if (mounted) {
         setState(() {
           _data = d;
@@ -41,6 +44,152 @@ class _MyDayScreenState extends State<MyDayScreen> {
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
     }
+  }
+
+  /// Calls tapped today with no outcome logged (GET /api/v1/unlogged-calls).
+  Future<void> _loadUnlogged() async {
+    if (!widget.session.me!.can('interaction.create')) return;
+    await widget.session.outbox.flush().catchError((_) => 0);
+    try {
+      final d = await widget.session.api.get(
+        '/unlogged-calls',
+      ) as Map<String, dynamic>;
+      final queued = widget.session.outbox.pending;
+      if (mounted) {
+        setState(
+          () => _unlogged = queued > 0
+              ? const [] // Saved offline and not sent yet: they would show here wrongly.
+              : ((d['rows'] as List?) ?? const []).cast<Map<String, dynamic>>(),
+        );
+      }
+    } on ApiException {
+      // Not worth an error on My Day.
+    }
+  }
+
+  Future<void> _logUnlogged(Map<String, dynamic> c) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => LeadDetailScreen(
+          session: widget.session,
+          leadId: c['leadId'] as String,
+          openLogOutcome: true,
+        ),
+      ),
+    );
+    await _load();
+  }
+
+  Future<void> _addTask() async {
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (_) => AddTaskSheet(
+        api: widget.session.api,
+        nowLocal: formatLocal(DateTime.now()),
+      ),
+    );
+    if (saved == true) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Task added')));
+      }
+      await _load();
+    }
+  }
+
+  Widget _unloggedCard() {
+    return AppCard(
+      padding: const EdgeInsets.fromLTRB(14, 12, 8, 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: AppColors.warn),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _unlogged.length == 1
+                      ? '1 call with no outcome'
+                      : '${_unlogged.length} calls with no outcome',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          for (final c in _unlogged)
+            ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                c['leadName'] as String? ?? '',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                '${c['channel'] == 'WHATSAPP_APP' ? 'WhatsApp' : 'Call'} at ${(c['occurredAt'] as String? ?? '').length >= 16 ? (c['occurredAt'] as String).substring(11, 16) : ''}',
+              ),
+              trailing: FilledButton.tonal(
+                onPressed: () => _logUnlogged(c),
+                child: const Text('Log'),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _outboxBanner() {
+    final o = widget.session.outbox;
+    return ListenableBuilder(
+      listenable: o,
+      builder: (context, _) {
+        final lines = <String>[
+          if (o.pending > 0)
+            o.pending == 1
+                ? '1 outcome saved on this phone, waiting for signal.'
+                : '${o.pending} outcomes saved on this phone, waiting for signal.',
+          if (o.failed.isNotEmpty)
+            'Could not save the outcome for ${o.failed.join(', ')}. Please log it again.',
+        ];
+        if (lines.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Material(
+            color: o.failed.isNotEmpty ? AppColors.redSoft : AppColors.warnSoft,
+            borderRadius: BorderRadius.circular(12),
+            child: ListTile(
+              leading: Icon(
+                o.failed.isNotEmpty
+                    ? Icons.error_outline
+                    : Icons.cloud_upload_outlined,
+              ),
+              title: Text(
+                lines.join('\n'),
+                style: const TextStyle(fontSize: 13),
+              ),
+              trailing: o.failed.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => setState(o.failed.clear),
+                    )
+                  : TextButton(
+                      onPressed: () async {
+                        await o.flush();
+                        await _load();
+                      },
+                      child: const Text('Send now'),
+                    ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   List<Map<String, dynamic>> _list(String key) =>
@@ -220,7 +369,9 @@ class _MyDayScreenState extends State<MyDayScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
           children: [
-            if (empty)
+            _outboxBanner(),
+            if (_unlogged.isNotEmpty) _unloggedCard(),
+            if (empty && _unlogged.isEmpty)
               const Padding(
                 padding: EdgeInsets.only(top: 80),
                 child: MessageView(
@@ -282,6 +433,14 @@ class _MyDayScreenState extends State<MyDayScreen> {
         actions: [NotificationBell(session: widget.session)],
       ),
       body: body,
+      floatingActionButton: me.can('task.create')
+          ? FloatingActionButton.extended(
+              heroTag: 'my-day-add',
+              onPressed: _addTask,
+              icon: const Icon(Icons.add_task),
+              label: const Text('Task'),
+            )
+          : null,
     );
   }
 }

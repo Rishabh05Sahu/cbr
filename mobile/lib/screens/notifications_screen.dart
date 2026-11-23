@@ -67,11 +67,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (_loading) return;
     setState(() => _loading = true);
     try {
-      final d =
-          await _api.get('/notifications', {
-                if (!reset && _cursor != null) 'cursor': _cursor!,
-              })
-              as Map<String, dynamic>;
+      final d = await _api.get('/notifications', {
+        if (!reset && _cursor != null) 'cursor': _cursor!,
+      }) as Map<String, dynamic>;
       if (!mounted) return;
       setState(() {
         if (reset) _rows.clear();
@@ -112,9 +110,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (n['readAt'] == null) {
       setState(() => n['readAt'] = DateTime.now().toUtc().toIso8601String());
       try {
-        final d =
-            await _api.post('/notifications/${n['id']}/read')
-                as Map<String, dynamic>;
+        final d = await _api.post(
+          '/notifications/${n['id']}/read',
+        ) as Map<String, dynamic>;
         _setUnread((d['unread'] as num?)?.toInt() ?? 0);
       } on ApiException {
         // Marking read is best effort; the next load shows the true state.
@@ -126,10 +124,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (lead != null) {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => LeadDetailScreen(
-            session: widget.session,
-            leadId: lead.group(1)!,
-          ),
+          builder: (_) =>
+              LeadDetailScreen(session: widget.session, leadId: lead.group(1)!),
         ),
       );
     } else if (link == '/app/my-day') {
@@ -186,10 +182,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   ),
                   if (body.isNotEmpty) ...[
                     const SizedBox(height: 2),
-                    Text(
-                      body,
-                      style: const TextStyle(color: AppColors.muted),
-                    ),
+                    Text(body, style: const TextStyle(color: AppColors.muted)),
                   ],
                 ],
               ),
@@ -228,10 +221,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     Widget body;
     if (!_loaded && _error != null) {
-      body = MessageView(
-        message: _error!,
-        onRetry: () => _load(reset: true),
-      );
+      body = MessageView(message: _error!, onRetry: () => _load(reset: true));
     } else if (!_loaded) {
       body = const Center(child: CircularProgressIndicator());
     } else {

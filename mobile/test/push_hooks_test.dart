@@ -22,52 +22,49 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   FlutterSecureStorage.setMockInitialValues({});
 
-  test(
-    'registers the phone when the session is ready, unregisters before sign-out',
-    () async {
-      final calls = <String>[];
-      final client = MockClient((req) async {
-        calls.add('${req.method} ${req.url.path}');
-        if (req.url.path == '/api/v1/me') {
-          return http.Response(
-            jsonEncode({
-              'ok': true,
-              'data': {
-                'user': {'id': 'u', 'name': 'Amit', 'email': 'a@x.test'},
-                'memberships': [
-                  {'orgId': 'o', 'orgName': 'CBR', 'role': 'SALES_EXECUTIVE'},
-                ],
-                'blocked': null,
-                'active': {
-                  'orgId': 'o',
-                  'orgName': 'CBR',
-                  'role': 'SALES_EXECUTIVE',
-                  'permissions': {},
-                  'unreadNotifications': 3,
-                },
+  test('registers the phone when the session is ready, unregisters before sign-out', () async {
+    final calls = <String>[];
+    final client = MockClient((req) async {
+      calls.add('${req.method} ${req.url.path}');
+      if (req.url.path == '/api/v1/me') {
+        return http.Response(
+          jsonEncode({
+            'ok': true,
+            'data': {
+              'user': {'id': 'u', 'name': 'Amit', 'email': 'a@x.test'},
+              'memberships': [
+                {'orgId': 'o', 'orgName': 'CBR', 'role': 'SALES_EXECUTIVE'},
+              ],
+              'blocked': null,
+              'active': {
+                'orgId': 'o',
+                'orgName': 'CBR',
+                'role': 'SALES_EXECUTIVE',
+                'permissions': {},
+                'unreadNotifications': 3,
               },
-            }),
-            200,
-          );
-        }
-        return http.Response('{}', 200);
-      });
-      final push = _FakePush();
-      final session = Session(
-        api: ApiClient(httpClient: client, baseUrl: 'https://crm.test')
-          ..token = 'tok',
-      )..push = push;
+            },
+          }),
+          200,
+        );
+      }
+      return http.Response('{}', 200);
+    });
+    final push = _FakePush();
+    final session = Session(
+      api: ApiClient(httpClient: client, baseUrl: 'https://crm.test')
+        ..token = 'tok',
+    )..push = push;
 
-      await session.refresh();
-      expect(session.status, SessionStatus.ready);
-      expect(session.unread.value, 3);
-      expect(push.events, ['ready']);
+    await session.refresh();
+    expect(session.status, SessionStatus.ready);
+    expect(session.unread.value, 3);
+    expect(push.events, ['ready']);
 
-      await session.signOut();
-      expect(push.events.last, 'unregister token=tok');
-      expect(session.status, SessionStatus.signedOut);
-    },
-  );
+    await session.signOut();
+    expect(push.events.last, 'unregister token=tok');
+    expect(session.status, SessionStatus.signedOut);
+  });
 
   test('a failing push never blocks sign-out', () async {
     final session = Session(

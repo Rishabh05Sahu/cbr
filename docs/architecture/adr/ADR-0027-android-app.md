@@ -52,8 +52,38 @@ Organisation switch and sign-out use Better Auth's own `/api/auth/organization/s
   - While the app is open, a push refreshes the badge.
 - **Privacy:** notification titles can name a lead, and they pass through Google FCM. The privacy policy lists FCM.
 
+## Slice 6: app 1.0.4, everyday work and light admin (2026-11-23)
+New `/api/v1` endpoints, each a thin call to the website's module function (same rules and scope):
+- **Daily work:**
+  - `POST /leads` (new lead, with the duplicate check) and `GET /lead-sources`;
+  - `POST /tasks` and `GET /task-assignees`;
+  - `GET /unlogged-calls`: taps in the last day with no outcome logged since, one per lead, only leads still in scope.
+- **Field screens:**
+  - `GET /calendar`;
+  - `GET /scripts`;
+  - `GET|POST /properties`, `GET /properties/:id`, `GET /property-options`;
+  - `POST /properties/:id/photos`: multipart and bearer-only, so the web route's same-origin check is not needed; the module checks type, size and the 20-photo limit;
+  - `GET /properties/:id/photos/:photoId`: private, `no-store`.
+- **Managers and owner:**
+  - `GET /dashboard`: the caller's report scope; KPI definitions are left out;
+  - `GET|POST /members`, `POST /members/:id/role|suspend|reactivate`, `POST /invitations/:id/cancel`. These pass the bearer-only header set to the auth layer, never the raw request headers.
+
+In the app:
+- New lead and Add task (including a task with no lead from My Day).
+- "Calls with no outcome" on My Day, opening the lead with the outcome sheet.
+- Properties with photos from the camera or gallery. They are resized to 2048 px with a 480 px thumbnail and re-encoded on the phone, which drops EXIF location.
+- The script library, the Calendar tab, the Dashboard, and People: invite, change role, suspend or reactivate, cancel an invitation. Deactivating with a lead handover stays on the website.
+
+**Offline outcomes.** When the outcome sheet cannot reach the server, the exact request, with its idempotency key, is kept in Android encrypted storage. It is sent on resume, every minute, and on My Day. "No connection", 5xx and 429 keep it for the next try. Any other refusal (for example a stale lead version) drops it and tells the person to log it again. Sign-out clears the queue.
+
+**Fingerprint unlock.** This is an opt-in switch in More, confirmed once. Once on, the app asks for fingerprint, face or the screen lock at start and after 60 s in the background. It uses `local_auth`, so `MainActivity` is now a `FlutterFragmentActivity`, the `USE_BIOMETRIC` permission is added, and the launch theme is AppCompat. Sign-out turns it off.
+
+Tests:
+- e2e: `tests/e2e/mobile-api-everyday.test.ts`, covering role scope, cross-organisation 404s, the photo round trip and the people rules.
+- App: `mobile/test/everyday_test.dart`, covering the outbox, photo preparation, Add task and the duplicate New lead.
+
 ## Later slices
-Visits and visit outcomes, calendar, properties with camera photos (the photo upload route needs a bearer variant without the same-origin check), people and invitations, and support-access approval.
+Support-access approval, property editing and owner contacts, lead editing (requirements, contact status), and Play Store release paperwork.
 
 ## Risks and limitations
 - A stolen token works until it expires (7 days) or the session is ended. The app keeps it in Android encrypted storage (Keystore) and signs out on the server when the user signs out.

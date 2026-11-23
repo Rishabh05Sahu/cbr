@@ -62,4 +62,20 @@ These screens are built:
 - Visits (1.0.3): outcome due, today, upcoming and recently closed. Confirm, reschedule, cancel, and record attended or no-show (`GET /api/v1/visits`, `POST /api/v1/visits/:id`).
 - My Day (1.0.3): Done and Reschedule on one's own follow-ups and tasks, including those on leads the person may change (`POST /api/v1/tasks/:id/complete`, `POST /api/v1/tasks/:id/reschedule`).
 
-The Calendar and People tabs link to the website for now.
+- Lead screen (1.0.4), the same as the website's lead page:
+  - **Log outcome:** every channel; who made contact; when; duration; notes; the contact-status confirmation; an optional requirements update; the follow-up (mark mine done, the next one at a chosen time with a title, or a reschedule with a reason).
+  - **Book a visit:** time, meeting point and, for managers, the salesperson (`POST /api/v1/leads/:id/visits`).
+  - **Change stage:** Lost reason, Nurture date and reasons (`POST /api/v1/leads/:id/stage`).
+
+- Everyday work (1.0.4):
+  - **New lead** with the duplicate check;
+  - **Add task** on a lead or for oneself;
+  - **Calls with no outcome** on My Day;
+  - **Offline outcomes**: saved on the phone without signal and sent later with the same idempotency key.
+- Field and admin screens (1.0.4):
+  - **Properties** with camera and gallery photos;
+  - **Call scripts**;
+  - **Calendar** tab;
+  - **Dashboard**;
+  - **People**: invite, role, suspend and reactivate, cancel an invitation;
+  - **Fingerprint unlock** (More).

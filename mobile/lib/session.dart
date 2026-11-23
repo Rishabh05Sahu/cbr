@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'api/api_client.dart';
+import 'app_lock.dart';
+import 'outbox.dart';
 
 enum SessionStatus { loading, signedOut, twoFactor, chooseOrg, blocked, ready }
 
@@ -57,6 +61,12 @@ class Session extends ChangeNotifier {
 
   /// Set by main.dart; null in tests and when Firebase is not configured.
   PushHooks? push;
+
+  /// Call outcomes saved while offline, sent when the connection is back.
+  late final Outbox outbox = Outbox(api, storage: _storage);
+
+  /// Fingerprint / face unlock (initialised by main.dart).
+  late final AppLock lock = AppLock(storage: _storage);
 
   /// Unread notifications for the badges. Kept apart from [notifyListeners] so a count change
   /// redraws only the badges, not the whole app.
@@ -130,6 +140,7 @@ class Session extends ChangeNotifier {
       _set(SessionStatus.ready);
       // Best effort and not awaited: a push problem never blocks the app.
       push?.onReady(this).catchError((_) {});
+      unawaited(outbox.flush().catchError((_) => 0));
       return;
     }
     if (blocked == 'NO_ACTIVE_ORG' || blocked == 'NOT_A_MEMBER') {
@@ -149,6 +160,8 @@ class Session extends ChangeNotifier {
       // Offline: the server drops the token when FCM reports it dead or another person registers.
     }
     await api.signOut();
+    await outbox.clear();
+    await lock.reset();
     await _storage.delete(key: _tokenKey);
     me = null;
     _set(SessionStatus.signedOut);
