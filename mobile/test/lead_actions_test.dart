@@ -130,7 +130,7 @@ void main() {
         find.widgetWithText(TextField, 'What to follow up on (optional)'),
         'Send floor plans',
       );
-      await _tapText(t, 'Update requirements (optional)');
+      await _tapText(t, 'Edit');
       await t.enterText(find.widgetWithText(TextField, 'City'), 'Abu Dhabi');
       await _tapText(t, 'Save interaction');
 
