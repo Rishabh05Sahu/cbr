@@ -1,0 +1,6 @@
+# Firebase Android config (ADR-0027 slice 5): the "API key" in google-services.json is a public
+# client identifier that ships inside every APK, not a secret. Restrict it to the app
+# com.crystalbricks.crm in Google Cloud. Only this one finding is ignored; any other key in the
+# repository still fails the scan. The server's FCM service-account key is never committed.
+# Owner approved this exception 2026-11-23.
+5b60fa16117c03e22163f9e38293f1e31cef55b3:mobile/android/app/google-services.json:gcp-api-key:18
