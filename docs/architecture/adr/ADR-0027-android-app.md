@@ -30,8 +30,16 @@ Organisation switch and sign-out use Better Auth's own `/api/auth/organization/s
 ## Slice 3 endpoints (assignment, 2026-11-23)
 `GET /assignment-targets` · `POST /leads/:id/assign` · `POST /leads/assign` (bulk, ≤ 100) · `POST /leads/round-robin`; the unassigned queue is `GET /leads?owner=none&sort=oldest`. They call the same commands as the website (`assignLead`, `bulkAssign`, `roundRobinAssign`), so scope (Sales Manager: the teams they lead), the reassign reason, version checks, history, audit and notifications are unchanged. App 1.0.1: Assign/Reassign on the lead screen, the Unassigned queue, and a Team tab.
 
+## Slice 4 endpoints (in-app notifications, 2026-11-23)
+`GET /notifications?cursor=` (30 a page, with `unread`) · `POST /notifications/:id/read` · `POST /notifications/read-all`. They call the website's notification module (FR-118), so a member only ever reads and marks their own rows; another member's or another organisation's notification is 404. In the app:
+- a bell with an unread badge on My Day and Leads, an Inbox tab for Owner, Admin and HR, and a badge on More for everyone else;
+- tapping a notification marks it read and opens the lead in the app (other links open the website);
+- while the app is open it re-reads the count every minute and on resume, and shows "You have a new notification".
+
+Phone notifications while the app is closed (FCM push) are not built. They need a Firebase project (`google-services.json` in the app, a service-account key on the server) and a `push_devices` migration.
+
 ## Later slices
-Visits and visit outcomes, calendar, properties with camera photos (the photo upload route needs a bearer variant without the same-origin check), notifications plus FCM push (migration `push_devices`), people and invitations, and support-access approval.
+Visits and visit outcomes, calendar, properties with camera photos (the photo upload route needs a bearer variant without the same-origin check), FCM push, people and invitations, and support-access approval.
 
 ## Risks and limitations
 - A stolen token works until it expires (7 days) or the session is ended. The app keeps it in Android encrypted storage (Keystore) and signs out on the server when the user signs out.
@@ -45,4 +53,5 @@ e2e `tests/e2e/mobile-api.test.ts`, against the built server:
 - no token, a forged token, an unsigned token and a website cookie are all refused;
 - private headers on every response;
 - executive OWN scope, owner ORG scope, HR without lead access, another organisation's lead is 404, and switching into a foreign organisation is refused;
-- the call → outcome loop.
+- the call → outcome loop;
+- assignment (slice 3), and notifications only for their recipient (slice 4).

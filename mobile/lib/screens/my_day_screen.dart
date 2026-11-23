@@ -5,6 +5,7 @@ import '../format.dart';
 import '../session.dart';
 import '../theme.dart';
 import 'lead_detail_screen.dart';
+import 'notifications_screen.dart';
 
 /// FR-101 My Day: overdue, today, the next 7 days and later (GET /api/v1/my-day).
 class MyDayScreen extends StatefulWidget {
@@ -241,6 +242,7 @@ class _MyDayScreenState extends State<MyDayScreen> {
             ),
           ],
         ),
+        actions: [NotificationBell(session: widget.session)],
       ),
       body: body,
     );

@@ -30,8 +30,9 @@ const _targets = {
       return http.Response(jsonEncode({'ok': true, 'data': _targets}), 200);
     }
     posts.add((path, jsonDecode(req.body) as Map<String, dynamic>));
-    if (error != null)
+    if (error != null) {
       return http.Response(jsonEncode({'ok': false, 'error': error}), 422);
+    }
     return http.Response(jsonEncode({'ok': true, 'data': {}}), 200);
   });
   final api = ApiClient(httpClient: client, baseUrl: 'https://crm.test')
