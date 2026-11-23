@@ -31,6 +31,11 @@ export default function PrivacyPage() {
           <strong>Security and audit records:</strong> sign-in events, the IP address of requests,
           and a log of important changes (for example a phone number being revealed).
         </li>
+        <li>
+          <strong>Phone notifications (Android app):</strong> if you allow notifications, a
+          notification token that identifies the app on your phone, so we can send you alerts. It is
+          deleted when you sign out.
+        </li>
       </ul>
 
       <h2>What the app does not do</h2>
@@ -60,8 +65,10 @@ export default function PrivacyPage() {
       </p>
       <p>
         We use service providers to run the system: Amazon Web Services (servers), Supabase
-        (database and file storage) and Google Workspace (email). They process data only on our
-        instructions.
+        (database and file storage), Google Workspace (email) and Google Firebase Cloud Messaging
+        (delivering phone notifications, which can include a lead&rsquo;s name). They process data
+        only on our instructions. Notifications are marked private, so a phone set to hide sensitive
+        content shows only &ldquo;Contents hidden&rdquo; on its lock screen.
       </p>
 
       <h2>Security</h2>

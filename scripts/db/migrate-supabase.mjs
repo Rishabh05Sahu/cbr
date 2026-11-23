@@ -135,6 +135,9 @@ export const MANIFEST = [
   ['0029_uae_phones', 'a0d472bdf719599c57278e84233b87fc424a8d9d5e9e4b519e81e675f4194d91'],
   // FR-141 property photos (ADR-0026); owner approved pinning 2026-11-19 ("Pin 0030 now").
   ['0030_property_photos', 'e3accf022966af35baf3b1be7ce95f09d1d21043a49d0bc134d432b8adfc1ffe'],
+  // FR-119 phone push devices (ADR-0027 slice 5); owner asked 2026-11-23 ("build the push
+  // notifications too").
+  ['0031_push_devices', 'a80aa3496534cafd11e8f96560f4e5ee8f6181fdf94baf1526db7f6e7986558e'],
 ];
 
 const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "558727886150",
+    "project_id": "cbr-crm-5c4df",
+    "storage_bucket": "cbr-crm-5c4df.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:558727886150:android:eebc9aafca01239847e147",
+        "android_client_info": {
+          "package_name": "com.crystalbricks.crm"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBaDLPyyDi7fgw8pQRGZFfSrV0iTUgmJF8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

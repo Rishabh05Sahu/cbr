@@ -8,6 +8,7 @@ export const QUEUE = {
   events: 'events',
   imports: 'imports',
   exports: 'exports',
+  push: 'push',
 } as const;
 export type QueueName = (typeof QUEUE)[keyof typeof QUEUE];
 
@@ -60,6 +61,32 @@ export async function enqueueDomainEvent(event: DomainEventJob): Promise<void> {
     backoff: { type: 'exponential', delay: 2_000 },
     removeOnComplete: { age: 24 * 3600, count: 10_000 },
     removeOnFail: { age: 7 * 24 * 3600 },
+  });
+}
+
+export interface PushJobMessage {
+  orgId: string;
+  items: {
+    recipientUserId: string;
+    type: string;
+    title: string;
+    body: string;
+    link: string | null;
+  }[];
+}
+
+/**
+ * Phone push for one event's notifications (ADR-0027 slice 5). jobId `push-<event id>`: a
+ * redelivered event does not push twice while the job is kept (24 h). Job data holds notification
+ * text, so completed jobs are removed after that window and failed ones are not kept long.
+ */
+export async function enqueuePush(message: PushJobMessage, jobId: string): Promise<void> {
+  await queue(QUEUE.push).add('push.send', message, {
+    jobId,
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 5_000 },
+    removeOnComplete: { age: 24 * 3600 },
+    removeOnFail: { age: 24 * 3600 },
   });
 }
 

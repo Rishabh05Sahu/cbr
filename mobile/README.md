@@ -43,6 +43,13 @@ flutter test
 - `store/play-icon-512.png`: the store icon.
 - `assets/icon/`: the launcher icon source. Regenerate with `dart run flutter_launcher_icons`.
 
+## Push notifications (Firebase)
+Push is off until both halves are configured:
+1. **App:** in the Firebase console, add an Android app with package name `com.crystalbricks.crm`. Download `google-services.json` into `mobile/android/app/` and rebuild. The file is not a secret; it ships inside the APK.
+2. **Server:** in Project settings → Service accounts, choose *Generate new private key*. Put the JSON, on one line or base64-encoded, in `FCM_SERVICE_ACCOUNT_JSON` in `/opt/crm/worker.env`, then restart the worker. This file **is** a secret: never commit it.
+
+Without the file, the app builds and runs with in-app notifications only. Without the key, the server sends no push.
+
 ## Scope (slices 1–2)
 These screens are built:
 - Sign-in, two-step verification and the organisation picker.

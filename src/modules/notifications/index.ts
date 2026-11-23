@@ -452,14 +452,42 @@ export async function notifyForEvent(job: {
   type: string;
   payload: unknown;
 }): Promise<'notified' | 'skipped'> {
+  return (await notifyForEventWithItems(job)).result;
+}
+
+/** As notifyForEvent, also returning what was written, for phone push (ADR-0027 slice 5). */
+export async function notifyForEventWithItems(job: {
+  eventId: string;
+  orgId: string;
+  type: string;
+  payload: unknown;
+}): Promise<{
+  result: 'notified' | 'skipped';
+  items: {
+    recipientUserId: string;
+    type: string;
+    title: string;
+    body: string;
+    link: string | null;
+  }[];
+}> {
   const eventId = z.uuid().parse(job.eventId);
   return tenantRunner().withTenant({ orgId: job.orgId, userId: null }, async (tx) => {
     const items = await build(tx, job.type, job.payload);
-    if (!items.length) return 'skipped';
+    if (!items.length) return { result: 'skipped' as const, items: [] };
     await tx.notification.createMany({
       data: items.map((n) => ({ ...n, orgId: job.orgId, eventId })),
       skipDuplicates: true,
     });
-    return 'notified';
+    return {
+      result: 'notified' as const,
+      items: items.map(({ recipientUserId, type, title, body, link }) => ({
+        recipientUserId,
+        type,
+        title,
+        body,
+        link,
+      })),
+    };
   });
 }

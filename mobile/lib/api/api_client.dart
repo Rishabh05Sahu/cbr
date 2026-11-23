@@ -173,6 +173,9 @@ class ApiClient {
   Future<dynamic> post(String path, [Map<String, dynamic>? body]) =>
       _v1('POST', path, body: body ?? {});
 
+  Future<dynamic> delete(String path, [Map<String, dynamic>? body]) =>
+      _v1('DELETE', path, body: body ?? {});
+
   Future<dynamic> _v1(
     String method,
     String path, {
@@ -189,9 +192,15 @@ class ApiClient {
     final http.Response res;
     try {
       res =
-          await (method == 'GET'
-                  ? _http.get(uri, headers: headers)
-                  : _http.post(uri, headers: headers, body: jsonEncode(body)))
+          await (switch (method) {
+                'GET' => _http.get(uri, headers: headers),
+                'DELETE' => _http.delete(
+                  uri,
+                  headers: headers,
+                  body: jsonEncode(body),
+                ),
+                _ => _http.post(uri, headers: headers, body: jsonEncode(body)),
+              })
               .timeout(const Duration(seconds: 30));
     } catch (_) {
       throw ApiException(

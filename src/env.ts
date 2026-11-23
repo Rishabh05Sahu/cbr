@@ -119,6 +119,12 @@ export const serverEnvSchema = z
      * Both give the same outcomes; any other value refuses to start.
      */
     IMPORT_COMMIT_STRATEGY: unsetIfBlank(z.enum(['row', 'set'])).transform((v) => v ?? 'set'),
+    /**
+     * Worker only: the Firebase service-account key (the downloaded JSON file's contents, or the
+     * same base64-encoded) for FCM push to the Android app (ADR-0027 slice 5). Optional: without
+     * it no push is sent and in-app notifications work as before. A server-only secret.
+     */
+    FCM_SERVICE_ACCOUNT_JSON: unsetIfBlank(z.string().min(20)),
   })
   .refine(
     (e) =>
