@@ -5,6 +5,7 @@ import '../format.dart';
 import '../session.dart';
 import '../theme.dart';
 import 'lead_detail_screen.dart';
+import 'queue_screen.dart';
 
 /// FR-056 lead list in the caller's scope, with search, quick filters and "load more".
 class LeadsScreen extends StatefulWidget {
@@ -171,6 +172,21 @@ class _LeadsScreenState extends State<LeadsScreen> {
           'Leads',
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
         ),
+        actions: [
+          if (widget.session.me!.can('lead.assign'))
+            TextButton.icon(
+              onPressed: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => QueueScreen(session: widget.session),
+                  ),
+                );
+                _load(reset: true);
+              },
+              icon: const Icon(Icons.inbox_outlined, size: 20),
+              label: const Text('Unassigned'),
+            ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(108),
           child: Padding(

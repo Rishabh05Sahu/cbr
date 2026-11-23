@@ -27,8 +27,11 @@ Sales executives make 60–120 calls a day from Android phones and want a Play S
 `GET /me` (user, memberships, active org with role, time zone and permission scopes; works before an organisation is chosen) · `GET /my-day` · `GET /leads` (FR-056 parameters) · `GET /leads/:id` (lead, tasks, visits, top 3 scripts, pending tap) · `GET /leads/:id/timeline` · `POST /leads/:id/reveal-phone` · `POST /leads/:id/call-intents` · `GET /interactions/defaults` · `POST /interactions` · `POST /tasks/:id/complete`.
 Organisation switch and sign-out use Better Auth's own `/api/auth/organization/set-active` and `/api/auth/sign-out` with the bearer token.
 
+## Slice 3 endpoints (assignment, 2026-11-23)
+`GET /assignment-targets` · `POST /leads/:id/assign` · `POST /leads/assign` (bulk, ≤ 100) · `POST /leads/round-robin`; the unassigned queue is `GET /leads?owner=none&sort=oldest`. They call the same commands as the website (`assignLead`, `bulkAssign`, `roundRobinAssign`), so scope (Sales Manager: the teams they lead), the reassign reason, version checks, history, audit and notifications are unchanged. App 1.0.1: Assign/Reassign on the lead screen, the Unassigned queue, and a Team tab.
+
 ## Later slices
-Visits and visit outcomes, calendar, properties with camera photos (the photo upload route needs a bearer variant without the same-origin check), notifications plus FCM push (migration `push_devices`), the manager queue and assignment, people and invitations, and support-access approval.
+Visits and visit outcomes, calendar, properties with camera photos (the photo upload route needs a bearer variant without the same-origin check), notifications plus FCM push (migration `push_devices`), people and invitations, and support-access approval.
 
 ## Risks and limitations
 - A stolen token works until it expires (7 days) or the session is ended. The app keeps it in Android encrypted storage (Keystore) and signs out on the server when the user signs out.

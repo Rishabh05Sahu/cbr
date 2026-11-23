@@ -5,6 +5,7 @@
 import { randomInt } from 'node:crypto';
 import { beforeAll, describe, expect, it } from 'vitest';
 import * as leads from '@/modules/leads';
+import * as teams from '@/modules/teams';
 import { actorIn, PASSWORD, seedOrg } from '../support/factory';
 import { authenticators, totp } from '../support/totp';
 import { Browser, BASE } from './http';
@@ -273,5 +274,171 @@ describe('the call loop', () => {
     const res = await app.api('/interactions', { method: 'POST', body: { leadId: exec1Lead } });
     expect(res.status).toBe(422);
     expect((await json(res)).error?.code).toBe('VALIDATION_FAILED');
+  });
+});
+
+describe('assignment from the app (FR-063/070/072/073)', () => {
+  let team: string;
+  const mine = async (user: { email: string }, name: string) => {
+    const a = await actorIn(user as Parameters<typeof actorIn>[0], A.orgId);
+    return created(
+      leads.createLead(a.ctx, { fullName: name, primaryPhone: `98111${randomInt(10000, 99999)}` }),
+    );
+  };
+  const lead = async (app: App, id: string) =>
+    (await json(await app.api(`/leads/${id}`))).data.lead;
+  /** An owner-created lead moved to the org queue (unassigned), as an import or a handover leaves it. */
+  const queued = async (owner: App, name: string) => {
+    const id = await mine(A.users.owner, name);
+    const v = (await lead(owner, id)).version;
+    const r = await owner.api(`/leads/${id}/assign`, {
+      method: 'POST',
+      body: { target: 'queue', version: v, reason: 'to the queue' },
+    });
+    expect(r.status).toBe(200);
+    return id;
+  };
+
+  beforeAll(async () => {
+    const owner = await actorIn(A.users.owner, A.orgId);
+    team = (await teams.createTeam(owner.ctx, { name: 'App Marina' })).id;
+    for (const [m, teamRole] of [
+      [A.membership.manager!, 'LEAD'],
+      [A.membership.exec1!, 'MEMBER'],
+      [A.membership.exec2!, 'MEMBER'],
+    ] as const)
+      await teams.addTeamMember(owner.ctx, { teamId: team, membershipId: m, teamRole });
+  });
+
+  it('the owner sees every person and team as a target; executives and HR cannot assign', async () => {
+    const owner = await appFor(A.users.owner, A.orgId);
+    const t = await json(await owner.api('/assignment-targets'));
+    expect(t.data.orgQueue).toBe(true);
+    const people = t.data.people.map((p: { userId: string }) => p.userId);
+    expect(people).toEqual(expect.arrayContaining([A.users.exec1.id, A.users.exec2.id]));
+    expect(people).not.toContain(B.users.exec1.id);
+    expect(t.data.teams.map((x: { id: string }) => x.id)).toContain(team);
+    for (const k of ['exec1', 'hr'] as const) {
+      const app = await appFor(A.users[k], A.orgId);
+      expect((await app.api('/assignment-targets')).status, k).toBe(403);
+    }
+  });
+
+  it('the owner reassigns a lead with a reason; without one it is refused', async () => {
+    const owner = await appFor(A.users.owner, A.orgId);
+    const id = await mine(A.users.exec1, 'Reassign Me');
+    const v = (await lead(owner, id)).version;
+    const noReason = await owner.api(`/leads/${id}/assign`, {
+      method: 'POST',
+      body: { target: `user:${A.users.exec2.id}`, version: v },
+    });
+    expect(noReason.status).toBe(422);
+    expect((await json(noReason)).error?.code).toBe('VALIDATION_FAILED');
+    const ok = await owner.api(`/leads/${id}/assign`, {
+      method: 'POST',
+      body: { target: `user:${A.users.exec2.id}`, version: v, reason: 'Arabic speaker' },
+    });
+    expect(ok.status).toBe(200);
+    expect((await lead(owner, id)).ownerUserId).toBe(A.users.exec2.id);
+    // A stale version (the screen was out of date) is a conflict, not a silent overwrite.
+    const stale = await owner.api(`/leads/${id}/assign`, {
+      method: 'POST',
+      body: { target: `user:${A.users.exec1.id}`, version: v, reason: 'again' },
+    });
+    expect(stale.status).toBe(409);
+  });
+
+  it('an executive cannot assign, even their own lead', async () => {
+    const exec = await appFor(A.users.exec1, A.orgId);
+    const id = await mine(A.users.exec1, 'Exec Keeps');
+    const v = (await lead(exec, id)).version;
+    const r = await exec.api(`/leads/${id}/assign`, {
+      method: 'POST',
+      body: { target: `user:${A.users.exec2.id}`, version: v, reason: 'x' },
+    });
+    expect(r.status).toBe(403);
+  });
+
+  it('no assigning across organisations', async () => {
+    const owner = await appFor(A.users.owner, A.orgId);
+    const r1 = await owner.api(`/leads/${bLead}/assign`, {
+      method: 'POST',
+      body: { target: `user:${A.users.exec1.id}`, version: 1, reason: 'x' },
+    });
+    expect(r1.status).toBe(404);
+    const id = await mine(A.users.exec1, 'Stay Home');
+    const r2 = await owner.api(`/leads/${id}/assign`, {
+      method: 'POST',
+      body: {
+        target: `user:${B.users.exec1.id}`,
+        version: (await lead(owner, id)).version,
+        reason: 'x',
+      },
+    });
+    expect(r2.status).toBe(422);
+    const r3 = await owner.api('/leads/assign', {
+      method: 'POST',
+      body: { leadIds: [bLead], target: `user:${A.users.exec1.id}` },
+    });
+    expect(r3.status).toBe(404);
+  });
+
+  it('queue: the owner lists unassigned leads, then bulk-assigns and deals round-robin', async () => {
+    const owner = await appFor(A.users.owner, A.orgId);
+    const q1 = await queued(owner, 'Queue One');
+    const q2 = await queued(owner, 'Queue Two');
+    const q3 = await queued(owner, 'Queue Three');
+    const list = await json(await owner.api('/leads?owner=none&sort=oldest'));
+    const ids = list.data.rows.map((r: { id: string }) => r.id);
+    expect(ids).toEqual(expect.arrayContaining([q1, q2, q3]));
+    expect(ids).not.toContain(exec1Lead);
+
+    const bulk = await json(
+      await owner.api('/leads/assign', {
+        method: 'POST',
+        body: { leadIds: [q1], target: `user:${A.users.exec1.id}` },
+      }),
+    );
+    expect(bulk.data).toEqual({ moved: 1 });
+    expect((await lead(owner, q1)).ownerUserId).toBe(A.users.exec1.id);
+
+    const rr = await json(
+      await owner.api('/leads/round-robin', {
+        method: 'POST',
+        body: { leadIds: [q2, q3], teamId: team },
+      }),
+    );
+    expect(rr.ok, JSON.stringify(rr)).toBe(true);
+    const owners = new Set(rr.data.assigned.map((a: { userId: string }) => a.userId));
+    for (const u of owners)
+      expect([A.users.manager.id, A.users.exec1.id, A.users.exec2.id]).toContain(u);
+    const after = (await json(await owner.api('/leads?owner=none'))).data.rows.map(
+      (r: { id: string }) => r.id,
+    );
+    expect(after).not.toEqual(expect.arrayContaining([q2]));
+  });
+
+  it('a sales manager assigns within the team they lead, never outside it', async () => {
+    const mgr = await appFor(A.users.manager, A.orgId);
+    const t = await json(await mgr.api('/assignment-targets'));
+    expect(t.data.orgQueue).toBe(false);
+    expect(t.data.teams.map((x: { id: string }) => x.id)).toEqual([team]);
+    expect(t.data.people.map((p: { userId: string }) => p.userId)).not.toContain(A.users.hr.id);
+    const id = await mine(A.users.exec1, 'Team Lead Move');
+    const v = (await lead(mgr, id)).version;
+    const ok = await mgr.api(`/leads/${id}/assign`, {
+      method: 'POST',
+      body: { target: `user:${A.users.exec2.id}`, version: v, reason: 'workload' },
+    });
+    expect(ok.status, JSON.stringify(await ok.clone().json())).toBe(200);
+    const out = await mgr.api(`/leads/${id}/assign`, {
+      method: 'POST',
+      body: {
+        target: `user:${A.users.admin.id}`,
+        version: (await lead(mgr, id)).version,
+        reason: 'x',
+      },
+    });
+    expect(out.status).toBe(422);
   });
 });

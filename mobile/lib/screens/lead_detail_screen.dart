@@ -5,6 +5,7 @@ import '../api/api_client.dart';
 import '../format.dart';
 import '../session.dart';
 import '../theme.dart';
+import 'assign_sheet.dart';
 import 'log_outcome_sheet.dart';
 
 /// The lead screen (GET /api/v1/leads/:id): contact, Call / WhatsApp, the follow-up, visits,
@@ -248,9 +249,44 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
           _kv('Source', l['sourceName'] as String? ?? ''),
           if (widget.session.me!.scope('lead.read') != 'OWN')
             _kv('Owner', (l['ownerName'] as String?) ?? 'Unassigned'),
+          if (_canAssign)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: OutlinedButton.icon(
+                  onPressed: _busy ? null : _assign,
+                  icon: const Icon(Icons.person_add_alt_1, size: 18),
+                  label: Text(l['ownerUserId'] == null ? 'Assign' : 'Reassign'),
+                ),
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  /// FR-070: Owner, Admin and Sales Manager (in scope) on an open, writable lead.
+  bool get _canAssign {
+    final l = _lead;
+    return l['canAssign'] == true &&
+        l['stage'] != 'WON' &&
+        l['stage'] != 'LOST';
+  }
+
+  Future<void> _assign() async {
+    final l = _lead;
+    final ok = await showAssignSheet(
+      context,
+      api: _api,
+      leadIds: [l['id'] as String],
+      version: (l['version'] as num).toInt(),
+      currentOwnerId: l['ownerUserId'] as String?,
+    );
+    if (ok && mounted) {
+      _toast('Lead assigned');
+      await _load();
+    }
   }
 
   Widget _phoneRow(String k, String? v) => Padding(
