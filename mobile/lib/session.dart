@@ -30,6 +30,15 @@ class Me {
   String? scope(String permission) => permissions[permission] as String?;
 }
 
+/// Phone push (lib/push.dart). An interface so the session and its tests do not need Firebase.
+abstract class PushHooks {
+  /// The session is ready (signed in, organisation chosen): register this phone.
+  Future<void> onReady(Session session);
+
+  /// Before signing out, while the token still works: unregister this phone.
+  Future<void> beforeSignOut(Session session);
+}
+
 /// Session state for the whole app. The token lives in Android's encrypted storage.
 class Session extends ChangeNotifier {
   Session({ApiClient? api, FlutterSecureStorage? storage})
@@ -45,6 +54,9 @@ class Session extends ChangeNotifier {
   SessionStatus status = SessionStatus.loading;
   Me? me;
   String? notice;
+
+  /// Set by main.dart; null in tests and when Firebase is not configured.
+  PushHooks? push;
 
   /// Unread notifications for the badges. Kept apart from [notifyListeners] so a count change
   /// redraws only the badges, not the whole app.
@@ -114,7 +126,12 @@ class Session extends ChangeNotifier {
     me = Me(data);
     unread.value = me!.unread;
     final blocked = me!.blocked;
-    if (blocked == null) return _set(SessionStatus.ready);
+    if (blocked == null) {
+      _set(SessionStatus.ready);
+      // Best effort and not awaited: a push problem never blocks the app.
+      push?.onReady(this).catchError((_) {});
+      return;
+    }
     if (blocked == 'NO_ACTIVE_ORG' || blocked == 'NOT_A_MEMBER') {
       return _set(
         me!.memberships.isEmpty
@@ -126,6 +143,11 @@ class Session extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
+    try {
+      await push?.beforeSignOut(this).timeout(const Duration(seconds: 5));
+    } catch (_) {
+      // Offline: the server drops the token when FCM reports it dead or another person registers.
+    }
     await api.signOut();
     await _storage.delete(key: _tokenKey);
     me = null;

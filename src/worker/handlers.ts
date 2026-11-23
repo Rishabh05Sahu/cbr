@@ -2,12 +2,13 @@
 // actor and must be idempotent (events can be delivered more than once).
 import { UnrecoverableError } from 'bullmq';
 import { z } from 'zod';
-import { notifyForEvent } from '@/modules/notifications';
+import { notifyForEventWithItems } from '@/modules/notifications';
 import { tenantRunner } from '@/platform/db';
 import type { EmailSender } from '@/platform/email/sender';
 import type { EmailMessage } from '@/platform/email/templates';
 import type { DomainEventJob } from '@/platform/queue';
-import { enqueueEmail, enqueueExportJob, enqueueImportJob } from '@/platform/queue';
+import { enqueueEmail, enqueueExportJob, enqueueImportJob, enqueuePush } from '@/platform/queue';
+import { pushSender } from '@/platform/push/fcm';
 
 const membershipPayload = z.object({
   membershipId: z.uuid(),
@@ -78,8 +79,15 @@ export async function handleDomainEvent(
     // FR-106 (ADR-0019): a reminder recorded by app.task_reminders_claim.
     case 'task.reminder_due':
     // FR-150 (ADR-0022): a site-visit reminder recorded by app.site_visit_reminders_claim.
-    case 'site_visit.reminder_due':
-      return notifyForEvent({ ...job, orgId });
+    case 'site_visit.reminder_due': {
+      const { result, items } = await notifyForEventWithItems({ ...job, orgId });
+      // Phone push (ADR-0027 slice 5) only when FCM is configured; its own queue, so a push
+      // problem never redoes or delays the in-app notification.
+      if (result === 'notified' && items.length && pushSender()) {
+        await enqueuePush({ orgId, items }, `push-${job.eventId}`);
+      }
+      return result;
+    }
     // Phase 2 M4: hand the import to its own queue (long-running, lower concurrency).
     case 'import.process_requested': {
       const p = z.object({ importJobId: z.uuid() }).parse(job.payload);

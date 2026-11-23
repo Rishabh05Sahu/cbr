@@ -6,6 +6,12 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Push notifications (ADR-0027 slice 5): the Firebase project's android/app/google-services.json
+// switches them on. Without the file the app builds and runs without push.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 // Upload key for Google Play (never committed): android/key.properties points at the keystore.
 // See mobile/README.md. Without it, release builds are signed with the debug key and Play
 // will refuse them.

@@ -36,10 +36,24 @@ Organisation switch and sign-out use Better Auth's own `/api/auth/organization/s
 - tapping a notification marks it read and opens the lead in the app (other links open the website);
 - while the app is open it re-reads the count every minute and on resume, and shows "You have a new notification".
 
-Phone notifications while the app is closed (FCM push) are not built. They need a Firebase project (`google-services.json` in the app, a service-account key on the server) and a `push_devices` migration.
+## Slice 5: phone push (FCM, 2026-11-23)
+- **Database:** migration `0031_push_devices` adds one row per phone (FCM registration token, member, organisation).
+  - A token is unique, so whoever registers it last owns it. When someone else signs in on the phone, the earlier person's notifications stop arriving there.
+  - Members register only through `app.push_device_register` (SECURITY DEFINER), and see or delete only their own rows.
+  - The worker (system actor) reads recipients' tokens and deletes the ones FCM reports as dead.
+- **API:** `POST /api/v1/push-devices {token}` after sign-in and after an organisation switch; `DELETE` on sign-out.
+- **Worker:** after writing an event's in-app notifications, it queues `push-<event id>` on a `push` queue. It sends through FCM HTTP v1 with an OAuth token minted from the service-account key, with no Firebase SDK on the server.
+  - Push is best effort: one phone failing is logged, not retried, because a retry would send twice to the phones that already got it. The notification centre remains the record.
+  - With no `FCM_SERVICE_ACCOUNT_JSON` (worker.env), nothing is queued.
+- **App:** `firebase_messaging` with registration tokens. The `google-services.json` file switches push on; without it the build works with push off.
+  - Android 13+ asks for permission once after sign-in.
+  - Notifications use the "Leads and tasks" channel with PRIVATE lock-screen visibility.
+  - Tapping one opens the lead.
+  - While the app is open, a push refreshes the badge.
+- **Privacy:** notification titles can name a lead, and they pass through Google FCM. The privacy policy lists FCM.
 
 ## Later slices
-Visits and visit outcomes, calendar, properties with camera photos (the photo upload route needs a bearer variant without the same-origin check), FCM push, people and invitations, and support-access approval.
+Visits and visit outcomes, calendar, properties with camera photos (the photo upload route needs a bearer variant without the same-origin check), people and invitations, and support-access approval.
 
 ## Risks and limitations
 - A stolen token works until it expires (7 days) or the session is ended. The app keeps it in Android encrypted storage (Keystore) and signs out on the server when the user signs out.
@@ -54,4 +68,7 @@ e2e `tests/e2e/mobile-api.test.ts`, against the built server:
 - private headers on every response;
 - executive OWN scope, owner ORG scope, HR without lead access, another organisation's lead is 404, and switching into a foreign organisation is refused;
 - the call → outcome loop;
-- assignment (slice 3), and notifications only for their recipient (slice 4).
+- assignment (slice 3), and notifications only for their recipient (slice 4);
+- push-device registration and removal (slice 5).
+
+Also: integration `tests/integration/push-devices.test.ts` (definer-only registration, token moves, own-row visibility, delivery and dead-token cleanup) and unit `src/platform/push/fcm.test.ts`.

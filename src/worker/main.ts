@@ -24,7 +24,10 @@ import {
   type DomainEventJob,
   type ExportJobMessage,
   type ImportJobMessage,
+  type PushJobMessage,
 } from '@/platform/queue';
+import { deliverPush } from '@/modules/push';
+import { pushSender } from '@/platform/push/fcm';
 import { exportStorage, importStorage, isStorageConfigured } from '@/platform/storage';
 import { handleDomainEvent, handleEmail } from './handlers';
 import { relayOnce } from './relay';
@@ -103,7 +106,19 @@ const exportWorker = new Worker<ExportJobMessage>(
   { connection: connection(), concurrency: 1, lockDuration: 60_000 },
 );
 
-for (const w of [emailWorker, eventWorker, importWorker, exportWorker]) {
+// ADR-0027 slice 5: phone push for new notifications (only enqueued when FCM is configured).
+const pushWorker = new Worker<PushJobMessage>(
+  QUEUE.push,
+  async (job) => {
+    const sender = pushSender();
+    if (!sender) return;
+    const out = await deliverPush(sender, job.data.orgId, job.data.items);
+    logger.info({ jobId: job.id, orgId: job.data.orgId, ...out }, 'push sent');
+  },
+  { connection: connection(), concurrency: 5 },
+);
+
+for (const w of [emailWorker, eventWorker, importWorker, exportWorker, pushWorker]) {
   // Job data may contain addresses/links: log ids and error names only.
   w.on('failed', (job, err) =>
     logger.warn(
@@ -195,6 +210,7 @@ async function shutdown(signal: string) {
     eventWorker.close(),
     importWorker.close(),
     exportWorker.close(),
+    pushWorker.close(),
   ]);
   await closeQueues();
   await disconnectAll();

@@ -1385,3 +1385,22 @@ model SiteVisitReminder {
   @@unique([siteVisitId, recipientUserId, offsetMinutes, fireAt], map: "site_visit_reminder_key")
   @@map("site_visit_reminder")
 }
+
+/// FR-119 (ADR-0027 slice 5, migration 0031): a phone that receives push notifications. Members
+/// register through app.push_device_register and see or delete only their own rows; the worker
+/// reads recipients' tokens and deletes dead ones.
+model PushDevice {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId     String   @map("org_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  /// FCM registration token (unique: re-registering on another account moves it)
+  token     String   @unique
+  /// ANDROID
+  platform  String   @default("ANDROID")
+  createdAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([orgId, id])
+  @@index([orgId, userId])
+  @@map("push_device")
+}

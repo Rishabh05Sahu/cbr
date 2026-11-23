@@ -487,3 +487,37 @@ describe('notifications in the app (FR-118)', () => {
     ).toBeNull();
   });
 });
+
+describe('phone push registration (ADR-0027 slice 5)', () => {
+  const fcmToken = () => `e2e${randomInt(100000, 999999)}:APA91b${'x'.repeat(60)}`;
+
+  it('registers and removes this phone for the signed-in member only', async () => {
+    const t = fcmToken();
+    const app = await appFor(A.users.exec1, A.orgId);
+    const reg = await app.api('/push-devices', { method: 'POST', body: { token: t } });
+    expect(reg.status, JSON.stringify(await reg.clone().json())).toBe(200);
+    expect(await migrator().pushDevice.findUnique({ where: { token: t } })).toMatchObject({
+      orgId: A.orgId,
+      userId: A.users.exec1.id,
+    });
+    // Someone else cannot remove it.
+    const other = await appFor(A.users.exec2, A.orgId);
+    await other.api('/push-devices', { method: 'DELETE', body: { token: t } });
+    expect(await migrator().pushDevice.findUnique({ where: { token: t } })).not.toBeNull();
+    // Sign-out removes it.
+    expect((await app.api('/push-devices', { method: 'DELETE', body: { token: t } })).status).toBe(
+      200,
+    );
+    expect(await migrator().pushDevice.findUnique({ where: { token: t } })).toBeNull();
+  });
+
+  it('refuses a malformed token and a caller without a token', async () => {
+    const app = await appFor(A.users.exec1, A.orgId);
+    const bad = await app.api('/push-devices', { method: 'POST', body: { token: 'no' } });
+    expect(bad.status).toBe(422);
+    const anon = new App();
+    expect(
+      (await anon.api('/push-devices', { method: 'POST', body: { token: fcmToken() } })).status,
+    ).toBe(401);
+  });
+});
