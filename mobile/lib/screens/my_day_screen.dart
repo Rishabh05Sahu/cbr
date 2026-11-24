@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../api/api_client.dart';
@@ -5,6 +6,7 @@ import '../format.dart';
 import '../session.dart';
 import '../theme.dart';
 import 'lead_detail_screen.dart';
+import 'lead_extras.dart';
 import 'notifications_screen.dart';
 import 'task_sheet.dart';
 import 'when_picker.dart';
@@ -100,11 +102,85 @@ class _MyDayScreenState extends State<MyDayScreen> {
     }
   }
 
+  /// Overdue / Today / Next 7 days at a glance (owner request 2026-11-24: a cleaner My Day).
+  Widget _summary(int overdue, int today, int upcoming) {
+    Widget tile(String label, int n, {bool alert = false}) => Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        decoration: BoxDecoration(
+          color: alert && n > 0 ? AppColors.redSoft : AppColors.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: alert && n > 0 ? const Color(0xFFF3B8B3) : AppColors.border,
+          ),
+        ),
+        child: Column(
+          children: [
+            Text(
+              '$n',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: alert && n > 0 ? AppColors.red : AppColors.text,
+              ),
+            ),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                color: alert && n > 0 ? AppColors.red : AppColors.muted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 12),
+      child: Row(
+        children: [
+          tile('Overdue', overdue, alert: true),
+          const SizedBox(width: 8),
+          tile('Today', today),
+          const SizedBox(width: 8),
+          tile('Next 7 days', upcoming),
+        ],
+      ),
+    );
+  }
+
+  /// "Today 11:33 pm" from the call's org-local time ("2026-11-23T23:33").
+  String _callTime(String? local) {
+    if (local == null || local.length < 16) return '';
+    final t = parseLocal(local);
+    final now = DateTime.now();
+    final days = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).difference(DateTime(t.year, t.month, t.day)).inDays;
+    final clock = DateFormat('h:mm a').format(t).toLowerCase();
+    if (days == 0) return 'Today $clock';
+    if (days == 1) return 'Yesterday $clock';
+    return '${DateFormat('EEE d MMM').format(t)}, $clock';
+  }
+
+  /// Calls tapped but not logged yet. Each row gives the name its own full width; the Log
+  /// button has a fixed size (the theme's FilledButton is full-width, which squeezed the name into
+  /// one letter per line inside a ListTile on phones: owner report 2026-11-24).
   Widget _unloggedCard() {
-    return AppCard(
-      padding: const EdgeInsets.fromLTRB(14, 12, 8, 6),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: AppColors.warnSoft,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFF4C7A1)),
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 12, 12, 6),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
@@ -118,25 +194,78 @@ class _MyDayScreenState extends State<MyDayScreen> {
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
+                    color: AppColors.warn,
                   ),
                 ),
               ),
             ],
           ),
+          const Padding(
+            padding: EdgeInsets.only(top: 2, left: 32, bottom: 4),
+            child: Text(
+              'Log what happened so your follow-ups stay right.',
+              style: TextStyle(fontSize: 13, color: AppColors.gray),
+            ),
+          ),
           for (final c in _unlogged)
-            ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                c['leadName'] as String? ?? '',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: Text(
-                '${c['channel'] == 'WHATSAPP_APP' ? 'WhatsApp' : 'Call'} at ${(c['occurredAt'] as String? ?? '').length >= 16 ? (c['occurredAt'] as String).substring(11, 16) : ''}',
-              ),
-              trailing: FilledButton.tonal(
-                onPressed: () => _logUnlogged(c),
-                child: const Text('Log'),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      c['channel'] == 'WHATSAPP_APP'
+                          ? Icons.chat_outlined
+                          : Icons.call_outlined,
+                      size: 18,
+                      color: AppColors.warn,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          c['leadName'] as String? ?? '',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            color: AppColors.text,
+                          ),
+                        ),
+                        Text(
+                          '${c['channel'] == 'WHATSAPP_APP' ? 'WhatsApp' : 'Phone call'} · ${_callTime(c['occurredAt'] as String?)}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(72, 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      textStyle: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    onPressed: () => _logUnlogged(c),
+                    child: const Text('Log'),
+                  ),
+                ],
               ),
             ),
         ],
@@ -237,6 +366,30 @@ class _MyDayScreenState extends State<MyDayScreen> {
       }
       _load();
     }
+  }
+
+  /// One-tap call from a card; back in the app, My Day reloads so the call shows under calls
+  /// with no outcome, ready to log.
+  bool _calling = false;
+  late final AppLifecycleListener _lifecycle = AppLifecycleListener(
+    onResume: () {
+      if (_calling) {
+        _calling = false;
+        _load();
+      }
+    },
+  );
+
+  Future<void> _call(String leadId) async {
+    _lifecycle; // start listening before the dialer opens
+    _calling = true;
+    await quickCall(context, widget.session.api, leadId);
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
   }
 
   Future<void> _open(Map<String, dynamic> t) async {
@@ -378,29 +531,46 @@ class _MyDayScreenState extends State<MyDayScreen> {
               const SizedBox(height: 6),
               const Divider(height: 1, color: AppColors.border),
               Padding(
-                padding: const EdgeInsets.only(left: 36),
-                // Wraps under large text sizes instead of overflowing.
-                child: Wrap(
-                  children: [
-                    TextButton.icon(
-                      onPressed: busy ? null : () => _complete(t),
-                      icon: busy
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.check_circle_outline, size: 20),
-                      label: const Text('Done'),
+                padding: const EdgeInsets.only(left: 30),
+                // Wraps under large text sizes instead of overflowing. Compact buttons so Call,
+                // Done and Reschedule fit one line at 360 dp.
+                child: TextButtonTheme(
+                  data: TextButtonThemeData(
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      visualDensity: VisualDensity.compact,
                     ),
-                    TextButton.icon(
-                      onPressed: busy
-                          ? null
-                          : () => _reschedule(t, overdue: overdue),
-                      icon: const Icon(Icons.update, size: 20),
-                      label: const Text('Reschedule'),
-                    ),
-                  ],
+                  ),
+                  child: Wrap(
+                    children: [
+                      if (lead != null)
+                        TextButton.icon(
+                          onPressed: () => _call(lead['id'] as String),
+                          icon: const Icon(Icons.call_outlined, size: 20),
+                          label: const Text('Call'),
+                        ),
+                      TextButton.icon(
+                        onPressed: busy ? null : () => _complete(t),
+                        icon: busy
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.check_circle_outline, size: 20),
+                        label: const Text('Done'),
+                      ),
+                      TextButton.icon(
+                        onPressed: busy
+                            ? null
+                            : () => _reschedule(t, overdue: overdue),
+                        icon: const Icon(Icons.update, size: 20),
+                        label: const Text('Reschedule'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -432,9 +602,11 @@ class _MyDayScreenState extends State<MyDayScreen> {
       body = RefreshIndicator(
         onRefresh: _load,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+          // Room at the bottom so the + Task button never covers the last card.
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
           children: [
             _outboxBanner(),
+            if (!empty) _summary(overdue.length, today.length, upcoming.length),
             if (_unlogged.isNotEmpty) _unloggedCard(),
             if (empty && _unlogged.isEmpty)
               const Padding(

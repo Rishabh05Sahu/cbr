@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../api/api_client.dart';
 import '../format.dart';
 import '../theme.dart';
+import 'lead_extras.dart';
 import 'when_picker.dart';
 
 /// Server errors under a form, in red.
@@ -55,6 +56,7 @@ class _BookVisitSheetState extends State<BookVisitSheet> {
   late String _when;
   final _location = TextEditingController();
   String _assignee = '';
+  List<Map<String, dynamic>> _properties = const [];
   bool _saving = false;
   List<String> _errors = const [];
 
@@ -81,6 +83,8 @@ class _BookVisitSheetState extends State<BookVisitSheet> {
         'scheduledFor': _when,
         'location': _location.text.trim(),
         if (_assignee.isNotEmpty) 'assigneeUserId': _assignee,
+        if (_properties.isNotEmpty)
+          'propertyIds': [for (final p in _properties) p['id']],
       });
       final warning = r is Map ? r['warning'] as String? : null;
       if (!mounted) return;
@@ -142,6 +146,33 @@ class _BookVisitSheetState extends State<BookVisitSheet> {
             ),
           ],
           const SizedBox(height: 8),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () async {
+              final picked = await pickProperties(
+                context,
+                widget.api,
+                multi: true,
+                selected: _properties,
+                title: 'Properties to show',
+              );
+              if (picked != null) setState(() => _properties = picked);
+            },
+            icon: const Icon(Icons.home_work_outlined),
+            label: Text(
+              _properties.isEmpty
+                  ? 'Properties to show (optional)'
+                  : '${_properties.length} ${_properties.length == 1 ? 'property' : 'properties'} to show',
+            ),
+          ),
+          for (final p in _properties)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 4),
+              child: Text(
+                '• ${p['title']} (${p['code']})',
+                style: const TextStyle(fontSize: 13),
+              ),
+            ),
           const Text(
             'Booking moves the lead to Site visit scheduled. Reminders go to the salesperson.',
             style: TextStyle(color: AppColors.muted, fontSize: 13),

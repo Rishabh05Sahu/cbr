@@ -95,6 +95,7 @@ export function filterWhere(
   if (q.sourceId) and.push({ sourceId: q.sourceId });
   if (q.city) and.push({ preferredCity: { equals: q.city, mode: 'insensitive' } });
   // Country: the primary phone's prefix ("+971" and "+91" never overlap).
+  if (q.tagId) and.push({ tags: { some: { tagId: q.tagId } } });
   if (q.country) and.push({ primaryPhoneE164: { startsWith: PHONE_COUNTRIES[q.country].prefix } });
   if (q.createdFrom) and.push({ createdAt: { gte: parseOrgLocal(q.createdFrom, timeZone)! } });
   if (q.createdTo) and.push({ createdAt: { lt: parseOrgLocal(nextDay(q.createdTo), timeZone)! } });

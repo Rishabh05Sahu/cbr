@@ -6,6 +6,7 @@ import '../format.dart';
 import '../session.dart';
 import '../theme.dart';
 import 'assign_sheet.dart';
+import 'lead_extras.dart';
 import 'lead_sheets.dart';
 import 'task_sheet.dart';
 import 'log_outcome_sheet.dart';
@@ -38,6 +39,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
   Map<String, dynamic>? _data;
   String? _error;
   Map<String, dynamic>? _revealed;
+  List<Map<String, dynamic>>? _history;
   bool _busy = false;
   bool _awaitingReturn = false;
   bool _sheetOpen = false;
@@ -69,6 +71,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
           _data = d;
           _error = null;
         });
+        _loadHistory();
         if (first &&
             widget.openLogOutcome &&
             _lead['canLogInteraction'] == true) {
@@ -83,6 +86,19 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
               : e.message,
         );
       }
+    }
+  }
+
+  /// The three newest history entries for the "Recent history" section.
+  Future<void> _loadHistory() async {
+    if (!widget.session.me!.can('lead.view_activity_timeline')) return;
+    try {
+      final rows = await _api.get('/leads/${widget.leadId}/timeline') as List;
+      if (mounted) {
+        setState(() => _history = rows.cast<Map<String, dynamic>>());
+      }
+    } on ApiException {
+      // The rest of the lead screen works without it.
     }
   }
 
@@ -110,7 +126,11 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
     }
   }
 
-  Future<void> _contact(String channel, {bool confirmInvalid = false}) async {
+  Future<void> _contact(
+    String channel, {
+    bool confirmInvalid = false,
+    String text = '',
+  }) async {
     setState(() => _busy = true);
     try {
       final r = await _api.post('/leads/${widget.leadId}/call-intents', {
@@ -119,7 +139,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
       }) as Map<String, dynamic>;
       _awaitingReturn = true;
       final ok = await launchUrl(
-        Uri.parse(r['href'] as String),
+        Uri.parse(withWhatsAppText(r['href'] as String, text)),
         mode: LaunchMode.externalApplication,
       );
       if (!ok) {
@@ -136,7 +156,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
       final invalid = e.fieldErrors.containsKey('confirmInvalidNumber');
       if (invalid && mounted && await _confirm(e.allMessages.join('\n'))) {
         if (mounted) setState(() => _busy = false);
-        return _contact(channel, confirmInvalid: true);
+        return _contact(channel, confirmInvalid: true, text: text);
       }
       _toast(e.allMessages.join('\n'));
     } finally {
@@ -237,8 +257,68 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
     );
   }
 
-  void _openVisit(Map<String, dynamic> v) =>
-      _modal(VisitSheet(api: _api, visit: v), 'Visit updated');
+  /// Quick messages (owner request 2026-11-24): WhatsApp opens with the chosen text.
+  Future<void> _whatsApp() async {
+    final me = widget.session.me!;
+    final visits = _maps((_data!['visits'] as Map?)?['visits']);
+    final next = visits
+        .where(
+          (v) => const {
+            'SCHEDULED',
+            'CONFIRMED',
+            'RESCHEDULED',
+          }.contains(v['status']),
+        )
+        .firstOrNull;
+    final name = _lead['fullName'] as String? ?? '';
+    final text = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (_) => WhatsAppMessageSheet(
+        api: _api,
+        leadFirstName: name.trim().split(RegExp(r'\s+')).first,
+        messages: quickMessages(
+          leadName: name,
+          agent: me.name,
+          org: me.orgName,
+          visit: next,
+        ),
+      ),
+    );
+    if (text == null || !mounted) return;
+    await _contact('WHATSAPP_APP', text: text);
+  }
+
+  void _editContact() =>
+      _modal(EditContactSheet(api: _api, lead: _lead), 'Contact details saved');
+
+  void _addTag() => _modal(
+    AddTagSheet(
+      api: _api,
+      leadId: widget.leadId,
+      options: _maps(_data!['tagOptions']),
+      current: _maps(_data!['tags']),
+    ),
+    'Tag added',
+  );
+
+  void _openHistory() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => LeadHistoryScreen(
+        api: _api,
+        leadId: widget.leadId,
+        leadName: _lead['fullName'] as String? ?? '',
+      ),
+    ),
+  );
+
+  Future<void> _openVisit(Map<String, dynamic> v) async {
+    await _modal(VisitSheet(api: _api, visit: v), 'Visit updated');
+    // Properties can change without closing the sheet with a result.
+    await _load();
+  }
 
   // --- sections -------------------------------------------------------------------------------
 
@@ -259,6 +339,13 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
               if (l['intent'] == 'WARM') Pill('Warm'),
               if (l['intent'] == 'COLD') Pill('Cold'),
               if (l['archivedAt'] != null) Pill('Archived'),
+              for (final t in _maps(_data!['tags'])) Pill('#${t['name']}'),
+              if (_maps(_data!['tagOptions']).isNotEmpty)
+                InkWell(
+                  borderRadius: BorderRadius.circular(999),
+                  onTap: _addTag,
+                  child: Pill.teal('+ Tag'),
+                ),
             ],
           ),
           if (status == 'DO_NOT_CONTACT' || status == 'INVALID') ...[
@@ -315,6 +402,15 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
           _kv('Source', l['sourceName'] as String? ?? ''),
           if (widget.session.me!.scope('lead.read') != 'OWN')
             _kv('Owner', (l['ownerName'] as String?) ?? 'Unassigned'),
+          if (_data!['canEditContact'] == true)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _editContact,
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Edit contact details'),
+              ),
+            ),
           if (_canAssign)
             Align(
               alignment: Alignment.centerLeft,
@@ -453,7 +549,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(52),
                   ),
-                  onPressed: _busy ? null : () => _contact('WHATSAPP_APP'),
+                  onPressed: _busy ? null : _whatsApp,
                   icon: const Icon(Icons.chat_outlined),
                   label: const Text('WhatsApp'),
                 ),
@@ -602,6 +698,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                           s['location'] as String? ?? '',
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
+                        if ((s['properties'] as List?)?.isNotEmpty == true)
+                          Text(
+                            '${(s['properties'] as List).length} ${(s['properties'] as List).length == 1 ? 'property' : 'properties'} to show',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.teal,
+                            ),
+                          ),
                         Text(
                           '${dueText(s['scheduledFor'] as String?)} · ${visitStatusLabel(s['status'] as String?)}',
                           style: const TextStyle(
@@ -625,6 +729,41 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
             icon: const Icon(Icons.add_location_alt_outlined),
             label: const Text('Book a visit'),
           ),
+      ],
+    );
+  }
+
+  Widget _historySection() {
+    final rows = _history;
+    if (rows == null) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionLabel('Recent history'),
+        AppCard(
+          padding: const EdgeInsets.fromLTRB(12, 14, 12, 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (rows.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    'No history yet.',
+                    style: TextStyle(color: AppColors.muted),
+                  ),
+                ),
+              for (var i = 0; i < rows.length && i < 3; i++)
+                HistoryTile(rows[i], last: i == 2 || i == rows.length - 1),
+              if (rows.length > 3)
+                TextButton.icon(
+                  onPressed: _openHistory,
+                  icon: const Icon(Icons.history),
+                  label: Text('See full history (${rows.length})'),
+                ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -746,6 +885,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                   _scripts(),
                   _followUps(),
                   _visits(),
+                  _historySection(),
                   _requirements(),
                 ],
               ),

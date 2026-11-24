@@ -49,6 +49,8 @@ export interface LeadQuery {
   owner: string | null;
   teamId: string | null;
   sourceId: string | null;
+  /** A lead tag's id (owner request 2026-11-24: filter by tag). */
+  tagId: string | null;
   city: string | null;
   /** The primary phone's country (UAE or India, from its +971 / +91 prefix). */
   country: PhoneCountry | null;
@@ -200,6 +202,7 @@ export function parseLeadQuery(sp: SearchParams): ParsedLeadQuery {
       owner: id('owner', 'owner', true),
       teamId: id('team', 'team'),
       sourceId: id('source', 'source'),
+      tagId: id('tag', 'tag'),
       city: city && city.length <= 100 ? city : null,
       country,
       createdFrom,
@@ -270,6 +273,7 @@ export function leadQueryString(query: LeadQuery, cursor: string | null = null):
   if (query.owner) p.set('owner', query.owner);
   if (query.teamId) p.set('team', query.teamId);
   if (query.sourceId) p.set('source', query.sourceId);
+  if (query.tagId) p.set('tag', query.tagId);
   if (query.city) p.set('city', query.city);
   if (query.country) p.set('country', query.country);
   if (query.createdFrom) p.set('createdFrom', query.createdFrom);

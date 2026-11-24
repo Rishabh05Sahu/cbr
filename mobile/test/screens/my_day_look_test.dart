@@ -14,7 +14,13 @@ import 'package:material_ui/material_ui.dart';
 
 import 'look.dart';
 
-String _iso(Duration d) => DateTime.now().add(d).toUtc().toIso8601String();
+/// Fixed clock times (today or a whole number of days away) so the picture never changes with the
+/// minute the test runs: [d] is whole days plus an hour of the day, e.g. Duration(hours: 9).
+String _iso(Duration d) {
+  final now = DateTime.now();
+  final day = DateTime(now.year, now.month, now.day + d.inDays);
+  return day.add(Duration(hours: d.inHours % 24)).toUtc().toIso8601String();
+}
 
 Map<String, dynamic> _t(
   String id,
@@ -68,7 +74,7 @@ void main() {
                       'a',
                       null,
                       'Mohammed Abdullah Al Mansoori Trading',
-                      due: const Duration(hours: -3),
+                      due: const Duration(hours: 9),
                       priority: 'URGENT',
                     ),
                   ],
@@ -77,14 +83,14 @@ void main() {
                       'b',
                       'Send floor plans for the 2 BHK in Marina',
                       'Priya Sharma',
-                      due: const Duration(hours: 2),
+                      due: const Duration(hours: 15),
                       intent: 'HOT',
                     ),
                     _t(
                       'c',
                       'Site office meeting',
                       'Rahul Khan',
-                      due: const Duration(hours: 4),
+                      due: const Duration(hours: 18),
                       type: 'MEETING',
                     ),
                   ],
@@ -93,12 +99,25 @@ void main() {
                       'd',
                       null,
                       'Sara M.',
-                      due: const Duration(days: 2),
+                      due: const Duration(days: 1, hours: 11),
                       priority: 'HIGH',
                     ),
                   ],
                   'later': const [],
                   'truncated': false,
+                }
+              : path == '/unlogged-calls'
+              ? {
+                  'rows': [
+                    {
+                      'id': 'i1',
+                      'leadId': 'l-x',
+                      'leadName': 'Mohamed Abdullah Al Mansoori',
+                      'channel': 'PHONE_NATIVE',
+                      'occurredAt':
+                          '${_iso(const Duration(hours: 9)).substring(0, 10)}T09:33',
+                    },
+                  ],
                 }
               : {'rows': const [], 'unread': 0};
           return http.Response(jsonEncode({'ok': true, 'data': data}), 200);
@@ -113,7 +132,12 @@ void main() {
             'orgId': 'o1',
             'orgName': 'Northstar Realty',
             'role': 'SALES_EXECUTIVE',
-            'permissions': {'task.read': 'OWN', 'lead.read': 'OWN'},
+            'permissions': {
+              'task.read': 'OWN',
+              'task.create': 'OWN',
+              'lead.read': 'OWN',
+              'interaction.create': 'OWN',
+            },
           },
         });
 

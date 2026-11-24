@@ -26,6 +26,7 @@ const query = (patch: Partial<LeadQuery> = {}): LeadQuery => ({
   owner: null,
   teamId: null,
   sourceId: null,
+  tagId: null,
   city: null,
   country: null,
   createdFrom: null,

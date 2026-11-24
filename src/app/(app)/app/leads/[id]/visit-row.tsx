@@ -85,6 +85,11 @@ export function VisitRow({ visit: v, leadId }: { visit: VisitView; leadId: strin
         )}
       </div>
       <p className="text-slate-800">Meeting point: {v.location}</p>
+      {v.properties.length > 0 && (
+        <p className="text-slate-800" data-testid="visit-properties">
+          Properties to show: {v.properties.map((p) => `${p.title} (${p.code})`).join(', ')}
+        </p>
+      )}
       <p className="text-xs text-slate-600">With {v.assigneeName}</p>
       {v.cancelReason && <p className="text-xs text-slate-600">Cancelled: {v.cancelReason}</p>}
       {v.noShowReason && <p className="text-xs text-slate-600">No-show: {v.noShowReason}</p>}

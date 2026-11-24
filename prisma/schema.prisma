@@ -188,51 +188,52 @@ model Member {
   designation    String?
   suspendedAt    DateTime? @map("suspended_at") @db.Timestamptz(6)
 
-  organization            Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  user                    User                     @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  teamMemberships         TeamMembership[]
-  leadsOwned              Lead[]                   @relation("LeadOwner")
-  leadsCreated            Lead[]                   @relation("LeadCreator")
-  leadEnquiries           LeadEnquiry[]
-  leadNotes               LeadNote[]
-  leadStageChanges        LeadStageHistory[]
-  leadActivities          LeadActivity[]
-  assignmentSpells        LeadAssignmentHistory[]  @relation("AssignmentUser")
-  assignmentsMade         LeadAssignmentHistory[]  @relation("AssignmentAssigner")
-  roundRobinLast          TeamAssignmentState[]
-  notifications           Notification[]
-  importJobs              ImportJob[]
-  importTemplates         ImportMappingTemplate[]
-  customFields            CustomFieldDefinition[]
-  leadTagsCreated         LeadTag[]
-  leadTagsAdded           LeadTagLink[]
-  duplicatesFound         LeadDuplicateMatch[]     @relation("DuplicateDetector")
-  duplicatesClosed        LeadDuplicateMatch[]     @relation("DuplicateResolver")
-  exportJobs              ExportJob[]
-  tasksAssigned           Task[]                   @relation("TaskAssignee")
-  tasksCreated            Task[]                   @relation("TaskCreator")
-  meetingsAttending       TaskAttendee[]           @relation("TaskAttendeeMember")
-  attendeesAdded          TaskAttendee[]           @relation("TaskAttendeeAdder")
-  attendeesRemoved        TaskAttendee[]           @relation("TaskAttendeeRemover")
-  seriesOwned             TaskSeries[]             @relation("TaskSeriesOwner")
-  seriesCreated           TaskSeries[]             @relation("TaskSeriesCreator")
-  seriesStopped           TaskSeries[]             @relation("TaskSeriesStopper")
-  propertiesResponsible   Property[]               @relation("PropertyResponsible")
-  propertiesCreated       Property[]               @relation("PropertyCreator")
-  propertyContactsAdded   PropertyContact[]        @relation("PropertyContactCreator")
-  propertyContactsRemoved PropertyContact[]        @relation("PropertyContactRemover")
-  propertyPhotosAdded     PropertyPhoto[]          @relation("PropertyPhotoUploader")
-  propertyPhotosRemoved   PropertyPhoto[]          @relation("PropertyPhotoRemover")
-  siteVisitsAssigned      SiteVisit[]              @relation("SiteVisitAssignee")
-  siteVisitsScheduled     SiteVisit[]              @relation("SiteVisitScheduler")
-  siteVisitEvents         SiteVisitEvent[]
-  scriptsCreated          CallScript[]
-  scriptVersions          CallScriptVersion[]      @relation("ScriptVersionCreator")
-  scriptsPublished        CallScriptVersion[]      @relation("ScriptVersionPublisher")
-  contactStatusChanges    LeadContactStatusEvent[]
-  phoneReveals            LeadPhoneReveal[]
-  interactions            Interaction[]
-  callIntents             CallIntent[]
+  organization             Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  user                     User                     @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  teamMemberships          TeamMembership[]
+  leadsOwned               Lead[]                   @relation("LeadOwner")
+  leadsCreated             Lead[]                   @relation("LeadCreator")
+  leadEnquiries            LeadEnquiry[]
+  leadNotes                LeadNote[]
+  leadStageChanges         LeadStageHistory[]
+  leadActivities           LeadActivity[]
+  assignmentSpells         LeadAssignmentHistory[]  @relation("AssignmentUser")
+  assignmentsMade          LeadAssignmentHistory[]  @relation("AssignmentAssigner")
+  roundRobinLast           TeamAssignmentState[]
+  notifications            Notification[]
+  importJobs               ImportJob[]
+  importTemplates          ImportMappingTemplate[]
+  customFields             CustomFieldDefinition[]
+  leadTagsCreated          LeadTag[]
+  leadTagsAdded            LeadTagLink[]
+  duplicatesFound          LeadDuplicateMatch[]     @relation("DuplicateDetector")
+  duplicatesClosed         LeadDuplicateMatch[]     @relation("DuplicateResolver")
+  exportJobs               ExportJob[]
+  tasksAssigned            Task[]                   @relation("TaskAssignee")
+  tasksCreated             Task[]                   @relation("TaskCreator")
+  meetingsAttending        TaskAttendee[]           @relation("TaskAttendeeMember")
+  attendeesAdded           TaskAttendee[]           @relation("TaskAttendeeAdder")
+  attendeesRemoved         TaskAttendee[]           @relation("TaskAttendeeRemover")
+  seriesOwned              TaskSeries[]             @relation("TaskSeriesOwner")
+  seriesCreated            TaskSeries[]             @relation("TaskSeriesCreator")
+  seriesStopped            TaskSeries[]             @relation("TaskSeriesStopper")
+  propertiesResponsible    Property[]               @relation("PropertyResponsible")
+  propertiesCreated        Property[]               @relation("PropertyCreator")
+  propertyContactsAdded    PropertyContact[]        @relation("PropertyContactCreator")
+  propertyContactsRemoved  PropertyContact[]        @relation("PropertyContactRemover")
+  propertyPhotosAdded      PropertyPhoto[]          @relation("PropertyPhotoUploader")
+  propertyPhotosRemoved    PropertyPhoto[]          @relation("PropertyPhotoRemover")
+  siteVisitPropertiesAdded SiteVisitProperty[]      @relation("SiteVisitPropertyAdder")
+  siteVisitsAssigned       SiteVisit[]              @relation("SiteVisitAssignee")
+  siteVisitsScheduled      SiteVisit[]              @relation("SiteVisitScheduler")
+  siteVisitEvents          SiteVisitEvent[]
+  scriptsCreated           CallScript[]
+  scriptVersions           CallScriptVersion[]      @relation("ScriptVersionCreator")
+  scriptsPublished         CallScriptVersion[]      @relation("ScriptVersionPublisher")
+  contactStatusChanges     LeadContactStatusEvent[]
+  phoneReveals             LeadPhoneReveal[]
+  interactions             Interaction[]
+  callIntents              CallIntent[]
 
   @@unique([organizationId, userId])
   @@unique([organizationId, id])
@@ -1241,11 +1242,12 @@ model Property {
   createdAt         DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamptz(6)
   updatedAt         DateTime  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("updated_at") @db.Timestamptz(6)
 
-  organization Organization      @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  responsible  Member            @relation("PropertyResponsible", fields: [orgId, responsibleUserId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
-  creator      Member            @relation("PropertyCreator", fields: [orgId, createdBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  organization Organization        @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  responsible  Member              @relation("PropertyResponsible", fields: [orgId, responsibleUserId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+  creator      Member              @relation("PropertyCreator", fields: [orgId, createdBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
   contacts     PropertyContact[]
   photos       PropertyPhoto[]
+  siteVisits   SiteVisitProperty[]
 
   @@unique([orgId, id])
   @@unique([orgId, code])
@@ -1308,6 +1310,26 @@ model PropertyPhoto {
   @@map("property_photo")
 }
 
+/// Properties to show on a site visit (migration 0032, owner request 2026-11-24). Added or removed
+/// while the visit is open; at most 10 per visit (database trigger).
+model SiteVisitProperty {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orgId       String   @map("org_id") @db.Uuid
+  siteVisitId String   @map("site_visit_id") @db.Uuid
+  propertyId  String   @map("property_id") @db.Uuid
+  addedBy     String   @map("added_by") @db.Uuid
+  addedAt     DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("added_at") @db.Timestamptz(6)
+
+  siteVisit SiteVisit @relation(fields: [orgId, siteVisitId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  property  Property  @relation(fields: [orgId, propertyId], references: [orgId, id], onDelete: Restrict, onUpdate: Restrict)
+  adder     Member    @relation("SiteVisitPropertyAdder", fields: [orgId, addedBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([orgId, id])
+  @@unique([siteVisitId, propertyId], map: "site_visit_property_visit_property_key")
+  @@index([orgId, propertyId])
+  @@map("site_visit_property")
+}
+
 /// FR-150–152 basic site visits (migration 0026, ADR-0022). Its own entity, not a task.
 /// SCHEDULED | CONFIRMED | RESCHEDULED (open) → CANCELLED | ATTENDED | NO_SHOW (closed, final).
 model SiteVisit {
@@ -1339,6 +1361,7 @@ model SiteVisit {
   assignee     Member              @relation("SiteVisitAssignee", fields: [orgId, assignedUserId], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
   scheduler    Member              @relation("SiteVisitScheduler", fields: [orgId, scheduledBy], references: [organizationId, userId], onDelete: Restrict, onUpdate: Restrict)
   events       SiteVisitEvent[]
+  properties   SiteVisitProperty[]
   reminders    SiteVisitReminder[]
 
   @@unique([orgId, id])
