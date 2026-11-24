@@ -9,3 +9,6 @@
 # Synthetic import corpus: pinned by SHA-256 in pilot/synthetic-corpus/manifest.json; CSV lines
 # end in CRLF (RFC 4180), so keep the exact bytes.
 pilot/synthetic-corpus/*.csv -text
+# 0032 was reviewed, pinned and applied (local and production ledgers) from a CRLF copy; keep its
+# exact bytes so the pinned SHA-256 (acbbe032…) matches every checkout.
+prisma/migrations/0032_site_visit_properties/migration.sql -text
