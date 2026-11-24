@@ -1,0 +1,53 @@
+# iPhone app build on Codemagic (cloud Macs). iPhone apps can only be built on macOS,
+# and this project is developed on Windows. See mobile/README.md, "Release (iPhone)".
+#
+# Runs only when started by hand in Codemagic (no triggering section). It builds the
+# signed .ipa from mobile/ and uploads it to TestFlight.
+#
+# One-time setup, done by the owner in Codemagic and Apple's websites (never commit keys):
+#   1. App Store Connect → Users and Access → Integrations → create an API key (App Manager).
+#   2. Codemagic → Team settings → Integrations → Developer Portal: add that key under the
+#      name below ("CBR App Store Connect").
+#   3. Codemagic → code signing → iOS: "Fetch" or generate an App Store distribution
+#      certificate and profile for com.crystalbricks.crm.
+workflows:
+  ios-testflight:
+    name: iPhone app to TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: CBR App Store Connect
+    environment:
+      flutter: 3.50.1
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.crystalbricks.crm
+    scripts:
+      - name: Packages
+        script: cd mobile && flutter pub get
+      - name: Checks
+        # The screenshot tests (test/screens) are drawn on Windows; macOS draws text a little
+        # differently, so they are checked on the Windows PC only.
+        script: |
+          cd mobile
+          flutter analyze
+          flutter test $(find test -name '*_test.dart' -not -path 'test/screens/*')
+      - name: Signing profiles
+        script: xcode-project use-profiles --project mobile/ios/Runner.xcodeproj
+      - name: CocoaPods
+        script: cd mobile/ios && pod install
+      - name: Build .ipa
+        # Version and build number come from mobile/pubspec.yaml (version: x.y.z+N).
+        # TestFlight refuses a build number it has already seen, so raise +N each upload.
+        script: |
+          cd mobile
+          flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - mobile/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
