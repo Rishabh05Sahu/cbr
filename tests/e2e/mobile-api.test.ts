@@ -5,6 +5,7 @@
 import { randomInt } from 'node:crypto';
 import { beforeAll, describe, expect, it } from 'vitest';
 import * as leads from '@/modules/leads';
+import * as properties from '@/modules/properties';
 import * as tasks from '@/modules/tasks';
 import * as teams from '@/modules/teams';
 import * as visits from '@/modules/visits';
@@ -775,5 +776,134 @@ describe('lead screen parity in the app (1.0.4)', () => {
         })
       ).status,
     ).toBe(404);
+  });
+});
+
+describe('app extras (2026-11-24): history, contact, tags, visit properties, imports, team table', () => {
+  const local = (minutes: number) =>
+    new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'Asia/Kolkata',
+      dateStyle: 'short',
+      timeStyle: 'short',
+    })
+      .format(new Date(Date.now() + minutes * 60_000))
+      .replace(' ', 'T');
+
+  it('history lines, contact edit, tags and visit properties work for the lead owner only', async () => {
+    const e1 = await actorIn(A.users.exec1, A.orgId);
+    const owner = await actorIn(A.users.owner, A.orgId);
+    const lead = await created(
+      leads.createLead(e1.ctx, {
+        fullName: 'Extras Mobile',
+        primaryPhone: '9811100041',
+        transactionType: 'BUY',
+        propertyType: 'APARTMENT',
+        preferredCity: 'Dubai',
+        budgetMax: '2M',
+      }),
+    );
+    const app = await appFor(A.users.exec1, A.orgId);
+    const history = (await json(await app.api(`/leads/${lead}/timeline`))).data;
+    expect(history[0].line).toMatchObject({ kind: 'lead', text: expect.stringMatching(/created/) });
+
+    let d = (await json(await app.api(`/leads/${lead}`))).data;
+    expect(d).toMatchObject({ canEditContact: true, tags: [], tagOptions: [] });
+    const edited = await json(
+      await app.api(`/leads/${lead}/contact`, {
+        method: 'POST',
+        body: { version: d.lead.version, fullName: 'Extras Renamed', email: 'x@example.test' },
+      }),
+    );
+    expect(edited.ok, JSON.stringify(edited)).toBe(true);
+    d = (await json(await app.api(`/leads/${lead}`))).data;
+    expect(d.lead.fullName).toBe('Extras Renamed');
+
+    // Tags: the executive cannot add; the owner can, and the list filters by it.
+    const tag = await leads.createLeadTag(owner.ctx, { name: 'Marina mobile' });
+    expect(
+      (await app.api(`/leads/${lead}/tags`, { method: 'POST', body: { tagId: tag.id } })).status,
+    ).toBe(403);
+    const ownerApp = await appFor(A.users.owner, A.orgId);
+    expect((await json(await ownerApp.api(`/leads/${lead}`))).data.tagOptions.length).toBe(1);
+    const added = await json(
+      await ownerApp.api(`/leads/${lead}/tags`, { method: 'POST', body: { tagId: tag.id } }),
+    );
+    expect(added.ok, JSON.stringify(added)).toBe(true);
+    const list = (await json(await app.api(`/leads?tag=${tag.id}`))).data;
+    expect(list.rows.map((r: { id: string }) => r.id)).toEqual([lead]);
+    expect((await json(await app.api('/lead-tags'))).data[0]).toMatchObject({ id: tag.id });
+
+    // Properties on a visit.
+    const p = (
+      await properties.createProperty(owner.ctx, {
+        title: 'Extras tower unit',
+        listingType: 'SALE',
+        propertyType: 'APARTMENT',
+        city: 'Dubai',
+        price: '1800000',
+        priceType: 'TOTAL',
+      })
+    ).id;
+    const booked = await json(
+      await app.api(`/leads/${lead}/visits`, {
+        method: 'POST',
+        body: { scheduledFor: local(2 * 24 * 60), location: 'Marina lobby', propertyIds: [p] },
+      }),
+    );
+    expect(booked.ok, JSON.stringify(booked)).toBe(true);
+    const visit = (await json(await app.api('/visits'))).data.open.find(
+      (v: { id: string }) => v.id === booked.data.id,
+    );
+    expect(visit.properties.map((x: { id: string }) => x.id)).toEqual([p]);
+    const cleared = await json(
+      await app.api(`/visits/${visit.id}/properties`, {
+        method: 'POST',
+        body: { version: visit.version, propertyIds: [] },
+      }),
+    );
+    expect(cleared.ok, JSON.stringify(cleared)).toBe(true);
+
+    // Another executive and another organisation are refused everything.
+    const other = await appFor(A.users.exec2, A.orgId);
+    const bApp = await appFor(B.users.owner, B.orgId);
+    for (const who of [other, bApp]) {
+      expect((await who.api(`/leads/${lead}/timeline`)).status).toBe(404);
+      expect(
+        (
+          await who.api(`/leads/${lead}/contact`, {
+            method: 'POST',
+            body: { version: 99, fullName: 'X' },
+          })
+        ).status,
+      ).toBe(404);
+      expect(
+        (
+          await who.api(`/visits/${visit.id}/properties`, {
+            method: 'POST',
+            body: { version: visit.version, propertyIds: [p] },
+          })
+        ).status,
+      ).toBe(404);
+    }
+  });
+
+  it('imports are Owner/Admin only; the team table names roles and leaves out HR', async () => {
+    const exec = await appFor(A.users.exec1, A.orgId);
+    expect((await exec.api('/imports')).status).toBe(403);
+    const ownerApp = await appFor(A.users.owner, A.orgId);
+    const list = await json(await ownerApp.api('/imports'));
+    expect(list.ok, JSON.stringify(list)).toBe(true);
+    const bad = await ownerApp.api('/imports', {
+      method: 'POST',
+      body: { fileName: 'leads.exe', size: 10, type: 'application/octet-stream' },
+    });
+    expect(bad.status).toBe(422);
+
+    const dash = (await json(await ownerApp.api('/dashboard?period=this_month'))).data;
+    const roles = new Map(
+      (dash.members as { userId: string; role: string }[]).map((m) => [m.userId, m.role]),
+    );
+    expect(roles.get(A.users.exec1.id)).toBe('SALES_EXECUTIVE');
+    expect(roles.has(A.users.hr.id)).toBe(false);
   });
 });

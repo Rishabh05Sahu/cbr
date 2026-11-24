@@ -80,6 +80,9 @@ export interface TileValue {
 export interface MemberRow {
   userId: string;
   name: string;
+  /** The member's role (OWNER, ADMIN, SALES_MANAGER, SALES_EXECUTIVE), so views can tell
+   *  salespeople from managers; HR is never listed (no sales data). */
+  role: string | null;
   counts: Record<string, number>;
   ratios: Record<string, RatioValue>;
 }
@@ -133,6 +136,8 @@ async function loadFrame(
   now: Date,
 ): Promise<{
   frame: Frame;
+  /** Each listed person's role code (Member.role). */
+  roles: Map<string, string>;
   filters: ReportFilters;
   error: string | null;
   timeZone: string;
@@ -176,7 +181,7 @@ async function loadFrame(
   const peopleIds = scope === 'ORG' ? null : [...new Set([ctx.userId, ...memberIds])];
   const people = await tx.member.findMany({
     where: peopleIds ? { userId: { in: peopleIds } } : {},
-    select: { userId: true, status: true, user: { select: { name: true } } },
+    select: { userId: true, status: true, role: true, user: { select: { name: true } } },
   });
   const sources = await tx.leadSource.findMany({
     select: { id: true, name: true },
@@ -212,6 +217,7 @@ async function loadFrame(
   };
   return {
     frame,
+    roles: new Map(people.map((p) => [p.userId, String(p.role).toUpperCase()])),
     filters: { period, teamId, userId, sourceId },
     error,
     timeZone,
@@ -301,7 +307,7 @@ export async function reportScope(ctx: RequestContext): Promise<ReportScope> {
 export async function dashboard(ctx: RequestContext, raw: RawFilters): Promise<Dashboard> {
   const scope = authorize(ctx, 'report.read');
   return tenantRunner().withTenant(ctx.tenant, async (tx) => {
-    const { frame, filters, error, timeZone, options } = await loadFrame(
+    const { frame, roles, filters, error, timeZone, options } = await loadFrame(
       tx,
       ctx,
       scope,
@@ -325,7 +331,29 @@ export async function dashboard(ctx: RequestContext, raw: RawFilters): Promise<D
         label,
         count: counts.find((c) => c.stage === stage)?.total ?? 0,
       }));
-    const members = scope === 'OWN' ? null : await memberTable(tx, frame, options.users);
+    // With a team chosen, the table lists that team's current members only (owner request
+    // 2026-11-24: the team filter used to narrow the figures but not the people).
+    const roster = frame.teamId
+      ? new Set(
+          (
+            await tx.teamMembership.findMany({
+              where: { teamId: frame.teamId, endedAt: null },
+              select: { membership: { select: { userId: true } } },
+            })
+          ).map((m) => m.membership.userId),
+        )
+      : null;
+    const members =
+      scope === 'OWN'
+        ? null
+        : await memberTable(
+            tx,
+            frame,
+            options.users.filter(
+              (u) => roles.get(u.id) !== 'HR_OPS' && (!roster || roster.has(u.id)),
+            ),
+            roles,
+          );
     return { scope, filters, error, options, timeZone, kpis, operational, stages, members };
   });
 }
@@ -334,6 +362,7 @@ async function memberTable(
   tx: Tx,
   frame: Frame,
   users: { id: string; name: string }[],
+  roles: Map<string, string> = new Map(),
 ): Promise<MemberRow[]> {
   const f = { ...frame, perUser: true };
   const rows = new Map<string, MemberRow>();
@@ -343,6 +372,7 @@ async function memberTable(
       r = {
         userId: id,
         name: users.find((u) => u.id === id)?.name ?? 'Former member',
+        role: roles.get(id) ?? null,
         counts: {},
         ratios: {},
       };

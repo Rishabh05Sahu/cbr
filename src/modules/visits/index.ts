@@ -45,10 +45,15 @@ const line = (max: number) =>
     )
     .pipe(z.string().max(max, `At most ${max} characters`));
 
+/** Properties one visit may list (migration 0032 enforces the same limit). */
+export const MAX_VISIT_PROPERTIES = 10;
+
 const scheduleInput = z.object({
   scheduledFor: z.string().max(40),
   location: line(300).refine((t) => t.length > 0, { message: 'Enter the meeting point' }),
   assigneeUserId: z.string().max(40).optional(),
+  /** Owner request 2026-11-24 (migration 0032): properties to show, at most 10. */
+  propertyIds: z.array(z.string().max(40)).max(MAX_VISIT_PROPERTIES).optional(),
 });
 const actionInput = z.object({
   action: z.enum(VISIT_ACTIONS, 'Choose what happened'),
@@ -196,6 +201,41 @@ const SCHEDULE_MOVES: readonly leads.LeadStage[] = [
 ];
 
 /**
+ * The properties a visit will show: distinct ids of properties in the organisation (property.read,
+ * which every sales role holds), at most MAX_VISIT_PROPERTIES. Unknown ids are refused.
+ */
+async function checkedPropertyIds(tx: Tx, ctx: RequestContext, raw: string[]): Promise<string[]> {
+  const ids = [...new Set(raw.map((r) => r.trim()).filter(Boolean))];
+  if (ids.length === 0) return [];
+  if (ids.length > MAX_VISIT_PROPERTIES)
+    throw invalidProperties(`Choose at most ${MAX_VISIT_PROPERTIES} properties`);
+  if (!ids.every((id) => z.uuid().safeParse(id).success))
+    throw invalidProperties('One of the properties was not found');
+  authorize(ctx, 'property.read');
+  const found = await tx.property.findMany({ where: { id: { in: ids } }, select: { id: true } });
+  if (found.length !== ids.length) throw invalidProperties('One of the properties was not found');
+  return ids;
+}
+const invalidProperties = (m: string) =>
+  new DomainError('VALIDATION_FAILED', 'Please check the highlighted fields', {
+    propertyIds: [m],
+  });
+
+/** Adds properties to a visit (rows stamped with the session user and the transaction time). */
+async function addVisitProperties(
+  tx: Tx,
+  ctx: RequestContext & { kind: 'member' },
+  visitId: string,
+  ids: string[],
+): Promise<void> {
+  for (const propertyId of ids)
+    await tx.$executeRaw`
+      INSERT INTO site_visit_property (org_id, site_visit_id, property_id, added_by, added_at)
+      VALUES (${ctx.orgId}::uuid, ${visitId}::uuid, ${propertyId}::uuid, ${ctx.userId}::uuid, now())
+      ON CONFLICT (site_visit_id, property_id) DO NOTHING`;
+}
+
+/**
  * FR-150: schedules a visit on a lead (site_visit.manage over the lead; a writable, open lead).
  * The lead moves to Site Visit Scheduled in the same transaction where the lifecycle allows it
  * (from New up to Qualified, with the same qualification check as a manual move, or from Site
@@ -230,6 +270,8 @@ export async function scheduleVisit(
       },
       select: { id: true, leadId: true },
     });
+    const propertyIds = await checkedPropertyIds(tx, ctx, input.propertyIds ?? []);
+    await addVisitProperties(tx, ctx, v.id, propertyIds);
     await record(
       tx,
       ctx,
@@ -492,6 +534,67 @@ export async function updateVisit(
   });
 }
 
+const propertiesInput = z.object({
+  version: z.coerce.number().int().positive(),
+  propertyIds: z.array(z.string().max(40)).max(MAX_VISIT_PROPERTIES),
+});
+
+/**
+ * Owner request 2026-11-24 (migration 0032): replace the properties an open visit will show.
+ * Needs site_visit.manage over the visit's lead, a writable lead, an open visit and the expected
+ * visit version (the version itself is not bumped: the list is not part of the visit's state).
+ */
+export async function setVisitProperties(
+  ctx: RequestContext,
+  visitId: string,
+  raw: unknown,
+): Promise<{ propertyIds: string[] }> {
+  const scope = authorize(ctx, 'site_visit.manage');
+  if (ctx.kind !== 'member') throw notFound('Visit not found');
+  const input = propertiesInput.parse(raw);
+  const id = z.uuid().safeParse(visitId);
+  if (!id.success) throw notFound('Visit not found');
+  return tenantRunner().withTenant(ctx.tenant, async (tx) => {
+    const found = await tx.siteVisit.findFirst({
+      where: { id: id.data },
+      select: { leadId: true },
+    });
+    if (!found) throw notFound('Visit not found');
+    const lead = await leads.lockLeadForInteraction(tx, ctx, scope, found.leadId).catch(() => {
+      throw notFound('Visit not found');
+    });
+    if (lead.archivedAt || lead.mergedIntoLeadId)
+      throw ruleViolation('This lead is archived or merged and cannot change');
+    await tx.$queryRaw`SELECT id FROM site_visit WHERE id = ${id.data}::uuid FOR UPDATE`;
+    const v = await tx.siteVisit.findUniqueOrThrow({
+      where: { id: id.data },
+      select: { status: true, version: true, properties: { select: { propertyId: true } } },
+    });
+    if (!(OPEN_VISIT_STATUSES as readonly string[]).includes(v.status))
+      throw ruleViolation('This visit has ended; its properties can no longer change');
+    if (v.version !== input.version)
+      throw conflict('This visit was changed by someone else. Reload and try again.');
+    const wanted = await checkedPropertyIds(tx, ctx, input.propertyIds);
+    const current = v.properties.map((p) => p.propertyId);
+    const removed = current.filter((p) => !wanted.includes(p));
+    if (removed.length)
+      await tx.siteVisitProperty.deleteMany({
+        where: { siteVisitId: id.data, propertyId: { in: removed } },
+      });
+    const added = wanted.filter((p) => !current.includes(p));
+    await addVisitProperties(tx, ctx, id.data, added);
+    if (added.length || removed.length)
+      await writeAudit(tx, ctx.orgId, {
+        action: 'site_visit.properties_changed',
+        entityType: 'site_visit',
+        entityId: id.data,
+        actorUserId: ctx.userId,
+        metadata: { added: added.length, removed: removed.length },
+      });
+    return { propertyIds: wanted };
+  });
+}
+
 const VISIT_SELECT = {
   id: true,
   leadId: true,
@@ -511,6 +614,10 @@ const VISIT_SELECT = {
   version: true,
   assignee: { select: { user: { select: { name: true } } } },
   lead: { select: { id: true, fullName: true } },
+  properties: {
+    orderBy: [{ addedAt: 'asc' }, { id: 'asc' }],
+    select: { property: { select: { id: true, code: true, title: true } } },
+  },
 } satisfies Prisma.SiteVisitSelect;
 type VisitRow = Prisma.SiteVisitGetPayload<{ select: typeof VISIT_SELECT }>;
 
@@ -536,6 +643,8 @@ export interface VisitView {
   lead: { id: string; fullName: string } | null;
   /** The visit's lead name for its assignee even without lead access (Workflow D). */
   leadName: string;
+  /** Properties to show on the visit (migration 0032), in the order they were added. */
+  properties: { id: string; code: string; title: string }[];
   /** The caller may change it (site_visit.manage over the lead, lead writable, visit open). */
   canManage: boolean;
   /** Attended / no-show can be recorded now (the visit's day has come). */
@@ -566,6 +675,7 @@ function toView(
     assigneeName: v.assignee.user.name,
     lead: opts.leadVisible ? v.lead : null,
     leadName: v.lead.fullName,
+    properties: v.properties.map((p) => p.property),
     canManage: opts.canManage && (OPEN_VISIT_STATUSES as readonly string[]).includes(status),
     outcomeDue: !outcomeTooEarly(dayIn(v.scheduledFor, opts.timeZone), opts.today),
   };

@@ -38,6 +38,7 @@ import type { ContactStatus } from './contactability';
 import { phoneDisplay, phoneMaskingPolicy } from './phone-masking';
 import { routeEnquiryForArchivedLead } from './hygiene';
 import {
+  CONTACT_METHODS,
   createInput,
   fieldErrors,
   opt,
@@ -756,6 +757,107 @@ export async function updateRequirements(
     assertWritable(current);
     if (current.version !== input.version) throw staleVersion();
     await applyRequirements(tx, ctx, id, reqs, input.version);
+  });
+}
+
+// ---------------------------------------------------------------------------------------------
+// Contact details (owner request 2026-11-24: "edit lead details" in the app)
+
+const contactInput = z.object({
+  version: z.coerce.number().int().min(1),
+  fullName: z.string().trim().min(1, 'Enter the customer name').max(200),
+  alternatePhone: z.string().max(64).optional(),
+  email: opt(z.email('Enter a valid email address').max(254)),
+  preferredLanguage: opt(z.string().regex(/^[a-z]{2}$/, 'Use a two-letter language code')),
+  preferredContactMethod: opt(z.enum(CONTACT_METHODS)),
+});
+
+/**
+ * Name, alternate phone, email, preferred language and contact method (lead.update over the lead,
+ * writable lead, expected version). The main number is not changed here: it identifies the lead
+ * for duplicate checks and call history, as on the website. With phone masking on, the alternate
+ * number is not sent (`alternatePhone` undefined) and stays as it is. A new alternate number that
+ * already belongs to another open lead is refused, as on create. Only changed fields are written;
+ * the timeline records which fields changed (never their values).
+ */
+export async function updateContactDetails(
+  ctx: RequestContext,
+  leadId: string,
+  raw: unknown,
+): Promise<{ changed: string[] }> {
+  const scope = authorize(ctx, 'lead.update');
+  const id = parseId(leadId);
+  const input = contactInput.parse(raw);
+  const alternate =
+    input.alternatePhone === undefined ? undefined : normalisePhone(input.alternatePhone);
+  if (alternate && !alternate.ok) throw invalid({ alternatePhone: [alternate.message] });
+  return tenantRunner().withTenant(ctx.tenant, async (tx) => {
+    const current = await findInScope(tx, ctx, scope, id, {
+      version: true,
+      fullName: true,
+      primaryPhoneE164: true,
+      alternatePhoneE164: true,
+      email: true,
+      preferredLanguage: true,
+      preferredContactMethod: true,
+      ...WRITABLE_FIELDS,
+    });
+    assertWritable(current);
+    const data: Prisma.LeadUpdateManyMutationInput = {};
+    const changed: string[] = [];
+    const set = <K extends keyof typeof data>(k: K, before: unknown, after: (typeof data)[K]) => {
+      if ((before ?? null) !== (after ?? null)) {
+        data[k] = after;
+        changed.push(k);
+      }
+    };
+    set('fullName', current.fullName, input.fullName);
+    set('email', current.email, input.email ?? null);
+    set('preferredLanguage', current.preferredLanguage, input.preferredLanguage ?? null);
+    set(
+      'preferredContactMethod',
+      current.preferredContactMethod,
+      input.preferredContactMethod ?? null,
+    );
+    if (alternate?.ok) {
+      const masking = await phoneMaskingPolicy(tx, ctx.orgId);
+      if (masking.enabled)
+        throw ruleViolation('Phone numbers are hidden in this organisation; ask an Owner or Admin');
+      const e164 = alternate.value?.e164 ?? null;
+      if (e164 && e164 === current.primaryPhoneE164)
+        throw invalid({ alternatePhone: ['This is already the main number'] });
+      if (e164 && e164 !== current.alternatePhoneE164) {
+        await lockPhones(tx, ctx.orgId, [e164]);
+        const match = await findOpenMatch(tx, [e164]);
+        if (match && match.id !== id)
+          throw invalid({ alternatePhone: ['This number belongs to another open lead'] });
+      }
+      set('alternatePhoneE164', current.alternatePhoneE164, e164);
+    }
+    if (!changed.length) return { changed };
+    if (current.version !== input.version) throw staleVersion();
+    const res = await tx.lead.updateMany({
+      where: { id, version: input.version },
+      data: { ...data, version: { increment: 1 }, updatedAt: new Date() },
+    });
+    if (res.count !== 1) throw staleVersion();
+    await tx.leadActivity.create({
+      data: {
+        orgId: ctx.orgId,
+        leadId: id,
+        type: 'FIELD_CHANGED',
+        actorId: ctx.userId,
+        summary: { fields: changed },
+      },
+    });
+    await writeAudit(tx, ctx.orgId, {
+      action: 'lead.contact_updated',
+      entityType: 'lead',
+      entityId: id,
+      actorUserId: ctx.userId,
+      metadata: { fields: changed.join(',') },
+    });
+    return { changed };
   });
 }
 

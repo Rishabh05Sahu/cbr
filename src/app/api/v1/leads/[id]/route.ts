@@ -7,7 +7,17 @@
 // the caller may move the lead to and the Lost reasons (as the Change stage card), `visitPeople`
 // the salespeople a manager may book a visit for, and `nowLocal` the org-local time the app's
 // pickers start from. The server re-checks all of it on every change.
-import { allowedTargets, getLead, LOST_REASONS, STAGE_LABELS } from '@/modules/leads';
+//
+// 2026-11-24: `tags` (the lead's tags), `tagOptions` (the org's tags, only for people who may add
+// one: Owner/Admin on a writable lead) and `canEditContact` (name, alternate number, email...).
+import {
+  allowedTargets,
+  getLead,
+  listLeadTags,
+  LOST_REASONS,
+  STAGE_LABELS,
+  tagsForLead,
+} from '@/modules/leads';
 import { pendingCallIntent } from '@/modules/interactions';
 import { suggestForLead } from '@/modules/scripts';
 import { followUpsForLead } from '@/modules/tasks';
@@ -37,6 +47,11 @@ export const GET = apiRoute<{ id: string }>('lead', async ({ ctx, params }) => {
       ? allowedTargets(lead.stage)
       : [];
   const visitPeople = visits?.canSchedule ? await visitAssigneeOptions(ctx) : [];
+  const canAddTag = lead.canUpdate && can(ctx, 'lead.bulk_update');
+  const [tags, tagOptions] = await Promise.all([
+    tagsForLead(ctx, lead.id),
+    canAddTag ? listLeadTags(ctx) : Promise.resolve([]),
+  ]);
   return {
     lead,
     followUps,
@@ -48,6 +63,9 @@ export const GET = apiRoute<{ id: string }>('lead', async ({ ctx, params }) => {
       lostReasons: Object.entries(LOST_REASONS).map(([code, label]) => ({ code, label })),
     },
     visitPeople,
+    tags,
+    tagOptions,
+    canEditContact: lead.canUpdate,
     nowLocal: orgLocalInput(new Date(), org.timeZone),
   };
 });

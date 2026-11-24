@@ -5,10 +5,12 @@ import '../session.dart';
 import '../theme.dart';
 import 'auth_screens.dart';
 import 'dashboard_screen.dart';
+import 'import_screen.dart';
 import 'notifications_screen.dart';
 import 'people_screen.dart';
 import 'properties_screen.dart';
 import 'scripts_screen.dart';
+import 'team_performance_screen.dart';
 
 /// More: who is signed in, switch organisation, website links, sign out.
 class MoreScreen extends StatelessWidget {
@@ -122,6 +124,28 @@ class MoreScreen extends StatelessWidget {
                     () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => DashboardScreen(session: session),
+                      ),
+                    ),
+                  ),
+                // Owner request 2026-11-24: who did how many calls, logs and visits.
+                if (const {'TEAM', 'ORG'}.contains(me.scope('report.read')))
+                  item(
+                    Icons.leaderboard_outlined,
+                    'Team performance',
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => TeamPerformanceScreen(session: session),
+                      ),
+                    ),
+                  ),
+                // Owner request 2026-11-24: import leads from a CSV or Excel file.
+                if (me.can('lead.import'))
+                  item(
+                    Icons.upload_file,
+                    'Import leads',
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => ImportScreen(session: session),
                       ),
                     ),
                   ),

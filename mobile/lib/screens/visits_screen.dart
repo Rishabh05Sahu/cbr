@@ -5,6 +5,7 @@ import '../format.dart';
 import '../session.dart';
 import '../theme.dart';
 import 'lead_detail_screen.dart';
+import 'lead_extras.dart';
 import 'notifications_screen.dart';
 import 'visit_sheet.dart';
 
@@ -54,13 +55,12 @@ class _VisitsScreenState extends State<VisitsScreen> {
       showDragHandle: true,
       builder: (_) => VisitSheet(api: widget.session.api, visit: v),
     );
-    if (saved == true) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Visit updated')));
-      }
-      _load();
+    if (saved == true && mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Visit updated')));
     }
+    // Properties can change without closing the sheet with a result.
+    _load();
   }
 
   Future<void> _openLead(String id) async {
@@ -84,53 +84,87 @@ class _VisitsScreenState extends State<VisitsScreen> {
       padding: const EdgeInsets.only(bottom: 10),
       child: AppCard(
         onTap: () => _openSheet(v),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Padding(
-              padding: EdgeInsets.all(8),
-              child: Icon(Icons.place_outlined, color: AppColors.muted),
+            Row(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Icon(Icons.place_outlined, color: AppColors.muted),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${dueText(v['scheduledFor'] as String?)} · ${visitStatusLabel(status)}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                      Text(
+                        v['location'] as String? ?? '',
+                        style: const TextStyle(fontSize: 13),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                if (due)
+                  Pill.warn('Outcome due')
+                else if (!open && status == 'ATTENDED')
+                  Pill.teal('Attended')
+                else if (!open)
+                  Pill(visitStatusLabel(status)),
+                if (lead != null)
+                  IconButton(
+                    tooltip: 'Open lead',
+                    icon: const Icon(
+                      Icons.chevron_right,
+                      color: Color(0xFF98A2B3),
+                    ),
+                    onPressed: () => _openLead(lead['id'] as String),
+                  ),
+              ],
             ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // Owner request 2026-11-24: call the lead and get directions from the card.
+            if ((open && lead != null) ||
+                (v['location'] as String?)?.trim().isNotEmpty == true) ...[
+              const SizedBox(height: 4),
+              const Divider(height: 1, color: AppColors.border),
+              Wrap(
                 children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                  if (open && lead != null)
+                    TextButton.icon(
+                      onPressed: () => quickCall(
+                        context,
+                        widget.session.api,
+                        lead['id'] as String,
+                      ),
+                      icon: const Icon(Icons.call_outlined, size: 20),
+                      label: const Text('Call'),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${dueText(v['scheduledFor'] as String?)} · ${visitStatusLabel(status)}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.muted,
+                  if ((v['location'] as String?)?.trim().isNotEmpty == true)
+                    TextButton.icon(
+                      onPressed: () => openDirections(v['location'] as String),
+                      icon: const Icon(Icons.directions_outlined, size: 20),
+                      label: const Text('Directions'),
                     ),
-                  ),
-                  Text(
-                    v['location'] as String? ?? '',
-                    style: const TextStyle(fontSize: 13),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
                 ],
               ),
-            ),
-            if (due)
-              Pill.warn('Outcome due')
-            else if (!open && status == 'ATTENDED')
-              Pill.teal('Attended')
-            else if (!open)
-              Pill(visitStatusLabel(status)),
-            if (lead != null)
-              IconButton(
-                tooltip: 'Open lead',
-                icon: const Icon(Icons.chevron_right, color: Color(0xFF98A2B3)),
-                onPressed: () => _openLead(lead['id'] as String),
-              ),
+            ],
           ],
         ),
       ),

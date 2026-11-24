@@ -40,6 +40,66 @@ class _LeadsScreenState extends State<LeadsScreen> {
   bool _loading = false;
   int _filter = 0;
 
+  /// Tag filter (owner request 2026-11-24), combined with the chip filter: {id, name} or null.
+  Map<String, dynamic>? _tag;
+
+  Future<void> _chooseTag() async {
+    List<Map<String, dynamic>> tags;
+    try {
+      tags = ((await widget.session.api.get('/lead-tags')) as List)
+          .cast<Map<String, dynamic>>();
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+      return;
+    }
+    if (!mounted) return;
+    final picked = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (c) => ListView(
+        shrinkWrap: true,
+        padding: const EdgeInsets.only(bottom: 16),
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Text(
+              'Filter by tag',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
+          ),
+          if (tags.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'No tags yet. Owners and Admins create them on the website.',
+              ),
+            ),
+          if (_tag != null)
+            ListTile(
+              leading: const Icon(Icons.clear),
+              title: const Text('Any tag'),
+              onTap: () => Navigator.pop(c, <String, dynamic>{}),
+            ),
+          for (final t in tags)
+            ListTile(
+              leading: const Icon(Icons.sell_outlined),
+              title: Text('#${t['name']}'),
+              selected: _tag?['id'] == t['id'],
+              onTap: () => Navigator.pop(c, t),
+            ),
+        ],
+      ),
+    );
+    if (picked == null) return;
+    setState(() => _tag = picked.isEmpty ? null : picked);
+    _load(reset: true);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -54,6 +114,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
     });
     final q = <String, String>{
       ..._filters[_filter].query,
+      if (_tag != null) 'tag': _tag!['id'] as String,
       if (_search.text.trim().isNotEmpty) 'q': _search.text.trim(),
       if (!reset && _cursor != null) 'cursor': _cursor!,
     };
@@ -230,16 +291,25 @@ class _LeadsScreenState extends State<LeadsScreen> {
                   height: 40,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    itemCount: _filters.length,
+                    itemCount: _filters.length + 1,
                     separatorBuilder: (_, _) => const SizedBox(width: 8),
-                    itemBuilder: (_, i) => ChoiceChip(
-                      label: Text(_filters[i].label),
-                      selected: _filter == i,
-                      onSelected: (_) {
-                        setState(() => _filter = i);
-                        _load(reset: true);
-                      },
-                    ),
+                    itemBuilder: (_, i) => i == _filters.length
+                        ? ChoiceChip(
+                            avatar: const Icon(Icons.sell_outlined, size: 16),
+                            label: Text(
+                              _tag == null ? 'Tag' : '#${_tag!['name']}',
+                            ),
+                            selected: _tag != null,
+                            onSelected: (_) => _chooseTag(),
+                          )
+                        : ChoiceChip(
+                            label: Text(_filters[i].label),
+                            selected: _filter == i,
+                            onSelected: (_) {
+                              setState(() => _filter = i);
+                              _load(reset: true);
+                            },
+                          ),
                   ),
                 ),
               ],

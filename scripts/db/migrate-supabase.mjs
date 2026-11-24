@@ -138,6 +138,8 @@ export const MANIFEST = [
   // FR-119 phone push devices (ADR-0027 slice 5); owner asked 2026-11-23 ("build the push
   // notifications too").
   ['0031_push_devices', 'a80aa3496534cafd11e8f96560f4e5ee8f6181fdf94baf1526db7f6e7986558e'],
+  // Properties to show on a site visit (FR-157 basic); owner approved 2026-11-24 ("Yes, add 0032").
+  ['0032_site_visit_properties', 'acbbe03243e49d4cbf1602679d60e44b27561f5a598d7c9116aaf259c134e659'],
 ];
 
 const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');

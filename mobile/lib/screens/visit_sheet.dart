@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../api/api_client.dart';
 import '../format.dart';
 import '../theme.dart';
+import 'lead_extras.dart';
 import 'when_picker.dart';
 
 /// FR-151/152 on a site visit (POST /api/v1/visits/:id): confirm, reschedule (new time and
@@ -52,6 +53,88 @@ class _VisitSheetState extends State<VisitSheet> {
     _notes.dispose();
     _nextAction.dispose();
     super.dispose();
+  }
+
+  late List<Map<String, dynamic>> _properties =
+      ((v['properties'] as List?) ?? const []).cast<Map<String, dynamic>>();
+
+  /// Owner request 2026-11-24 (migration 0032): which properties to show on this visit.
+  Future<void> _editProperties() async {
+    final picked = await pickProperties(
+      context,
+      widget.api,
+      multi: true,
+      selected: _properties,
+      title: 'Properties to show',
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _saving = true;
+      _errors = const [];
+    });
+    try {
+      await widget.api.post('/visits/${v['id']}/properties', {
+        'version': v['version'],
+        'propertyIds': [for (final p in picked) p['id']],
+      });
+      if (mounted) {
+        // Callers reload after the sheet closes, whatever closed it.
+        setState(() => _properties = picked);
+      }
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _errors = e.allMessages);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Widget _propertiesBlock(bool canManage) {
+    final open = const {
+      'SCHEDULED',
+      'CONFIRMED',
+      'RESCHEDULED',
+    }.contains(v['status']);
+    if (_properties.isEmpty && !(canManage && open)) {
+      return const SizedBox.shrink();
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionLabel('Properties to show'),
+        if (_properties.isEmpty)
+          const Text(
+            'None chosen yet.',
+            style: TextStyle(color: AppColors.muted, fontSize: 13),
+          ),
+        for (final p in _properties)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: Icon(
+                    Icons.home_work_outlined,
+                    size: 18,
+                    color: AppColors.teal,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: Text('${p['title']} (${p['code']})')),
+              ],
+            ),
+          ),
+        if (canManage && open)
+          TextButton.icon(
+            onPressed: _saving ? null : _editProperties,
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            label: Text(
+              _properties.isEmpty ? 'Choose properties' : 'Change properties',
+            ),
+          ),
+      ],
+    );
   }
 
   Future<void> _save(String action) async {
@@ -188,6 +271,16 @@ class _VisitSheetState extends State<VisitSheet> {
             'With ${v['assigneeName'] ?? ''}',
             style: const TextStyle(color: AppColors.muted, fontSize: 13),
           ),
+          if ((v['location'] as String?)?.trim().isNotEmpty == true)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => openDirections(v['location'] as String),
+                icon: const Icon(Icons.directions_outlined, size: 18),
+                label: const Text('Directions'),
+              ),
+            ),
+          _propertiesBlock(canManage),
           if (!canManage)
             const Padding(
               padding: EdgeInsets.only(top: 16),

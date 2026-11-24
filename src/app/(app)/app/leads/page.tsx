@@ -66,10 +66,12 @@ export default async function LeadsPage({ searchParams }: PageProps<'/app/leads'
   // Filter options come only from the caller's own org and scope.
   const scope = scopeOf(ctx, 'lead.read');
   const wide = scope === 'TEAM' || scope === 'ORG';
-  const [sources, people, teams] = await Promise.all([
+  const [sources, people, teams, tagOptions] = await Promise.all([
     listLeadSources(ctx),
     wide && can(ctx, 'user.read') ? listMembers(ctx) : Promise.resolve([]),
     wide && can(ctx, 'team.read') ? listTeams(ctx) : Promise.resolve([]),
+    // Owner request 2026-11-24: filter by tag (every member who reads leads sees the labels).
+    listLeadTags(ctx),
   ]);
   const filtered = hasFilters(query);
   const errorList = Object.entries(errors);
@@ -200,6 +202,17 @@ export default async function LeadsPage({ searchParams }: PageProps<'/app/leads'
                 </option>
               )),
             )}
+            {tagOptions.length > 0 &&
+              single(
+                'tag',
+                'Tag',
+                query.tagId,
+                tagOptions.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    #{t.name}
+                  </option>
+                )),
+              )}
             {single(
               'country',
               'Country',
