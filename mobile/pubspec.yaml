@@ -1,5 +1,5 @@
 name: crm
-description: "CBR Property CRM for Android"
+description: "CBR Property CRM for Android and iPhone"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -106,7 +106,8 @@ flutter:
 #   dart run flutter_launcher_icons
 flutter_launcher_icons:
   android: true
-  ios: false
+  ios: true
+  remove_alpha_ios: true
   image_path: assets/icon/icon.png
   adaptive_icon_background: "#DEDDC4"
   adaptive_icon_foreground: assets/icon/foreground.png

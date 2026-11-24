@@ -1,6 +1,6 @@
-# CBR CRM: Android app (Flutter)
+# CBR CRM: Android and iPhone app (Flutter)
 
-The CRM's Android app. It uses the same backend and database as the website through the bearer-only `/api/v1` API ([ADR-0027](../docs/architecture/adr/ADR-0027-android-app.md)).
+The CRM's phone app for Android and iPhone. It uses the same backend and database as the website through the bearer-only `/api/v1` API ([ADR-0027](../docs/architecture/adr/ADR-0027-android-app.md)).
 - **App ID:** `com.crystalbricks.crm`
 - **Release server:** `https://crm.crystalbricksroofs.com`
 
@@ -42,6 +42,32 @@ flutter test
 - `store/play-listing.md`: descriptions, Data safety and App content answers.
 - `store/play-icon-512.png`: the store icon.
 - `assets/icon/`: the launcher icon source. Regenerate with `dart run flutter_launcher_icons`.
+
+## Release (iPhone)
+
+iPhone apps can only be built on a Mac, so the iPhone build runs on Codemagic's cloud Macs (`codemagic.yaml` at the repository root, workflow `ios-testflight`). It is started by hand and uploads to **TestFlight**; staff install the app from Apple's TestFlight app.
+
+- **Project:** `ios/`, bundle ID `com.crystalbricks.crm`, iOS 15 or later (the Firebase SDK's minimum), display name *CBR CRM*.
+- **Permissions:** camera and photos (property photos), Face ID (app lock). `Runner/Info.plist` holds the wording Apple shows.
+- **Screenshots:** iPhones do not let apps block screenshots. Release builds cover the app in the app switcher instead (`lib/privacy_cover.dart`).
+
+### One-time setup (owner)
+1. **Apple Developer Program:** enrol at developer.apple.com ($99 a year, as an organisation if possible, which needs a D-U-N-S number).
+2. **App Store Connect:** create the app with bundle ID `com.crystalbricks.crm`. Then go to *Users and Access → Integrations* and create an API key with the *App Manager* role.
+3. **Codemagic:** sign in with GitHub and add this repository. Add the API key under *Team settings → Integrations → Developer Portal* with the name `CBR App Store Connect`. Under *Code signing → iOS*, generate or fetch an App Store distribution certificate and profile for `com.crystalbricks.crm`.
+4. Start the `ios-testflight` workflow. When the build appears in TestFlight, add testers by email.
+
+### Each release
+Raise `version:` in `pubspec.yaml`; TestFlight refuses a build number it has already seen. Then start the workflow.
+
+### Push notifications on iPhone (later)
+Push is off in the iPhone build until all of these are done. The rest of the app works without them.
+1. In the Firebase console, add an iOS app with the bundle ID `com.crystalbricks.crm`.
+2. Upload an APNs key (Apple Developer → Keys) to Firebase under *Cloud Messaging*.
+3. Add `GoogleService-Info.plist` to the Runner target in Xcode. It must be in the project, not only in the folder.
+4. Turn on the *Push Notifications* capability (`aps-environment` entitlement) for `com.crystalbricks.crm`.
+
+The server sends iPhone pushes through FCM as it does for Android; no server change is needed.
 
 ## Push notifications (Firebase)
 Push is off until both halves are configured:

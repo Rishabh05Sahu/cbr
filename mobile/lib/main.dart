@@ -6,6 +6,7 @@ import 'screens/home_shell.dart';
 import 'session.dart';
 import 'theme.dart';
 import 'app_lock.dart';
+import 'privacy_cover.dart';
 
 final _navigatorKey = GlobalKey<NavigatorState>();
 
@@ -21,7 +22,7 @@ Future<void> main() async {
   runApp(CrmApp(session: session, navigatorKey: _navigatorKey));
 }
 
-/// CBR Property CRM for Android (ADR-0027). Same backend and database as the website.
+/// CBR Property CRM for Android and iPhone (ADR-0027). Same backend and database as the website.
 class CrmApp extends StatelessWidget {
   const CrmApp({super.key, required this.session, this.navigatorKey});
   final Session session;
@@ -34,12 +35,14 @@ class CrmApp extends StatelessWidget {
       // Fingerprint unlock covers every screen, pushed ones included.
       builder: (context, child) => ListenableBuilder(
         listenable: Listenable.merge([session, session.lock]),
-        builder: (context, _) => Stack(
-          children: [
-            ?child,
-            if (session.lock.locked && session.status == SessionStatus.ready)
-              LockScreen(lock: session.lock),
-          ],
+        builder: (context, _) => PrivacyCover(
+          child: Stack(
+            children: [
+              ?child,
+              if (session.lock.locked && session.status == SessionStatus.ready)
+                LockScreen(lock: session.lock),
+            ],
+          ),
         ),
       ),
       title: 'CBR CRM',
