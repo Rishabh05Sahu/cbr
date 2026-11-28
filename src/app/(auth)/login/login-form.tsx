@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { PasswordInput } from '@/components/password-input';
 import { Alert, Button, Field, Input } from '@/components/ui';
 import { authClient, authErrorMessage } from '@/platform/auth/client';
 
@@ -52,13 +53,7 @@ export function LoginForm({
         <Input id="email" name="email" type="email" autoComplete="username" required />
       </Field>
       <Field label="Password" htmlFor="password">
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-        />
+        <PasswordInput id="password" name="password" autoComplete="current-password" required />
       </Field>
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? 'Signing in…' : 'Sign in'}

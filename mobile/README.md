@@ -105,3 +105,5 @@ These screens are built:
   - **Dashboard**;
   - **People**: invite, role, suspend and reactivate, cancel an invitation;
   - **Fingerprint unlock** (More).
+
+- Import template (1.0.7): Download template (CSV) on Import leads, the same file as the website, and a list of what goes in each column (`GET /api/v1/imports/template`).

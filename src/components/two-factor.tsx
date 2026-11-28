@@ -5,6 +5,7 @@
 // authenticator replacement is a Server Action that checks password + second factor.
 import { useRouter } from 'next/navigation';
 import { useActionState, useState } from 'react';
+import { PasswordInput } from '@/components/password-input';
 import { Alert, Button, Field, Input } from '@/components/ui';
 import { authClient, authErrorMessage } from '@/platform/auth/client';
 import type { ActionResult } from '@/platform/errors';
@@ -38,7 +39,7 @@ function RecoveryCodes({ codes, onDone }: { codes: string[]; onDone: () => void 
 
 const passwordField = (id: string) => (
   <Field label="Confirm your password" htmlFor={id}>
-    <Input id={id} name="password" type="password" autoComplete="current-password" required />
+    <PasswordInput id={id} name="password" autoComplete="current-password" required />
   </Field>
 );
 

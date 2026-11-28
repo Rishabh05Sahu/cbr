@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { PasswordInput } from '@/components/password-input';
 import { Alert, Button, Field, Input } from '@/components/ui';
 import { authClient, authErrorMessage } from '@/platform/auth/client';
 
@@ -42,10 +43,9 @@ export function SignupForm({ invitationId }: { invitationId: string }) {
         <Input id="email" name="email" type="email" autoComplete="email" required />
       </Field>
       <Field label="Password" htmlFor="password" hint="At least 12 characters.">
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="new-password"
           minLength={12}
           maxLength={128}

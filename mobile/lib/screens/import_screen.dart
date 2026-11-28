@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -122,6 +123,19 @@ class ImportFile {
 
 typedef ImportFilePicker = Future<ImportFile?> Function();
 
+/// Saves the import template; true once saved, false if the person cancelled.
+typedef TemplateSaver = Future<bool> Function(String fileName, Uint8List bytes);
+
+/// The phone's own "Save to" screen (Downloads, Drive, Files…). No storage permission needed.
+Future<bool> saveImportTemplate(String fileName, Uint8List bytes) async =>
+    await FilePicker.saveFile(
+      fileName: fileName,
+      bytes: bytes,
+      mimeType: 'text/csv',
+      dialogTitle: 'Save the import template',
+    ) !=
+    null;
+
 /// Android's document picker, limited to .csv and .xlsx. No storage permission is needed.
 Future<ImportFile?> pickImportFile() async {
   final f = await FilePicker.pickFile(
@@ -204,12 +218,14 @@ class ImportScreen extends StatefulWidget {
     super.key,
     required this.session,
     this.pickFile = pickImportFile,
+    this.saveTemplate = saveImportTemplate,
     this.storageClient,
     this.pollInterval = const Duration(seconds: 2),
   });
 
   final Session session;
   final ImportFilePicker pickFile;
+  final TemplateSaver saveTemplate;
 
   /// For the storage PUT only (tests); a fresh client otherwise.
   final http.Client? storageClient;
@@ -252,6 +268,11 @@ class _ImportScreenState extends State<ImportScreen> {
   bool _showMapping = false;
   bool _confirmCancel = false;
 
+  // The template: the file and what goes in each column.
+  Map<String, dynamic>? _template;
+  bool _templateBusy = false;
+  bool _showColumns = false;
+
   Map<String, dynamic> get _job =>
       (_data?['import'] as Map?)?.cast<String, dynamic>() ?? const {};
   String? get _status => _job['status'] as String?;
@@ -283,6 +304,124 @@ class _ImportScreenState extends State<ImportScreen> {
     } on ApiException catch (e) {
       if (mounted) setState(() => _homeError = e.message);
     }
+  }
+
+  // --- Template ---------------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>?> _loadTemplate() async {
+    if (_template != null) return _template;
+    setState(() => _templateBusy = true);
+    try {
+      final t = await _api.get('/imports/template') as Map<String, dynamic>;
+      if (mounted) setState(() => _template = t);
+      return t;
+    } on ApiException catch (e) {
+      _snack(e.message);
+      return null;
+    } finally {
+      if (mounted) setState(() => _templateBusy = false);
+    }
+  }
+
+  Future<void> _downloadTemplate() async {
+    final t = await _loadTemplate();
+    if (t == null || !mounted) return;
+    try {
+      final saved = await widget.saveTemplate(
+        t['fileName'] as String? ?? 'lead-import-template.csv',
+        Uint8List.fromList(utf8.encode(t['csv'] as String? ?? '')),
+      );
+      if (saved) {
+        _snack(
+          'Template saved. Fill one lead per row, then choose it here to import.',
+        );
+      }
+    } catch (_) {
+      _snack('The template could not be saved on this phone.');
+    }
+  }
+
+  Future<void> _toggleColumns() async {
+    if (_showColumns) return setState(() => _showColumns = false);
+    if (await _loadTemplate() != null && mounted) {
+      setState(() => _showColumns = true);
+    }
+  }
+
+  void _snack(String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  Widget _templateCard() {
+    final columns = ((_template?['columns'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>();
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Start from our template: one lead per row under the headings. Every column '
+            'is matched automatically; you just confirm. Do not rename the headings.',
+            style: TextStyle(color: AppColors.muted),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            key: const Key('import-template'),
+            onPressed: _templateBusy ? null : _downloadTemplate,
+            icon: const Icon(Icons.download_outlined),
+            label: const Text('Download template (CSV)'),
+          ),
+          TextButton(
+            key: const Key('import-template-columns'),
+            onPressed: _templateBusy ? null : _toggleColumns,
+            child: Text(
+              _showColumns ? 'Hide the columns' : 'What goes in each column',
+            ),
+          ),
+          if (_showColumns)
+            for (final c in columns)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: c['heading'] as String? ?? '',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          if (c['required'] == true)
+                            const TextSpan(
+                              text: '  required',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.teal,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (c['hint'] is String)
+                      Text(
+                        c['hint'] as String,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+        ],
+      ),
+    );
   }
 
   // --- Upload -----------------------------------------------------------------------------------
@@ -504,6 +643,8 @@ class _ImportScreenState extends State<ImportScreen> {
             'Bring leads in from a portal or spreadsheet export (.xlsx or .csv).',
             style: TextStyle(color: AppColors.muted),
           ),
+          const SectionLabel('Template'),
+          _templateCard(),
           const SectionLabel('New import'),
           AppCard(
             padding: const EdgeInsets.all(16),

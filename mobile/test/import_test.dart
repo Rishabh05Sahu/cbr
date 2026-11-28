@@ -379,4 +379,75 @@ void main() {
       expect(find.text('Upload and check'), findsOneWidget);
     },
   );
+
+  testWidgets('downloads the template and lists its columns', (t) async {
+    const csv = '﻿Name,Phone,Email\r\n';
+    final api = ApiClient(
+      baseUrl: 'https://crm.test',
+      httpClient: MockClient((req) async {
+        if (req.url.path == '/api/v1/imports/template') {
+          return http.Response.bytes(
+            utf8.encode(
+              jsonEncode({
+                'ok': true,
+                'data': {
+                  'fileName': 'lead-import-template.csv',
+                  'csv': csv,
+                  'columns': [
+                    {'heading': 'Name', 'required': true, 'hint': null},
+                    {
+                      'heading': 'Phone',
+                      'required': true,
+                      'hint': 'UAE numbers (050 123 4567, +971…)',
+                    },
+                    {'heading': 'Email', 'required': false, 'hint': null},
+                  ],
+                },
+              }),
+            ),
+            200,
+            headers: {'content-type': 'application/json; charset=utf-8'},
+          );
+        }
+        return _ok({
+          'imports': [],
+          'maxBytes': 1000000,
+          'maxRows': 1000,
+          'storageConfigured': true,
+        });
+      }),
+    )..token = 't';
+    String? savedName;
+    Uint8List? savedBytes;
+    t.view.physicalSize = const Size(400, 3000);
+    t.view.devicePixelRatio = 1;
+    addTearDown(t.view.reset);
+    await t.pumpWidget(
+      MaterialApp(
+        home: ImportScreen(
+          session: Session(api: api),
+          saveTemplate: (name, bytes) async {
+            savedName = name;
+            savedBytes = bytes;
+            return true;
+          },
+        ),
+      ),
+    );
+    await t.pumpAndSettle();
+
+    await _tap(t, find.byKey(const Key('import-template')));
+    expect(savedName, 'lead-import-template.csv');
+    // UTF-8 with the byte-order mark Excel needs (utf8.decode would drop it).
+    expect(savedBytes!.take(3), [0xEF, 0xBB, 0xBF]);
+    expect(savedBytes, utf8.encode(csv));
+    expect(find.textContaining('Template saved'), findsOneWidget);
+
+    await _tap(t, find.byKey(const Key('import-template-columns')));
+    // Each heading with "required" after it for Name and Phone only.
+    expect(find.text('Phone  required', findRichText: true), findsOneWidget);
+    expect(find.text('Name  required', findRichText: true), findsOneWidget);
+    expect(find.text('Email', findRichText: true), findsOneWidget);
+    expect(find.text('UAE numbers (050 123 4567, +971…)'), findsOneWidget);
+  });
 }
