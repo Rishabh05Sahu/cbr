@@ -1,7 +1,8 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Alert, Button, Field, Input } from '@/components/ui';
+import { PasswordInput } from '@/components/password-input';
+import { Alert, Button, Field } from '@/components/ui';
 import { authClient, authErrorMessage } from '@/platform/auth/client';
 
 export function ResetForm({ token }: { token: string }) {
@@ -24,10 +25,9 @@ export function ResetForm({ token }: { token: string }) {
       <h1 className="text-lg font-semibold">Choose a new password</h1>
       {error && <Alert tone="error">{error}</Alert>}
       <Field label="New password" htmlFor="password" hint="At least 12 characters.">
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="new-password"
           minLength={12}
           maxLength={128}
@@ -35,10 +35,9 @@ export function ResetForm({ token }: { token: string }) {
         />
       </Field>
       <Field label="Confirm password" htmlFor="confirm">
-        <Input
+        <PasswordInput
           id="confirm"
           name="confirm"
-          type="password"
           autoComplete="new-password"
           minLength={12}
           maxLength={128}

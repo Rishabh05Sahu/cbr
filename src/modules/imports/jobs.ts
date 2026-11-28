@@ -29,6 +29,8 @@ import {
   CUSTOM_PREFIX,
   customKeyOf,
   FIELD_SPEC,
+  IMPORT_FIELDS,
+  TEMPLATE_HEADINGS,
   templateHeaders,
   validateMapping,
   type ColumnMapping,
@@ -810,6 +812,21 @@ export async function importIssuesCsv(ctx: RequestContext, rawId: unknown): Prom
  * rows: anything under the header would be imported. Owner/Admin (lead.import + lead.create).
  */
 export async function importTemplateCsv(ctx: RequestContext): Promise<string> {
+  return (await importTemplate(ctx)).csv;
+}
+
+/** One template column for the app's guide: its heading and whether a row needs it. */
+export interface TemplateColumn {
+  heading: string;
+  required: boolean;
+  /** Accepted values or format, e.g. "Buy, Rent, …" (mapping.ts hints). */
+  hint: string | null;
+}
+
+/** The template file and, for the app (owner request 2026-11-28), its columns. */
+export async function importTemplate(
+  ctx: RequestContext,
+): Promise<{ fileName: string; csv: string; columns: TemplateColumn[] }> {
   const me = requireImporter(ctx);
   const custom = await tenantRunner().withTenant(me.tenant, (tx) =>
     tx.customFieldDefinition.findMany({
@@ -818,5 +835,17 @@ export async function importTemplateCsv(ctx: RequestContext): Promise<string> {
       select: { key: true, label: true, required: true },
     }),
   );
-  return '\uFEFF' + templateHeaders(custom).map(csvCell).join(',') + '\r\n';
+  const columns = [
+    ...IMPORT_FIELDS.map((f) => ({
+      heading: TEMPLATE_HEADINGS[f.field],
+      required: f.required,
+      hint: f.hint ?? null,
+    })),
+    ...custom.map((c) => ({ heading: c.label, required: c.required, hint: null })),
+  ];
+  return {
+    fileName: 'lead-import-template.csv',
+    csv: '\uFEFF' + templateHeaders(custom).map(csvCell).join(',') + '\r\n',
+    columns,
+  };
 }

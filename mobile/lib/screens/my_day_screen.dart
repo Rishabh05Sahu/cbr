@@ -13,8 +13,11 @@ import 'when_picker.dart';
 
 /// FR-101 My Day: overdue, today, the next 7 days and later (GET /api/v1/my-day).
 class MyDayScreen extends StatefulWidget {
-  const MyDayScreen({super.key, required this.session});
+  const MyDayScreen({super.key, required this.session, this.clock});
   final Session session;
+
+  /// The date in the header; screenshot tests fix it so the picture does not change daily.
+  final DateTime Function()? clock;
 
   @override
   State<MyDayScreen> createState() => _MyDayScreenState();
@@ -658,7 +661,7 @@ class _MyDayScreenState extends State<MyDayScreen> {
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
             ),
             Text(
-              '${longDate(DateTime.now())} · ${me.orgName}',
+              '${longDate((widget.clock ?? DateTime.now)())} · ${me.orgName}',
               style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.muted,

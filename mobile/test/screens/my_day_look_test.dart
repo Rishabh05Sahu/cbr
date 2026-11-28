@@ -150,7 +150,10 @@ void main() {
                 .copyWith(textScaler: TextScaler.linear(scale)),
             child: child!,
           ),
-          home: MyDayScreen(session: session),
+          home: MyDayScreen(
+            session: session,
+            clock: () => DateTime(2026, 11, 24),
+          ),
         ),
       );
       await t.pumpAndSettle();

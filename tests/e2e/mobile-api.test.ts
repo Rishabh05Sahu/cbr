@@ -899,6 +899,16 @@ describe('app extras (2026-11-24): history, contact, tags, visit properties, imp
     });
     expect(bad.status).toBe(422);
 
+    // The import template for the app (2026-11-28): the website's file, plus its columns.
+    expect((await exec.api('/imports/template')).status).toBe(403);
+    const tpl = (await json(await ownerApp.api('/imports/template'))).data;
+    expect(tpl.fileName).toBe('lead-import-template.csv');
+    expect(tpl.csv.startsWith('﻿Name,Phone,')).toBe(true);
+    expect(tpl.columns.slice(0, 2)).toEqual([
+      { heading: 'Name', required: true, hint: null },
+      expect.objectContaining({ heading: 'Phone', required: true }),
+    ]);
+
     const dash = (await json(await ownerApp.api('/dashboard?period=this_month'))).data;
     const roles = new Map(
       (dash.members as { userId: string; role: string }[]).map((m) => [m.userId, m.role]),
